@@ -18,13 +18,13 @@ export function createMenu(win, store) {
           {
             label: app.name,
             submenu: [
-              { role: 'about' },
+              { role: 'about', label: '关于' + app.name },
               { type: 'separator' },
-              { role: 'services' },
+              { role: 'services', label: '服务' },
               { type: 'separator' },
               { type: 'separator' },
               {
-                label: 'Preferences...',
+                label: '偏好设置...',
                 accelerator: 'CmdOrCtrl+,',
                 click: () => {
                   win.webContents.send('changeRouteTo', '/settings');
@@ -32,37 +32,44 @@ export function createMenu(win, store) {
                 role: 'preferences',
               },
               { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideothers' },
-              { role: 'unhide' },
+              { role: 'hide', label: '隐藏' },
+              { role: 'hideothers', label: '隐藏所有' },
+              { role: 'unhide', label: '显示全部' },
               { type: 'separator' },
-              { role: 'quit' },
+              { role: 'quit', label: '退出' },
             ],
           },
         ]
       : []),
     {
-      label: 'Edit',
+      label: '编辑',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: '撤销' },
+        { role: 'redo', label: '恢复' },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
+        { role: 'cut', label: '剪切' },
+        { role: 'copy', label: '复制' },
+        { role: 'paste', label: '粘贴' },
         ...(isMac
           ? [
-              { role: 'delete' },
-              { role: 'selectAll' },
+              { role: 'delete', label: '删除' },
+              { role: 'selectAll', label: '删除所有' },
               { type: 'separator' },
               {
-                label: 'Speech',
-                submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
+                label: '听写',
+                submenu: [
+                  { role: 'startspeaking', label: '开始听写' },
+                  { role: 'stopspeaking', label: '停止听写' },
+                ],
               },
             ]
-          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+          : [
+              { role: 'delete', label: '删除' },
+              { type: 'separator' },
+              { role: 'selectAll', label: '删除所有' },
+            ]),
         {
-          label: 'Search',
+          label: '搜索',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
             win.webContents.send('search');
@@ -71,59 +78,59 @@ export function createMenu(win, store) {
       ],
     },
     {
-      label: 'Controls',
+      label: '控制',
       submenu: [
         {
-          label: 'Play',
+          label: '播放',
           accelerator: shortcuts.find(s => s.id === 'play').shortcut,
           click: () => {
             win.webContents.send('play');
           },
         },
         {
-          label: 'Next',
+          label: '下一首',
           accelerator: shortcuts.find(s => s.id === 'next').shortcut,
           click: () => {
             win.webContents.send('next');
           },
         },
         {
-          label: 'Previous',
+          label: '上一首',
           accelerator: shortcuts.find(s => s.id === 'previous').shortcut,
           click: () => {
             win.webContents.send('previous');
           },
         },
         {
-          label: 'Increase Volume',
+          label: '增大音量',
           accelerator: shortcuts.find(s => s.id === 'increaseVolume').shortcut,
           click: () => {
             win.webContents.send('increaseVolume');
           },
         },
         {
-          label: 'Decrease Volume',
+          label: '降低音量',
           accelerator: shortcuts.find(s => s.id === 'decreaseVolume').shortcut,
           click: () => {
             win.webContents.send('decreaseVolume');
           },
         },
         {
-          label: 'Like',
+          label: '喜欢',
           accelerator: shortcuts.find(s => s.id === 'like').shortcut,
           click: () => {
             win.webContents.send('like');
           },
         },
         {
-          label: 'Repeat',
+          label: '重复',
           accelerator: 'Alt+R',
           click: () => {
             win.webContents.send('repeat');
           },
         },
         {
-          label: 'Shuffle',
+          label: '随机',
           accelerator: 'Alt+S',
           click: () => {
             win.webContents.send('shuffle');
@@ -132,20 +139,20 @@ export function createMenu(win, store) {
       ],
     },
     {
-      label: 'Window',
+      label: '窗口',
       submenu: [
-        { role: 'close' },
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { role: 'reload' },
-        { role: 'forcereload' },
-        { role: 'toggledevtools' },
+        { role: 'close', label: '关闭' },
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '最大化' },
+        { role: 'reload', label: '重新加载' },
+        { role: 'forcereload', label: '强制重新加载' },
+        { role: 'toggledevtools', label: '开发者工具' },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: '切换全屏' },
         ...(isMac
           ? [
               { type: 'separator' },
-              { role: 'front' },
+              { role: 'front', label: '全部置于顶层' },
               { type: 'separator' },
               {
                 role: 'window',
@@ -167,7 +174,7 @@ export function createMenu(win, store) {
       ],
     },
     {
-      label: 'Help',
+      label: '帮助',
       submenu: [
         {
           label: 'GitHub',
@@ -193,27 +200,6 @@ export function createMenu(win, store) {
       ],
     },
   ];
-  // for window
-  // if (process.platform === "win32") {
-  //   template.push({
-  //     label: "Help",
-  //     submenu: [
-  //       {
-  //         label: `Current version v${version}`,
-  //         enabled: false,
-  //       },
-  //       {
-  //         label: "Check for update",
-  //         accelerator: "Ctrl+U",
-  //         click: (item, focusedWindow) => {
-  //           win = focusedWindow;
-  //           updateSource = "menu";
-  //           autoUpdater.checkForUpdates();
-  //         },
-  //       },
-  //     ],
-  //   });
-  // }
 
   menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);

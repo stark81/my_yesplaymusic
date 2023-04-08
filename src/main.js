@@ -33,6 +33,7 @@ Vue.use(
   {
     config: { id: 'G-KMJJCFZDKF' },
   },
+  // VueLoadmore,
   router
 );
 Vue.config.productionTip = false;

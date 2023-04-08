@@ -37,7 +37,9 @@
 
 :root {
   --color-body-bg: #ffffff;
+  --color-body-bg-alpha: rgba(255, 255, 255, 0.92);
   --color-text: #000;
+  --color-text-transparent: rgba(0, 0, 0, 0.35);
   --color-primary: #335eea;
   --color-primary-bg: #eaeffd;
   --color-secondary: #7a7a7b;
@@ -50,7 +52,9 @@
 
 [data-theme='dark'] {
   --color-body-bg: #222222;
+  --color-body-bg-alpha: rgba(128, 128, 128, 0.92);
   --color-text: #ffffff;
+  --color-text-transparent: rgba(255, 255, 255, 0.35);
   --color-primary: #335eea;
   --color-primary-bg: #bbcdff;
   --color-secondary: #7a7a7b;

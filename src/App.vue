@@ -19,7 +19,7 @@
     <ModalAddTrackToPlaylist v-if="isAccountLoggedIn" />
     <ModalNewPlaylist v-if="isAccountLoggedIn" />
     <transition v-if="enablePlayer" name="slide-up">
-      <Lyrics v-show="showLyrics" />
+      <MusicPlay v-show="showLyrics" />
     </transition>
   </div>
 </template>
@@ -33,7 +33,7 @@ import Player from './components/Player.vue';
 import Toast from './components/Toast.vue';
 import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
-import Lyrics from './views/lyrics.vue';
+import MusicPlay from './views/musicPlay.vue';
 import { mapState } from 'vuex';
 
 export default {
@@ -44,7 +44,7 @@ export default {
     Toast,
     ModalAddTrackToPlaylist,
     ModalNewPlaylist,
-    Lyrics,
+    MusicPlay,
     Scrollbar,
   },
   data() {
@@ -85,6 +85,7 @@ export default {
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;
+        if (e.target.classList.contains('comment_box')) return false;
         if (this.$route.name === 'mv') return false;
         e.preventDefault();
         this.player.playOrPause();
