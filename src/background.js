@@ -32,6 +32,7 @@ import express from 'express';
 import expressProxy from 'express-http-proxy';
 import Store from 'electron-store';
 import { createMpris } from '@/electron/mpris';
+
 const clc = require('cli-color');
 const log = text => {
   console.log(`${clc.blueBright('[background.js]')} ${text}`);

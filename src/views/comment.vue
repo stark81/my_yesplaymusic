@@ -157,6 +157,7 @@ export default {
     });
   },
   beforeDestroy() {
+    this.comment2Top();
     window.removeEventListener('resize', this.handleResize);
   },
   methods: {

@@ -117,7 +117,13 @@
                   </button-icon>
                   <button-icon
                     class="lyric_comment_btn"
-                    :title="$t(show === 'lyric' ? '查看评论' : '查看歌词')"
+                    :title="
+                      $t(
+                        show === 'lyric'
+                          ? 'contextMenu.showComment'
+                          : 'contextMenu.showLyric'
+                      )
+                    "
                     @click.native="
                       switchCommentAndLyric(
                         show === 'lyric' ? 'comment' : 'lyric'
@@ -212,8 +218,8 @@
       </div>
       <div class="right-side">
         <Lyrics v-show="show === 'lyric'" />
-        <Comment v-show="show === 'comment'" />
-        <CommentFloor v-if="show === 'floor_comment'" />
+        <Comment v-show="show === 'comment'" ref="commentRef" />
+        <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
       </div>
       <!-- <div class="close-button" @click="toggleLyrics"> -->
       <div class="close-button" @click="closePlayPage">
@@ -242,6 +248,7 @@ import { hasListSource, getListSourcePath } from '@/utils/playList';
 import locale from '@/locale';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import CommentFloor from '@/views/commentFloor.vue';
+import { isMac } from '@/utils/platform';
 
 export default {
   name: 'MusicPlay',
@@ -265,7 +272,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings']),
+    ...mapState(['player', 'settings', 'showLyrics']),
     currentTrack: {
       get() {
         return this.player.currentTrack;
@@ -340,7 +347,6 @@ export default {
     closePlayPage() {
       this.toggleLyrics();
       this.show = 'lyric';
-      // this.$store.state.isComment = !this.$store.state.isComment;
     },
     formatTime(value) {
       let hour = value.getHours().toString();
@@ -379,6 +385,10 @@ export default {
     },
     playOrPause() {
       this.player.playOrPause();
+      if (isMac && this.settings.showTray && this.settings.showStatusBarLyric) {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.send('updateTrayPlayState', this.playing);
+      }
     },
     playNextTrack() {
       if (this.player.isPersonalFM) {

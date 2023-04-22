@@ -1,7 +1,7 @@
 /* global __static */
 import path from 'path';
-import { app, nativeImage, Tray, Menu } from 'electron';
-import { isLinux } from '@/utils/platform';
+import { app, nativeImage, Tray, Menu, nativeTheme } from 'electron';
+import { isLinux, isMac } from '@/utils/platform';
 
 function createMenuTemplate(win) {
   return [
@@ -92,14 +92,6 @@ function createMenuTemplate(win) {
   ];
 }
 
-// linux下托盘的实现方式比较迷惑
-// right-click无法在linux下使用
-// click在默认行为下会弹出一个contextMenu，里面的唯一选项才会调用click事件
-// setContextMenu应该是目前唯一能在linux下使用托盘菜单api
-// 但是无法区分鼠标左右键
-
-// 发现openSUSE KDE环境可以区分鼠标左右键
-// 添加左键支持
 // 2022.05.17
 class YPMTrayLinuxImpl {
   constructor(tray, win, emitter) {
@@ -196,18 +188,89 @@ class YPMTrayWindowsImpl {
   }
 }
 
-export function createTray(win, eventEmitter) {
-  let icon = nativeImage
-    .createFromPath(path.join(__static, 'img/icons/menu@88.png'))
-    .resize({
-      height: 20,
-      width: 20,
-    });
+class YPMTrayMacImpl {
+  constructor(tray, win, emitter) {
+    this.tray = tray;
+    this.win = win;
+    this.emitter = emitter;
 
+    this.template = createMenuTemplate(win);
+    this.contextMenu = Menu.buildFromTemplate(this.template);
+
+    this.isPlaying = false;
+    this.curDisplayPlaying = false;
+
+    this.isLiked = false;
+    this.curDisplayLiked = false;
+
+    this.handleEvents();
+  }
+
+  handleEvents() {
+    this.tray.on('click', (event, bounds, position) => {
+      this.win.webContents.send('trayClick', { event, bounds, position });
+    });
+    this.emitter.on('lyricsReceived', lyric => {
+      this.win.webContents.send('showTrayLyric', lyric);
+    });
+    this.emitter.on('updatePlayState', () => {
+      this.win.webContents.send('changeTrayPlayingStatus');
+    });
+    this.emitter.on('updateLikeState', () => {
+      this.win.webContents.send('changeTrayLikeStatus');
+    });
+    this.emitter.on('ifShowTray', ops => {
+      if (ops == 'switchShowTray') {
+        this.win.webContents.send('switchTrayShow');
+      } else if (ops == 'switchControl') {
+        this.win.webContents.send('switchControlShow');
+      } else if (ops == 'switchLyric') {
+        this.win.webContents.send('switchLyricShow');
+      }
+    });
+  }
+}
+
+function getIcon() {
+  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  let iconPath = isDarkMode
+    ? 'img/icons/menu@88.png'
+    : 'img/icons/menu@88_dark.png';
+
+  return nativeImage.createFromPath(path.join(__static, iconPath)).resize({
+    height: 20,
+    width: 20,
+  });
+}
+
+function createMacTray(win, eventEmitter) {
+  const tray = new Tray(nativeImage.createEmpty());
+  // tray.setHighlightMode('never');
+  global.setTray = function (img, width, height) {
+    const Image = nativeImage.createFromDataURL(img).resize({ width, height });
+    tray.setImage(Image);
+  };
+  return new YPMTrayMacImpl(tray, win, eventEmitter);
+}
+
+function createWindowLinuxTray(win, eventEmitter) {
+  let icon = getIcon();
   let tray = new Tray(icon);
+
   tray.setToolTip('YesPlayMusic');
+
+  nativeTheme.on('updated', () => {
+    let icon = getIcon();
+    tray.setImage(icon);
+  });
 
   return isLinux
     ? new YPMTrayLinuxImpl(tray, win, eventEmitter)
     : new YPMTrayWindowsImpl(tray, win, eventEmitter);
+}
+
+export function createTray(win, eventEmitter) {
+  return isMac
+    ? createMacTray(win, eventEmitter)
+    : createWindowLinuxTray(win, eventEmitter);
 }

@@ -47,11 +47,13 @@ import Color from 'color';
 import { isAccountLoggedIn } from '@/utils/auth';
 import { hasListSource, getListSourcePath } from '@/utils/playList';
 import locale from '@/locale';
+import { isMac } from '@/utils/platform';
 
 export default {
   name: 'Lyrics',
   data() {
     return {
+      sendIndex: 0,
       lyricsInterval: null,
       lyric: [],
       tlyric: [],
@@ -143,6 +145,12 @@ export default {
       } else {
         clearInterval(this.lyricsInterval);
         this.$store.commit('enableScrolling', true);
+      }
+    },
+    lyric(lyric) {
+      if (lyric.length && isMac) {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.send('sendLyrics', this.lyric);
       }
     },
   },

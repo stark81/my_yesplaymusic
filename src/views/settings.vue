@@ -166,6 +166,58 @@
         </div>
       </div>
 
+      <h3 v-show="isMac">状态栏</h3>
+      <div v-show="isMac" class="item">
+        <div class="left">
+          <div class="title">{{ $t('settings.showTray') }}</div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="show-lyrics-tray"
+              v-model="showTray"
+              type="checkbox"
+              name="show-lyrics-tray"
+            />
+            <label for="show-lyrics-tray"></label>
+          </div>
+        </div>
+      </div>
+      <div v-show="isMac" class="item">
+        <div class="left">
+          <div class="title">{{ $t('settings.showControl') }}</div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="show-lyrics-control"
+              v-model="showControl"
+              :disabled="!showTray"
+              type="checkbox"
+              name="show-lyrics-control"
+            />
+            <label for="show-lyrics-control"></label>
+          </div>
+        </div>
+      </div>
+      <div v-show="isMac" class="item">
+        <div class="left">
+          <div class="title">{{ $t('settings.showStatusBarLyric') }}</div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="show-lyrics-statusbar"
+              v-model="showStatusBarLyric"
+              :disabled="!showTray"
+              type="checkbox"
+              name="show-lyrics-statusbar"
+            />
+            <label for="show-lyrics-statusbar"></label>
+          </div>
+        </div>
+      </div>
+
       <h3>歌词</h3>
       <div class="item">
         <div class="left">
@@ -941,6 +993,42 @@ export default {
         });
       },
     },
+    showTray: {
+      get() {
+        return this.settings.showTray;
+      },
+      set(value) {
+        ipcRenderer.send('switchShowTray', 'switchShowTray');
+        this.$store.commit('updateSettings', {
+          key: 'showTray',
+          value,
+        });
+      },
+    },
+    showStatusBarLyric: {
+      get() {
+        return this.settings.showStatusBarLyric;
+      },
+      set(value) {
+        ipcRenderer.send('switchShowTray', 'switchLyric');
+        this.$store.commit('updateSettings', {
+          key: 'showStatusBarLyric',
+          value,
+        });
+      },
+    },
+    showControl: {
+      get() {
+        return this.settings.showControl;
+      },
+      set(value) {
+        ipcRenderer.send('switchShowTray', 'switchControl');
+        this.$store.commit('updateSettings', {
+          key: 'showControl',
+          value,
+        });
+      },
+    },
     lyricsBackground: {
       get() {
         return this.settings.lyricsBackground || false;
@@ -1637,6 +1725,16 @@ input[type='number'] {
   left: 0;
   border-radius: 8px;
 }
+
+.toggle input:disabled + label:before {
+  background-color: var(--color-secondary-bg-disabled);
+  cursor: not-allowed;
+}
+.toggle input:disabled:checked + label:before {
+  background-color: var(--color-primary-disabled);
+  cursor: not-allowed;
+}
+
 .toggle input + label:after {
   content: '';
   position: absolute;

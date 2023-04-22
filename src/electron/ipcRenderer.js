@@ -36,6 +36,7 @@ export function ipcRenderer(vueInstance) {
   });
 
   ipcRenderer.on('next', () => {
+    console.log('ipcRenderer.js next');
     if (player.isPersonalFM) {
       player.playNextFMTrack();
     } else {

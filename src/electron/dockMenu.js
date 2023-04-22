@@ -1,22 +1,23 @@
 const { app, Menu, Tray } = require('electron');
+import path from 'path';
 
 export function createDockMenu(win) {
   return Menu.buildFromTemplate([
     {
-      label: 'Play',
+      label: '播放',
       click() {
         win.webContents.send('play');
       },
     },
     { type: 'separator' },
     {
-      label: 'Next',
+      label: '下一首',
       click() {
         win.webContents.send('next');
       },
     },
     {
-      label: 'Previous',
+      label: '上一首',
       click() {
         win.webContents.send('previous');
       },
@@ -25,19 +26,19 @@ export function createDockMenu(win) {
 }
 const contextMenu = Menu.buildFromTemplate([
   {
-    label: 'Play',
+    label: '播放',
     click: () => {
       // 播放音乐
     },
   },
   {
-    label: 'Pause',
+    label: '暂停',
     click: () => {
       // 暂停音乐
     },
   },
   {
-    label: 'Exit',
+    label: '下一首',
     click: () => {
       // 退出应用
       app.quit();

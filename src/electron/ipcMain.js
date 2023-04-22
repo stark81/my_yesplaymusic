@@ -1,4 +1,4 @@
-import { app, dialog, globalShortcut, ipcMain } from 'electron';
+import { app, dialog, globalShortcut, ipcMain, nativeTheme } from 'electron';
 import UNM from '@unblockneteasemusic/rust-napi';
 import { registerGlobalShortcut } from '@/electron/globalShortcut';
 import cloneDeep from 'lodash/cloneDeep';
@@ -131,6 +131,13 @@ function parseSourceStringToList(executor, sourceString) {
 
       return isAvailable;
     });
+}
+
+function watchNativeTheme(win) {
+  nativeTheme.on('updated', () => {
+    const isDarkMode = nativeTheme.shouldUseDarkColors;
+    win.send('changeTheme', isDarkMode);
+  });
 }
 
 export function initIpcMain(win, store, trayEventEmitter) {
@@ -308,8 +315,8 @@ export function initIpcMain(win, store, trayEventEmitter) {
     globalShortcut.unregisterAll();
     registerGlobalShortcut(win, store);
   });
-
   if (isCreateTray) {
+    watchNativeTheme(win);
     ipcMain.on('updateTrayTooltip', (_, title) => {
       trayEventEmitter.emit('updateTooltip', title);
     });
@@ -318,6 +325,19 @@ export function initIpcMain(win, store, trayEventEmitter) {
     });
     ipcMain.on('updateTrayLikeState', (_, isLiked) => {
       trayEventEmitter.emit('updateLikeState', isLiked);
+    });
+    ipcMain.on('sendLyrics', (_, lyrics) => {
+      trayEventEmitter.emit('lyricsReceived', lyrics);
+    });
+    ipcMain.on('windowShow', () => {
+      win.show();
+    });
+    ipcMain.handle('getNativeTheme', () => {
+      const isDarkMode = nativeTheme.shouldUseDarkColors;
+      return isDarkMode;
+    });
+    ipcMain.on('switchShowTray', (_, ops) => {
+      trayEventEmitter.emit('ifShowTray', ops);
     });
   }
 }

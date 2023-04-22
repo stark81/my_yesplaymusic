@@ -629,4 +629,9 @@ module.exports = [
     route: '/comment/floor',
     module: require('NeteaseCloudMusicApi/module/comment_floor'),
   },
+  {
+    identifier: 'comment',
+    route: '/comment',
+    module: require('NeteaseCloudMusicApi/module/comment'),
+  },
 ];
