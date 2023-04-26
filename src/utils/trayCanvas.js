@@ -75,7 +75,7 @@ export class Lyric extends Canvas {
       this.fontSize * this.devicePixelRatio
     }px "microsoft yahei", sans-serif`;
     this.ctx.textBaseline = 'middle';
-    this.findCurrentLyric();
+    // this.findCurrentLyric();
   }
   findCurrentLyric() {
     const progress = player.seek() ?? 0;

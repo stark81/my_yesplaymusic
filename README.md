@@ -18,6 +18,26 @@
 
 [![Library][library-screenshot]](https://music.qier222.com)
 
+==========================================================================
+## 特性✨
+ - 新增歌曲评论功能，包括：查看评论、发表评论、回复评论、点赞等。注：因未对歌曲本身进行校验，因此可能会出现评论失败的情况(且没有失败提示)；
+ - 针对Mac系统，增加了状态栏歌词显示；
+## 说明
+ - 此版本在YesPlayMusic[官方代码](https://github.com/qier222/YesPlayMusic/)0.4.7版本进行的功能调整，可直接访问官方仓库获取原版软件；
+ - 此版本并没有屏蔽原代码里的更新检查，如果更新的话应该会被官方版本覆盖；
+ - 当前README内的交流群是原作者所留；
+ - 当前代码仅学习使用，请勿用于其他用途。如有侵权，请联系删除。
+ - 请按照安装部署章节中的【配置开发环境】进行配置：
+   - 目前只在Mac设备上进行过测试，其他平台请自行打包测试；
+   - 本地运行只能使用electron方式启动，网页端启动不成功。由于本人倾向使用客户端，且本身并非前端开发者，不打算也没有能力解决网页端无法启动的问题；
+
+## 截图
+
+![comment][comment-screenshot]
+![floor][floor-screenshot]
+![tray][trayLyric-screenshot]
+
+==========================================================================
 
 ## 全新版本
 全新2.0 Alpha测试版已发布，欢迎前往 [Releases](https://github.com/qier222/YesPlayMusic/releases) 页面下载。
@@ -258,3 +278,6 @@ API 源代码来自 [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryif
 [library-screenshot]: images/library.png
 [library-dark-screenshot]: images/library-dark.png
 [search-screenshot]: images/search.png
+[comment-screenshot]: images/comment.png
+[floor-screenshot]: images/floor.png
+[trayLyric-screenshot]: images/statusBarLyric.png

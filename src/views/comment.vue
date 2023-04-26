@@ -21,7 +21,7 @@
           </label>
         </div>
       </div>
-      <div id="Container">
+      <div id="Container" ref="ContainerRef">
         <div
           v-for="(comment, index) in sourceComments.comments"
           :id="`comment${index}`"
@@ -97,6 +97,7 @@ export default {
   data() {
     return {
       reply2Name: '',
+      scrollTop: 0,
       sourceComments: {
         type: 0,
         isDelete: false,
@@ -252,21 +253,23 @@ export default {
       document.getElementById('Container').scrollTop = 0;
     },
     loadMoreComments() {
-      const el = document.getElementById('Container');
-      if (this.$parent.show === 'comment' && el) {
-        let scrollTop = el.scrollTop;
-        let clientHeight = el.clientHeight;
-        let scrollHeight = el.scrollHeight;
-        if (scrollTop + clientHeight >= scrollHeight) {
-          if (
-            !this.sourceComments.hasMore &&
-            this.sourceComments.sortType === 1
-          ) {
-            this.sourceComments.hasMore = true;
-            this.sourceComments.sortType = 3;
-            this.pageNo = 0;
+      if (this.$parent.show == 'comment') {
+        const el = document.getElementById('Container');
+        if (this.$parent.show === 'comment' && el) {
+          let scrollTop = el.scrollTop;
+          let clientHeight = el.clientHeight;
+          let scrollHeight = el.scrollHeight;
+          if (scrollTop + clientHeight >= scrollHeight) {
+            if (
+              !this.sourceComments.hasMore &&
+              this.sourceComments.sortType === 1
+            ) {
+              this.sourceComments.hasMore = true;
+              this.sourceComments.sortType = 3;
+              this.pageNo = 0;
+            }
+            this.getComment();
           }
-          this.getComment();
         }
       }
     },

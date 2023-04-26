@@ -149,7 +149,10 @@ export default async function initMacStatusbarLyric() {
 
   ipcRenderer.on('showTrayLyric', (event, arg) => {
     currrentLyric = arg;
-    LyricIcon.allLyric = currrentLyric;
+    if (lyricShow) {
+      LyricIcon.allLyric = currrentLyric;
+      LyricIcon.findCurrentLyric();
+    }
   });
   ipcRenderer.on('changeTrayPlayingStatus', () => {
     changeStatus({ changeControl: true });
@@ -197,6 +200,7 @@ export default async function initMacStatusbarLyric() {
     trayShow = store.state.settings.showTray;
     lyricShow = trayShow && store.state.settings.showStatusBarLyric;
     CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
+    LyricIcon.allLyric = lyricShow ? currrentLyric : null;
     updateTray(lyricShow, controlShow, trayShow);
     changeStatus({
       changeLyric: true,
@@ -217,11 +221,13 @@ export default async function initMacStatusbarLyric() {
   });
   ipcRenderer.on('switchTrayShow', () => {
     trayShow = store.state.settings.showTray;
+    lyricShow = trayShow && store.state.settings.showStatusBarLyric;
     CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
+    LyricIcon.allLyric = lyricShow ? currrentLyric : null;
     updateTray(lyricShow, controlShow, trayShow);
     changeStatus({
-      changeLyric: false,
-      changeControl: false,
+      changeLyric: true,
+      changeControl: true,
       changeTray: true,
     });
   });
