@@ -2,6 +2,7 @@
   <div class="cover-row" :style="rowStyles">
     <div
       v-for="item in items"
+      v-show="item.show !== false"
       :key="item.id"
       class="item"
       :class="{ artist: type === 'artist' }"

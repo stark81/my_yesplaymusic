@@ -5,6 +5,10 @@ import updateApp from '@/utils/updateApp';
 if (localStorage.getItem('appVersion') === null) {
   localStorage.setItem('settings', JSON.stringify(initLocalStorage.settings));
   localStorage.setItem('data', JSON.stringify(initLocalStorage.data));
+  localStorage.setItem(
+    'localMusic',
+    JSON.stringify(initLocalStorage.localMusic)
+  );
   localStorage.setItem('appVersion', pkg.version);
 }
 
@@ -46,9 +50,20 @@ export default {
       afterCreateAddTrackID: 0,
     },
   },
+  // localMusic: {
+  //   songsIdCounter: 1,
+  //   albumsIdCounter: 1,
+  //   artistsIdCounter: 1,
+  //   songs: [],
+  //   songsWithDetails: [], // 只有前12首
+  //   playlists: [],
+  //   albums: [],
+  //   artists: [],
+  // },
   dailyTracks: [],
   lastfm: JSON.parse(localStorage.getItem('lastfm')) || {},
   player: JSON.parse(localStorage.getItem('player')),
   settings: JSON.parse(localStorage.getItem('settings')),
   data: JSON.parse(localStorage.getItem('data')),
+  localMusic: JSON.parse(localStorage.getItem('localMusic')),
 };

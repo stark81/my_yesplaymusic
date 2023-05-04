@@ -115,6 +115,11 @@ const routes = [
     },
   },
   {
+    path: '/local-music',
+    name: 'localMusic',
+    component: () => import('@/views/localMusic.vue'),
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('@/views/settings.vue'),

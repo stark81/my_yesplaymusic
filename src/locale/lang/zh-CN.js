@@ -7,6 +7,7 @@ export default {
     home: '首页',
     explore: '发现',
     library: '音乐库',
+    localMusic: '本地音乐',
     search: '搜索',
     github: 'GitHub 仓库',
   },
@@ -37,6 +38,13 @@ export default {
       settings: '设置',
       logout: '登出',
     },
+  },
+  localMusic: {
+    sLocalMusic: '的本地音乐',
+    playlist: '本地歌单',
+    albums: '专辑',
+    artists: '艺人',
+    changeScanningPath: '更改扫描路径',
   },
   explore: {
     explore: '发现',
@@ -228,6 +236,10 @@ export default {
     allPlaylists: '全部歌单',
     minePlaylists: '创建的歌单',
     likedPlaylists: '收藏的歌单',
+    localMusic: '本地歌曲',
+    sortByName: '按名称排列',
+    ascendSort: '按时间升序排列',
+    descendSort: '按时间降序排列',
     cardiacMode: '心动模式',
   },
   toast: {

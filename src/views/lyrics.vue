@@ -38,22 +38,16 @@
 // The lyrics page of Apple Music is so gorgeous, so I copy the design.
 // Some of the codes are from https://github.com/sl1673495/vue-netease-music
 
-import { mapState, mapMutations, mapActions } from 'vuex';
+import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
 import { getLyric } from '@/api/track';
 import { lyricParser } from '@/utils/lyrics';
-import * as Vibrant from 'node-vibrant/dist/vibrant.worker.min.js';
-import Color from 'color';
-import { isAccountLoggedIn } from '@/utils/auth';
-import { hasListSource, getListSourcePath } from '@/utils/playList';
-import locale from '@/locale';
 import { isMac } from '@/utils/platform';
 
 export default {
   name: 'Lyrics',
   data() {
     return {
-      sendIndex: 0,
       lyricsInterval: null,
       lyric: [],
       tlyric: [],
@@ -134,9 +128,22 @@ export default {
     },
   },
   watch: {
-    currentTrack() {
-      this.getLyric();
-      this.getCoverColor();
+    async currentTrack() {
+      const { ipcRenderer } = require('electron');
+      if (isMac) {
+        const lyric = [
+          {
+            content: this.currentTrack.name,
+            time: 0.0,
+            rawTime: '[00:00.000]',
+          },
+        ];
+        ipcRenderer.send('sendLyrics', lyric);
+      }
+      await this.getLyric();
+      if (isMac && this.lyric.length > 1) {
+        ipcRenderer.send('sendLyrics', this.lyric);
+      }
     },
     showLyrics(show) {
       if (show) {
@@ -147,16 +154,9 @@ export default {
         this.$store.commit('enableScrolling', true);
       }
     },
-    lyric(lyric) {
-      if (lyric.length && isMac) {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('sendLyrics', this.lyric);
-      }
-    },
   },
   created() {
     this.getLyric();
-    this.getCoverColor();
     this.initDate();
   },
   beforeDestroy: function () {
@@ -168,8 +168,7 @@ export default {
     clearInterval(this.lyricsInterval);
   },
   methods: {
-    ...mapMutations(['toggleLyrics', 'updateModal']),
-    ...mapActions(['likeATrack']),
+    ...mapMutations(['toggleLyrics']),
     initDate() {
       var _this = this;
       clearInterval(this.timer);
@@ -188,36 +187,6 @@ export default {
         ':' +
         second.padStart(2, '0')
       );
-    },
-    addToPlaylist() {
-      if (!isAccountLoggedIn()) {
-        this.showToast(locale.t('toast.needToLogin'));
-        return;
-      }
-      this.$store.dispatch('fetchLikedPlaylist');
-      this.updateModal({
-        modalName: 'addTrackToPlaylistModal',
-        key: 'show',
-        value: true,
-      });
-      this.updateModal({
-        modalName: 'addTrackToPlaylistModal',
-        key: 'selectedTrackID',
-        value: this.currentTrack?.id,
-      });
-    },
-    playPrevTrack() {
-      this.player.playPrevTrack();
-    },
-    playOrPause() {
-      this.player.playOrPause();
-    },
-    playNextTrack() {
-      if (this.player.isPersonalFM) {
-        this.player.playNextFMTrack();
-      } else {
-        this.player.playNextTrack();
-      }
     },
     getLyric() {
       if (!this.currentTrack.id) return;
@@ -293,36 +262,6 @@ export default {
             });
         }
       }, 50);
-    },
-    moveToFMTrash() {
-      this.player.moveToFMTrash();
-    },
-    switchRepeatMode() {
-      this.player.switchRepeatMode();
-    },
-    switchShuffle() {
-      this.player.switchShuffle();
-    },
-    getCoverColor() {
-      if (this.settings.lyricsBackground !== true) return;
-      const cover = this.currentTrack.al?.picUrl + '?param=256y256';
-      Vibrant.from(cover, { colorCount: 1 })
-        .getPalette()
-        .then(palette => {
-          const originColor = Color.rgb(palette.DarkMuted._rgb);
-          const color = originColor.darken(0.1).rgb().string();
-          const color2 = originColor.lighten(0.28).rotate(-30).rgb().string();
-          this.background = `linear-gradient(to top left, ${color}, ${color2})`;
-        });
-    },
-    hasList() {
-      return hasListSource();
-    },
-    getListPath() {
-      return getListSourcePath();
-    },
-    mute() {
-      this.player.mute();
     },
   },
 };

@@ -3,6 +3,7 @@ import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import { likeATrack } from '@/api/track';
 import { getPlaylistDetail } from '@/api/playlist';
 import { getTrackDetail } from '@/api/track';
+// import { search } from '@/api/others';
 import {
   userPlaylist,
   userPlayHistory,
@@ -13,6 +14,133 @@ import {
   cloudDisk,
   userAccount,
 } from '@/api/user';
+
+function getArtist(artist) {
+  if (artist.includes('&')) {
+    artist = artist.split('&');
+  } else if (artist.includes('、')) {
+    artist = artist.split('、');
+  } else if (artist.includes(',')) {
+    artist = artist.split(',');
+  } else if (artist.includes('/')) {
+    artist = artist.split('/');
+  }
+  return artist;
+}
+
+function getAlbum({ state, commit }, common) {
+  let matchAlbum = state.localMusic.albums.find(
+    a => a.rawName === common.album || a.name === common.album
+  );
+  if (matchAlbum) {
+    matchAlbum.show = true;
+    commit('updateAlbum', matchAlbum);
+  } else {
+    let id = state.localMusic.albumsIdCounter;
+    matchAlbum = {
+      id: id,
+      show: true,
+      name: common.album,
+      rawName: null,
+      picUrl:
+        'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+    };
+    state.localMusic.albumsIdCounter++;
+    commit('addAnAlbum', matchAlbum);
+  }
+  return matchAlbum;
+}
+
+function getArtists({ state, commit }, common) {
+  const allArtists = [];
+
+  let artists = common.artists[0];
+  artists = getArtist(artists);
+  if (typeof artists === 'string') {
+    artists = [artists];
+  }
+
+  for (const artist of artists) {
+    const foundArtist = state.localMusic.artists.find(a => a.name === artist);
+    if (foundArtist) {
+      foundArtist.show = true;
+      commit('updateArtist', foundArtist);
+      allArtists.push(foundArtist);
+    } else {
+      const ar = {
+        id: state.localMusic.artistsIdCounter,
+        name: artist,
+        show: true,
+        picUrl:
+          'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+      };
+      commit('addAnArtist', ar);
+      allArtists.push(ar);
+      state.localMusic.artistsIdCounter++;
+    }
+  }
+  return allArtists;
+}
+
+function getLocalSongs({ state, commit }, { metadata, filePath }) {
+  const { common } = metadata;
+  if (!common.title) return;
+
+  const album = getAlbum({ state, commit }, common);
+  const artists = getArtists({ state, commit }, common);
+  const foundSong = state.localMusic.songs.find(
+    obj => obj.name === common.title
+  );
+  if (foundSong) {
+    foundSong.show = true;
+    commit('updateAsong', foundSong);
+  } else {
+    const song = {
+      id: state.localMusic.songsIdCounter,
+      name: common.title,
+      ar: artists,
+      al: album,
+      dt: metadata.format.duration * 1000,
+      show: true,
+      filePath: filePath,
+      picUrl:
+        'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+    };
+    commit('addAMusic', song);
+    state.localMusic.songsIdCounter++;
+  }
+}
+
+// function updateAlbum({ state, commit }, common) {
+//   let artist = common.albumartist || common.artist;
+//   artist = getArtist(artist);
+//   artist = artist[0];
+//   const keyword = {
+//     keywords: `${common.title} ${artist}`,
+//     type: 10,
+//     limit: 16,
+//   };
+//   search(keyword).then(result => {
+//     let matchAlbum;
+//     matchAlbum =
+//       result.result.albums.find(obj => obj.containedSong === common.title) ||
+//       result.result.albums.find(obj => obj.artist.name === artist) ||
+//       result.result.albums[0];
+//     if (!matchAlbum) {
+//       let id = state.localMusic.albumsIdCounter;
+//       matchAlbum = {
+//         id: id,
+//         name: common.album,
+//         picUrl:
+//           'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+//       };
+//       state.localMusic.albumsIdCounter++;
+//     }
+//     matchAlbum.rawName = common.album;
+//     commit('addAnAlbum', matchAlbum);
+//     return matchAlbum;
+//   });
+// }
 
 export default {
   showToast({ state, commit }, text) {
@@ -31,6 +159,30 @@ export default {
         });
       }, 3200),
     });
+  },
+  loadLocalMusic({ state, commit }) {
+    const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
+    const folderPath = state.settings.localMusicFolderPath;
+    if (!folderPath) return;
+    commit('clearLocalMusic');
+    const fs = require('fs');
+    const path = require('path');
+    const mm = require('music-metadata');
+
+    const walk = async folder => {
+      const files = fs.readdirSync(folder);
+      files.forEach(async file => {
+        const filePath = path.join(folder, file);
+        const stats = fs.statSync(filePath);
+        if (stats.isFile() && musicFileExtensions.test(filePath)) {
+          const metadata = await mm.parseFile(filePath);
+          getLocalSongs({ state, commit }, { metadata, filePath });
+        } else if (stats.isDirectory()) {
+          walk(filePath);
+        }
+      });
+    };
+    walk(folderPath);
   },
   likeATrack({ state, commit, dispatch }, id) {
     if (!isAccountLoggedIn()) {

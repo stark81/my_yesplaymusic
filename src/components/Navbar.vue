@@ -25,6 +25,11 @@
           :class="{ active: $route.name === 'library' }"
           >{{ $t('nav.library') }}</router-link
         >
+        <router-link
+          to="/local-music"
+          :class="{ active: $route.name === 'localMusic' }"
+          >{{ $t('nav.localMusic') }}</router-link
+        >
       </div>
       <div class="right-part">
         <div class="search-box">

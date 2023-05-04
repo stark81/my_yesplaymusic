@@ -498,6 +498,20 @@
       </div>
 
       <h3>其他</h3>
+      <div class="item">
+        <div class="left">
+          <div class="title"
+            >本地歌曲扫描路径: {{ settings.localMusicFolderPath }}</div
+          >
+        </div>
+        <div class="right">
+          <button v-if="settings.localMusicFolderPath" @click="choseDir"
+            >更改</button
+          >
+          <button v-else @click="choseDir">选择</button>
+        </div>
+      </div>
+
       <div v-if="isElectron && !isMac" class="item">
         <div class="left">
           <div class="title"> {{ $t('settings.closeAppOption.text') }} </div>
@@ -799,6 +813,9 @@ export default {
   },
   computed: {
     ...mapState(['player', 'settings', 'data', 'lastfm']),
+    localPathChange() {
+      return this.settings.localMusicFolderPath;
+    },
     isElectron() {
       return process.env.IS_ELECTRON;
     },
@@ -992,6 +1009,9 @@ export default {
           value,
         });
       },
+    },
+    localMusicFolderPath() {
+      return this.settings.localMusicFolderPath;
     },
     showTray: {
       get() {
@@ -1271,6 +1291,11 @@ export default {
       return this.lastfm.key !== undefined;
     },
   },
+  watch: {
+    localPathChange() {
+      this.loadLocalMusic();
+    },
+  },
   created() {
     this.countDBSize('tracks');
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
@@ -1280,7 +1305,20 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions(['showToast']),
+    ...mapActions(['showToast', 'loadLocalMusic']),
+    async choseDir() {
+      const { dialog } = require('electron').remote;
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory'],
+      });
+      if (!result.canceled) {
+        const folderPath = result.filePaths[0];
+        this.$store.commit('updateSettings', {
+          key: 'localMusicFolderPath',
+          value: folderPath,
+        });
+      }
+    },
     getAllOutputDevices() {
       navigator.mediaDevices.enumerateDevices().then(devices => {
         this.allOutputDevices = devices.filter(device => {

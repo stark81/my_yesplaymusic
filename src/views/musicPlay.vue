@@ -279,6 +279,11 @@ export default {
       },
       set() {},
     },
+    isLocal: {
+      get() {
+        return this.player.isLocal();
+      },
+    },
     volume: {
       get() {
         return this.player.volume;
@@ -336,7 +341,7 @@ export default {
   },
   methods: {
     ...mapMutations(['toggleLyrics', 'updateModal']),
-    ...mapActions(['likeATrack']),
+    ...mapActions(['likeATrack', 'showToast']),
     initDate() {
       var _this = this;
       clearInterval(this.timer);

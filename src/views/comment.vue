@@ -97,7 +97,6 @@ export default {
   data() {
     return {
       reply2Name: '',
-      scrollTop: 0,
       sourceComments: {
         type: 0,
         isDelete: false,

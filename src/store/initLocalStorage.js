@@ -25,6 +25,7 @@ let localStorage = {
     showTray: true,
     showControl: true,
     showStatusBarLyric: true,
+    localMusicFolderPath: null,
     lyricsBackground: true,
     closeAppOption: 'ask',
     enableDiscordRichPresence: false,
@@ -45,6 +46,16 @@ let localStorage = {
     likedSongPlaylistID: 0,
     lastRefreshCookieDate: 0,
     loginMode: null,
+  },
+  localMusic: {
+    songsIdCounter: 1,
+    albumsIdCounter: 1,
+    artistsIdCounter: 1,
+    songs: [],
+    songsWithDetails: [], // 只有前12首
+    playlists: [],
+    albums: [],
+    artists: [],
   },
 };
 

@@ -71,6 +71,7 @@ export default class {
 
     // 播放信息
     this._list = []; // 播放列表
+    this._isLocal = false;
     this._current = 0; // 当前播放歌曲在播放列表里的index
     this._shuffledList = []; // 被随机打乱的播放列表，随机播放模式下会使用此播放列表
     this._shuffledCurrent = 0; // 当前播放歌曲在随机列表里面的index
@@ -328,7 +329,7 @@ export default class {
       src: [source],
       html5: true,
       preload: true,
-      format: ['mp3', 'flac'],
+      format: ['mp3', 'flac', 'alac', 'm4a', 'aac', 'wav'],
       onend: () => {
         this._nextTrackCallback();
       },
@@ -471,33 +472,65 @@ export default class {
     return this._getAudioSourceBlobURL(buffer);
   }
   _getAudioSource(track) {
-    return this._getAudioSourceFromCache(String(track.id))
-      .then(source => {
-        return source ?? this._getAudioSourceFromNetease(track);
-      })
-      .then(source => {
-        return source ?? this._getAudioSourceFromUnblockMusic(track);
+    if (this._isLocal) {
+      const getLocalMusic = track => {
+        return new Promise(resolve => {
+          const source = `file://${track.filePath}`;
+          resolve(source);
+        });
+      };
+      return getLocalMusic(track).then(source => {
+        return source;
       });
+    } else {
+      return this._getAudioSourceFromCache(String(track.id))
+        .then(source => {
+          return source ?? this._getAudioSourceFromNetease(track);
+        })
+        .then(source => {
+          return source ?? this._getAudioSourceFromUnblockMusic(track);
+        });
+    }
   }
   _replaceCurrentTrack(
     id,
     autoplay = true,
     ifUnplayableThen = UNPLAYABLE_CONDITION.PLAY_NEXT_TRACK
   ) {
-    if (autoplay && this._currentTrack.name) {
+    if (autoplay && this._currentTrack.name && !this._isLocal) {
       this._scrobble(this.currentTrack, this._howler?.seek());
     }
-    return getTrackDetail(id).then(data => {
-      const track = data.songs[0];
-      this._currentTrack = track;
-      this._updateMediaSessionMetaData(track);
-      return this._replaceCurrentTrackAudio(
-        track,
-        autoplay,
-        true,
-        ifUnplayableThen
-      );
-    });
+    if (this._isLocal) {
+      const getLocalMusic = id => {
+        return new Promise(resolve => {
+          const track = store.state.localMusic.songs.find(obj => obj.id === id);
+          resolve([track]);
+        });
+      };
+      return getLocalMusic(id).then(data => {
+        const track = data[0];
+        this._currentTrack = track;
+        this._updateMediaSessionMetaData(track);
+        return this._replaceCurrentTrackAudio(
+          track,
+          autoplay,
+          false,
+          ifUnplayableThen
+        );
+      });
+    } else {
+      return getTrackDetail(id).then(data => {
+        const track = data.songs[0];
+        this._currentTrack = track;
+        this._updateMediaSessionMetaData(track);
+        return this._replaceCurrentTrackAudio(
+          track,
+          autoplay,
+          true,
+          ifUnplayableThen
+        );
+      });
+    }
   }
   /**
    * @returns 是否成功加载音频，并使用加载完成的音频替换了howler实例
@@ -631,7 +664,9 @@ export default class {
     }
   }
   _nextTrackCallback() {
-    this._scrobble(this._currentTrack, 0, true);
+    if (!this._isLocal) {
+      this._scrobble(this._currentTrack, 0, true);
+    }
     if (!this.isPersonalFM && this.repeatMode === 'one') {
       this._replaceCurrentTrack(this.currentTrackID);
     } else {
@@ -841,6 +876,7 @@ export default class {
   ) {
     this._isPersonalFM = false;
     if (!this._enabled) this._enabled = true;
+    this._isLocal = playlistSourceType === 'localMusic' ? true : false;
     this.list = trackIDs;
     this.current = 0;
     this._playlistSource = {
@@ -902,12 +938,16 @@ export default class {
   }
   playPersonalFM() {
     this._isPersonalFM = true;
+    this._isLocal = false;
     if (!this._enabled) this._enabled = true;
     if (this.currentTrackID !== this._personalFMTrack.id) {
       this._replaceCurrentTrack(this._personalFMTrack.id, true);
     } else {
       this.playOrPause();
     }
+  }
+  isLocal() {
+    return this._isLocal;
   }
   async moveToFMTrash() {
     this._isPersonalFM = true;
