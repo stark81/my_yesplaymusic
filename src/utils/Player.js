@@ -183,6 +183,9 @@ export default class {
   get playNextList() {
     return this._playNextList;
   }
+  get isLocal() {
+    return this._isLocal;
+  }
   get isPersonalFM() {
     return this._isPersonalFM;
   }
@@ -472,7 +475,7 @@ export default class {
     return this._getAudioSourceBlobURL(buffer);
   }
   _getAudioSource(track) {
-    if (this._isLocal) {
+    if (track.isLocal) {
       const getLocalMusic = track => {
         return new Promise(resolve => {
           const source = `file://${track.filePath}`;
@@ -500,15 +503,19 @@ export default class {
     if (autoplay && this._currentTrack.name && !this._isLocal) {
       this._scrobble(this.currentTrack, this._howler?.seek());
     }
-    if (this._isLocal) {
-      const getLocalMusic = id => {
-        return new Promise(resolve => {
-          const track = store.state.localMusic.songs.find(obj => obj.id === id);
-          resolve([track]);
-        });
-      };
-      return getLocalMusic(id).then(data => {
-        const track = data[0];
+    const getLocalMusic = id => {
+      return new Promise(resolve => {
+        const track = store.state.localMusic.songs.find(obj => obj.id === id);
+        const data = { songs: [track] };
+        resolve(data);
+      });
+    };
+    return getLocalMusic(id)
+      .then(data => {
+        return data.songs[0] ? data : getTrackDetail(id);
+      })
+      .then(data => {
+        const track = data.songs[0];
         this._currentTrack = track;
         this._updateMediaSessionMetaData(track);
         return this._replaceCurrentTrackAudio(
@@ -518,19 +525,6 @@ export default class {
           ifUnplayableThen
         );
       });
-    } else {
-      return getTrackDetail(id).then(data => {
-        const track = data.songs[0];
-        this._currentTrack = track;
-        this._updateMediaSessionMetaData(track);
-        return this._replaceCurrentTrackAudio(
-          track,
-          autoplay,
-          true,
-          ifUnplayableThen
-        );
-      });
-    }
   }
   /**
    * @returns 是否成功加载音频，并使用加载完成的音频替换了howler实例
@@ -877,6 +871,7 @@ export default class {
     this._isPersonalFM = false;
     if (!this._enabled) this._enabled = true;
     this._isLocal = playlistSourceType === 'localMusic' ? true : false;
+    playlistSourceType = this._isLocal ? 'artist' : playlistSourceType;
     this.list = trackIDs;
     this.current = 0;
     this._playlistSource = {
@@ -945,9 +940,6 @@ export default class {
     } else {
       this.playOrPause();
     }
-  }
-  isLocal() {
-    return this._isLocal;
   }
   async moveToFMTrash() {
     this._isPersonalFM = true;

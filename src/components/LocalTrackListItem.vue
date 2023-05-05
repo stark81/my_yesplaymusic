@@ -36,12 +36,12 @@
           <span v-if="isSubTitle" :title="subTitle" class="sub-title">
             ({{ subTitle }})
           </span>
-          <!-- <span v-if="isAlbum" class="featured">
+          <span v-if="isAlbum" class="featured">
             <ArtistsInLine
               :artists="track.ar"
               :exclude="$parent.albumObject.artist.name"
               prefix="-"
-          /></span> -->
+          /></span>
           <span v-if="isAlbum && track.mark === 1318912" class="explicit-symbol"
             ><ExplicitSymbol
           /></span>
@@ -52,7 +52,7 @@
             class="explicit-symbol before-artist"
             ><ExplicitSymbol :size="15"
           /></span>
-          <!-- <ArtistsInLine :artists="artists" /> -->
+          <ArtistsInLine :artists="artists" />
         </div>
       </div>
       <div></div>
@@ -65,7 +65,7 @@
       <div></div>
     </div>
 
-    <!-- <div v-if="showLikeButton" class="actions">
+    <div v-if="showLikeButton" class="actions">
       <button @click="likeThisSong">
         <svg-icon
           icon-class="heart"
@@ -75,7 +75,7 @@
         ></svg-icon>
         <svg-icon v-show="isLiked" icon-class="heart-solid"></svg-icon>
       </button>
-    </div> -->
+    </div>
     <div v-if="showTrackTime" class="time">
       {{ track.dt | formatTime }}
     </div>
@@ -85,14 +85,14 @@
 </template>
 
 <script>
-// import ArtistsInLine from '@/components/ArtistsInLine.vue';
+import ArtistsInLine from '@/components/ArtistsInLine.vue';
 import ExplicitSymbol from '@/components/ExplicitSymbol.vue';
 import { mapState } from 'vuex';
 import { isNil } from 'lodash';
 
 export default {
   name: 'LocalTrackListItem',
-  components: { ExplicitSymbol },
+  components: { ExplicitSymbol, ArtistsInLine },
 
   props: {
     trackProp: Object,
@@ -113,6 +113,7 @@ export default {
       return this.trackProp;
     },
     playable() {
+      console.log('playable', this.track);
       return this.track?.privilege?.pl > 0 || this.track?.playable;
     },
     imgUrl() {
@@ -211,6 +212,7 @@ export default {
       // this.$router.push({ path: '/album/' + this.track.al.id });
     },
     playTrack() {
+      console.log('Localitem.vue playTrack: ', this.track.id);
       this.$parent.playThisList(this.track.id);
     },
     likeThisSong() {

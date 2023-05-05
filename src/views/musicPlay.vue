@@ -279,11 +279,6 @@ export default {
       },
       set() {},
     },
-    isLocal: {
-      get() {
-        return this.player.isLocal();
-      },
-    },
     volume: {
       get() {
         return this.player.volume;

@@ -37,9 +37,9 @@ export default {
     }
   },
   updateAlbum(state, value) {
-    const index = state.localMusic.albums.findIndex(obj => obj.id === value.id);
+    const index = state.localMusic.albums.findIndex(obj => obj.id === value.ID);
     if (index !== -1) {
-      state.localMusic.albums.splice(index, 1, value);
+      state.localMusic.albums.splice(index, 1, value.value);
     }
   },
   updateAsong(state, value) {
@@ -47,6 +47,9 @@ export default {
     if (index !== -1) {
       state.localMusic.songs.splice(index, 1, value);
     }
+  },
+  changeFilter(state, value) {
+    state.localMusic.sortBy = value;
   },
   addAMusic(state, value) {
     state.localMusic.songs.push(value);

@@ -41,7 +41,7 @@ export default {
   },
   localMusic: {
     sLocalMusic: '的本地音乐',
-    playlist: '本地歌单',
+    playlist: '离线歌单',
     albums: '专辑',
     artists: '艺人',
     changeScanningPath: '更改扫描路径',
@@ -237,6 +237,7 @@ export default {
     minePlaylists: '创建的歌单',
     likedPlaylists: '收藏的歌单',
     localMusic: '本地歌曲',
+    defaultSort: '默认排序',
     sortByName: '按名称排列',
     ascendSort: '按时间升序排列',
     descendSort: '按时间降序排列',

@@ -23,11 +23,7 @@
             :class="{ active: currentTab === 'localSongs' }"
             @click="updateCurrentTab('localSongs')"
           >
-            <span class="text">{{
-              {
-                all: $t('contextMenu.localMusic'),
-              }[playlistFilter]
-            }}</span>
+            <span class="text">{{ $t('contextMenu.localMusic') }}</span>
             <span class="icon" @click.stop="openPlaylistTabMenu"
               ><svg-icon icon-class="dropdown"
             /></span>
@@ -64,8 +60,8 @@
 
       <div v-show="currentTab === 'localSongs'">
         <div v-if="localMusic.songs.length > 1">
-          <LocalTrackList
-            :tracks="localMusic.songs"
+          <TrackList
+            :tracks="filterLocalTracks"
             :column-number="1"
             type="localtracks"
           />
@@ -102,14 +98,17 @@
     </div>
 
     <ContextMenu ref="playlistTabMenu">
-      <div class="item" @click="changePlaylistFilter('descend')">{{
+      <div class="item" @click="changeFilter('default')">{{
+        $t('contextMenu.defaultSort')
+      }}</div>
+      <div class="item" @click="changeFilter('byname')">{{
+        $t('contextMenu.sortByName')
+      }}</div>
+      <div class="item" @click="changeFilter('descend')">{{
         $t('contextMenu.descendSort')
       }}</div>
-      <div class="item" @click="changePlaylistFilter('ascend')">{{
+      <div class="item" @click="changeFilter('ascend')">{{
         $t('contextMenu.ascendSort')
-      }}</div>
-      <div class="item" @click="changePlaylistFilter('byname')">{{
-        $t('contextMenu.sortByName')
       }}</div>
     </ContextMenu>
 
@@ -127,7 +126,7 @@ import { mapState, mapMutations } from 'vuex';
 // import locale from '@/locale';
 // import { getLyric } from '@/api/track';
 // import NProgress from 'nprogress';
-import LocalTrackList from '@/components/LocalTrackList.vue';
+import TrackList from '@/components/TrackList.vue';
 
 import ContextMenu from '@/components/ContextMenu.vue';
 import CoverRow from '@/components/CoverRow.vue';
@@ -135,35 +134,34 @@ import SvgIcon from '@/components/SvgIcon.vue';
 
 export default {
   name: 'LocalMusic',
-  components: { SvgIcon, CoverRow, ContextMenu, LocalTrackList },
+  components: { SvgIcon, CoverRow, ContextMenu, TrackList },
   data() {
     return {
       show: true,
       likedSongs: [],
-      lyric: undefined,
+      sortedTracks: [],
+      lyric: [],
       currentTab: 'localSongs',
-      playHistoryMode: 'week',
     };
   },
   computed: {
     ...mapState(['data', 'localMusic', 'settings']),
-    playlistFilter() {
-      return this.data.libraryPlaylistFilter || 'all';
+    sortBy() {
+      return this.localMusic.sortBy;
     },
-    filterPlaylists() {
-      const playlists = this.localMusic.songs;
-      const userId = this.data.user.userId;
-      if (this.playlistFilter === 'mine') {
-        return playlists.filter(p => p.creator.userId === userId);
-      } else if (this.playlistFilter === 'liked') {
-        return playlists.filter(p => p.creator.userId !== userId);
+    filterLocalTracks() {
+      let type = this.sortBy;
+      if (!type) {
+        type = 'default';
+        this.changeFilter(type);
       }
-      return playlists;
+      const tracks = this.changeLocalTrackFilter(type);
+      return tracks;
     },
   },
   created() {},
   methods: {
-    ...mapMutations(['updateData']),
+    ...mapMutations(['updateData', 'changeFilter']),
     updateCurrentTab(tab) {
       this.currentTab = tab;
       this.$parent.$refs.main.scrollTo({ top: 375, behavior: 'smooth' });
@@ -181,9 +179,30 @@ export default {
     openPlayModeTabMenu(e) {
       this.$refs.playModeTabMenu.openMenu(e);
     },
-    changePlaylistFilter(type) {
-      console.log('type = ', type);
-      // this.updateData({ key: 'libraryPlaylistFilter', value: type });
+    changeLocalTrackFilter(type) {
+      const tracks = this.localMusic.songs;
+      if (type === 'default') {
+        return tracks.sort((a, b) => a.id - b.id);
+      } else if (type === 'byname') {
+        const newTracks = tracks.sort((a, b) => {
+          return a['name'].localeCompare(b['name'], 'zh-CN', { numeric: true });
+        });
+        return newTracks;
+      } else if (type === 'descend') {
+        const trackList = tracks.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return timeB - timeA;
+        });
+        return trackList;
+      } else if (type === 'ascend') {
+        const trackList = tracks.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return timeA - timeB;
+        });
+        return trackList;
+      }
       window.scrollTo({ top: 375, behavior: 'smooth' });
     },
   },

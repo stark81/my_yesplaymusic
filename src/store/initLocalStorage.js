@@ -56,6 +56,7 @@ let localStorage = {
     playlists: [],
     albums: [],
     artists: [],
+    sortBy: null,
   },
 };
 

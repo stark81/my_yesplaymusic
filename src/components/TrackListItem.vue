@@ -76,6 +76,9 @@
         <svg-icon v-show="isLiked" icon-class="heart-solid"></svg-icon>
       </button>
     </div>
+    <div v-if="showCreateTime" class="createTime">
+      {{ track.createTime }}
+    </div>
     <div v-if="showTrackTime" class="time">
       {{ track.dt | formatTime }}
     </div>
@@ -195,7 +198,11 @@ export default {
         : true;
     },
     showLikeButton() {
-      return this.type !== 'tracklist' && this.type !== 'cloudDisk';
+      return (
+        this.type !== 'tracklist' &&
+        this.type !== 'cloudDisk' &&
+        this.track.isLocal !== true
+      );
     },
     showOrderNumber() {
       return this.type === 'album';
@@ -205,6 +212,9 @@ export default {
     },
     showTrackTime() {
       return this.type !== 'tracklist';
+    },
+    showCreateTime() {
+      return this.track.isLocal;
     },
   },
 
@@ -355,6 +365,15 @@ button {
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
+  .createTime {
+    flex: 1;
+    font-size: 16px;
+    justify-content: flex-end;
+    margin-right: 10px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.88;
+    color: var(--color-text);
+  }
   .time,
   .count {
     font-size: 16px;
@@ -386,6 +405,7 @@ button {
   .title,
   .artist,
   .album,
+  .createTime,
   .time,
   .no,
   .featured {
@@ -427,6 +447,7 @@ button {
   color: var(--color-primary);
   .title,
   .album,
+  .createTime,
   .time,
   .title-and-artist .sub-title {
     color: var(--color-primary);

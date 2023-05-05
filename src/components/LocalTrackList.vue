@@ -178,9 +178,7 @@ export default {
         id: 0,
         name: '',
         ar: [{ name: '' }],
-        al: {
-          picUrl: '',
-        },
+        al: { picUrl: '' },
       };
       this.rightClickedTrackIndex = -1;
     },

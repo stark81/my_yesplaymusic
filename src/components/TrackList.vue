@@ -24,14 +24,22 @@
       >
       <hr v-show="type !== 'cloudDisk'" />
       <div
-        v-show="!isRightClickedTrackLiked && type !== 'cloudDisk'"
+        v-show="
+          !isRightClickedTrackLiked &&
+          type !== 'cloudDisk' &&
+          rightClickedTrack.isLocal !== true
+        "
         class="item"
         @click="like"
       >
         {{ $t('contextMenu.saveToMyLikedSongs') }}
       </div>
       <div
-        v-show="isRightClickedTrackLiked && type !== 'cloudDisk'"
+        v-show="
+          isRightClickedTrackLiked &&
+          type !== 'cloudDisk' &&
+          rightClickedTrack.isLocal !== true
+        "
         class="item"
         @click="like"
       >
@@ -44,14 +52,17 @@
         >从歌单中删除</div
       >
       <div
-        v-show="type !== 'cloudDisk'"
+        v-show="type !== 'cloudDisk' && rightClickedTrack.isLocal !== true"
         class="item"
         @click="addTrackToPlaylist"
         >{{ $t('contextMenu.addToPlaylist') }}</div
       >
-      <div v-show="type !== 'cloudDisk'" class="item" @click="copyLink">{{
-        $t('contextMenu.copyUrl')
-      }}</div>
+      <div
+        v-show="type !== 'cloudDisk' && rightClickedTrack.isLocal !== true"
+        class="item"
+        @click="copyLink"
+        >{{ $t('contextMenu.copyUrl') }}</div
+      >
       <div
         v-if="extraContextMenuItem.includes('removeTrackFromCloudDisk')"
         class="item"
@@ -224,6 +235,9 @@ export default {
       } else if (this.type === 'tracklist') {
         let trackIDs = this.tracks.map(t => t.id);
         this.player.replacePlaylist(trackIDs, this.id, 'artist', trackID);
+      } else if (this.type === 'localtracks') {
+        let trackIDs = this.tracks.filter(t => t.show === true).map(t => t.id);
+        this.player.replacePlaylist(trackIDs, this.id, 'localMusic', trackID);
       }
     },
     play() {

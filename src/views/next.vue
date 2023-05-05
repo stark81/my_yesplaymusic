@@ -33,6 +33,7 @@
 import { mapState, mapActions } from 'vuex';
 import { getTrackDetail } from '@/api/track';
 import TrackList from '@/components/TrackList.vue';
+import state from '@/store/state';
 
 export default {
   name: 'Next',
@@ -99,12 +100,24 @@ export default {
       let loadedTrackIDs = this.tracks.map(t => t.id);
 
       if (trackIDs.length > 0) {
-        getTrackDetail(trackIDs.join(',')).then(data => {
-          let newTracks = data.songs.filter(
-            t => !loadedTrackIDs.includes(t.id)
-          );
-          this.tracks.push(...newTracks);
-        });
+        const matchTracks = state.localMusic.songs.filter(obj =>
+          trackIDs.includes(obj.id)
+        );
+        this.tracks.push(...matchTracks);
+        this.tracks = [...new Set(this.tracks)];
+
+        const filterIDs = trackIDs.filter(
+          a => !matchTracks.some(b => b.id === a)
+        );
+        if (filterIDs.length !== 0) {
+          getTrackDetail(filterIDs.join(',')).then(data => {
+            let newTracks = data.songs.filter(
+              t => !loadedTrackIDs.includes(t.id)
+            );
+            this.tracks.push(...newTracks);
+            this.tracks = [...new Set(this.tracks)];
+          });
+        }
       }
     },
   },
