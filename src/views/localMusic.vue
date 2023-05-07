@@ -59,7 +59,7 @@
       </div>
 
       <div v-show="currentTab === 'localSongs'">
-        <div v-if="localMusic.songs.length > 1">
+        <div v-if="localMusic.tracks.length > 1">
           <TrackList
             :tracks="filterLocalTracks"
             :column-number="1"
@@ -122,12 +122,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex';
-// import { isAccountLoggedIn } from '@/utils/auth';
-// import locale from '@/locale';
-// import { getLyric } from '@/api/track';
-// import NProgress from 'nprogress';
 import TrackList from '@/components/TrackList.vue';
-
 import ContextMenu from '@/components/ContextMenu.vue';
 import CoverRow from '@/components/CoverRow.vue';
 import SvgIcon from '@/components/SvgIcon.vue';
@@ -159,7 +154,6 @@ export default {
       return tracks;
     },
   },
-  created() {},
   methods: {
     ...mapMutations(['updateData', 'changeFilter']),
     updateCurrentTab(tab) {
@@ -180,7 +174,24 @@ export default {
       this.$refs.playModeTabMenu.openMenu(e);
     },
     changeLocalTrackFilter(type) {
-      const tracks = this.localMusic.songs;
+      const tracks = this.localMusic.tracks;
+      if (
+        tracks.every(item => !Object.prototype.hasOwnProperty.call(item, 'al'))
+      ) {
+        const songs = this.localMusic.songs;
+        const albums = this.localMusic.albums;
+        const artists = this.localMusic.artists;
+        for (const song of songs) {
+          const track = tracks.find(t => t.id === song.trackID);
+          const album = albums.find(a => a.id === song.albumID);
+          const songArtists = artists.filter(a =>
+            song.artistIDs.includes(a.id)
+          );
+          track.al = album;
+          track.ar = songArtists;
+        }
+      }
+      // const result = [];
       if (type === 'default') {
         return tracks.sort((a, b) => a.id - b.id);
       } else if (type === 'byname') {

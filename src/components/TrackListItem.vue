@@ -65,19 +65,22 @@
       <div></div>
     </div>
 
+    <div v-if="showTrackTime" class="createTime">
+      {{ track.createTime || getPublishTime(track) }}
+    </div>
     <div v-if="showLikeButton" class="actions">
       <button @click="likeThisSong">
         <svg-icon
           icon-class="heart"
           :style="{
-            visibility: focus && !isLiked ? 'visible' : 'hidden',
+            visibility:
+              focus && !isLiked && !(track.isLocal || false)
+                ? 'visible'
+                : 'hidden',
           }"
         ></svg-icon>
         <svg-icon v-show="isLiked" icon-class="heart-solid"></svg-icon>
       </button>
-    </div>
-    <div v-if="showCreateTime" class="createTime">
-      {{ track.createTime }}
     </div>
     <div v-if="showTrackTime" class="time">
       {{ track.dt | formatTime }}
@@ -111,7 +114,7 @@ export default {
   },
 
   computed: {
-    ...mapState(['settings']),
+    ...mapState(['settings', 'player']),
     track() {
       return this.type === 'cloudDisk'
         ? this.trackProp.simpleSong
@@ -198,11 +201,7 @@ export default {
         : true;
     },
     showLikeButton() {
-      return (
-        this.type !== 'tracklist' &&
-        this.type !== 'cloudDisk' &&
-        this.track.isLocal !== true
-      );
+      return this.type !== 'tracklist' && this.type !== 'cloudDisk';
     },
     showOrderNumber() {
       return this.type === 'album';
@@ -214,7 +213,7 @@ export default {
       return this.type !== 'tracklist';
     },
     showCreateTime() {
-      return this.track.isLocal;
+      return this.player.isLocal;
     },
   },
 
@@ -228,6 +227,13 @@ export default {
     },
     likeThisSong() {
       this.$parent.likeATrack(this.track.id);
+    },
+    getPublishTime(track) {
+      const date = new Date(track.publishTime);
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return track.publishTime === 0 ? null : `${year}-${month}-${day}`;
     },
   },
 };
@@ -359,6 +365,7 @@ button {
     display: flex;
     font-size: 16px;
     opacity: 0.88;
+    padding: 0 30px;
     color: var(--color-text);
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -366,7 +373,7 @@ button {
     overflow: hidden;
   }
   .createTime {
-    flex: 1;
+    flex: 0.8;
     font-size: 16px;
     justify-content: flex-end;
     margin-right: 10px;

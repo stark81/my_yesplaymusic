@@ -505,7 +505,7 @@ export default class {
     }
     const getLocalMusic = id => {
       return new Promise(resolve => {
-        const track = store.state.localMusic.songs.find(obj => obj.id === id);
+        const track = store.state.localMusic.tracks.find(obj => obj.id === id);
         const data = { songs: [track] };
         resolve(data);
       });
@@ -878,6 +878,7 @@ export default class {
       type: playlistSourceType,
       id: playlistSourceID,
     };
+    console.log('this._isLocal = ', this._isLocal);
     if (this.shuffle) this._shuffleTheList(autoPlayTrackID);
     if (autoPlayTrackID === 'first') {
       this._replaceCurrentTrack(this.list[0]);

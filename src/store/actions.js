@@ -1,9 +1,8 @@
-// import store, { state, dispatch, commit } from "@/store";
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import { likeATrack } from '@/api/track';
 import { getPlaylistDetail } from '@/api/playlist';
 import { getTrackDetail } from '@/api/track';
-import { search } from '@/api/others';
+// import { search } from '@/api/others';
 import {
   userPlaylist,
   userPlayHistory,
@@ -14,6 +13,9 @@ import {
   cloudDisk,
   userAccount,
 } from '@/api/user';
+const fs = require('fs');
+const path = require('path');
+const mm = require('music-metadata');
 
 function getArtist(artist) {
   if (artist.includes('&')) {
@@ -28,39 +30,35 @@ function getArtist(artist) {
   return artist;
 }
 
-function getAlbum({ state, commit }, common) {
-  let matchAlbum = state.localMusic.albums.find(
-    a => a.rawName === common.album || a.name === common.album
-  );
-  if (matchAlbum) {
-    matchAlbum.show = true;
-    commit('updateAlbum', { ID: matchAlbum.id, value: matchAlbum });
+async function getAlbum({ state, commit }, filePath) {
+  const metadata = await mm.parseFile(filePath);
+  const { common } = metadata;
+
+  let album = state.localMusic.albums.find(a => a.name === common.album);
+  if (album) {
+    album.show = true;
+    commit('updateAlbum', album);
   } else {
-    let id = state.localMusic.albumsIdCounter;
-    let artist = common.albumartist || common.artist;
-    artist = getArtist(artist);
-    artist = artist[0];
-    matchAlbum = {
-      id: id,
-      rawID: null,
-      matched: false,
-      arForSearch: artist,
-      song: common.title,
+    album = {
+      id: state.localMusic.albumsIdCounter,
       show: true,
+      isLocal: true,
       name: common.album,
-      rawName: null,
+      onlineAlbum: null,
       picUrl:
         'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
     };
     state.localMusic.albumsIdCounter++;
-    commit('addAnAlbum', matchAlbum);
+    commit('addAnAlbum', album);
   }
-  return matchAlbum;
+  return album.id;
 }
 
-function getArtists({ state, commit }, common) {
-  const allArtists = [];
+async function getArtists({ state, commit }, filePath) {
+  const artistIDs = [];
 
+  const metadata = await mm.parseFile(filePath);
+  const { common } = metadata;
   let artists = common.artists[0];
   artists = getArtist(artists);
   if (typeof artists === 'string') {
@@ -72,55 +70,180 @@ function getArtists({ state, commit }, common) {
     if (foundArtist) {
       foundArtist.show = true;
       commit('updateArtist', foundArtist);
-      allArtists.push(foundArtist);
+      artistIDs.push(foundArtist.id);
     } else {
       const ar = {
         id: state.localMusic.artistsIdCounter,
-        onlineID: null,
         name: artist,
         show: true,
+        isLocal: true,
+        onlineArtist: null,
         picUrl:
           'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
       };
       commit('addAnArtist', ar);
-      allArtists.push(ar);
+      artistIDs.push(ar.id);
       state.localMusic.artistsIdCounter++;
     }
   }
-  return allArtists;
+  return artistIDs;
 }
 
-function getLocalSongs({ state, commit }, { metadata, filePath, formatDate }) {
+async function getTrack({ state, commit }, filePath) {
+  const stats = fs.statSync(filePath);
+  const birthDate = stats.ctime.toLocaleDateString();
+  const formatDate = new Date(birthDate).toISOString().slice(0, 10);
+  const metadata = await mm.parseFile(filePath);
+
   const { common } = metadata;
   if (!common.title) return;
 
-  const album = getAlbum({ state, commit }, common);
-  const artists = getArtists({ state, commit }, common);
-  const foundSong = state.localMusic.songs.find(
-    obj => obj.name === common.title
+  let foundSong = state.localMusic.tracks.find(
+    obj => obj.filePath === filePath
   );
   if (foundSong) {
     foundSong.show = true;
-    commit('updateAsong', foundSong);
+    commit('updateATrack', foundSong);
   } else {
-    const song = {
-      id: state.localMusic.songsIdCounter,
-      onlineID: null,
-      name: common.title,
+    foundSong = {
+      id: state.localMusic.trackIdCounter,
       createTime: formatDate,
-      isLocal: true,
-      ar: artists,
-      al: album,
+      name: common.title,
       dt: metadata.format.duration * 1000,
+      isLocal: true,
       show: true,
       filePath: filePath,
+      onlineTrack: null,
       picUrl:
         'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
     };
-    commit('addAMusic', song);
-    state.localMusic.songsIdCounter++;
+    commit('addATrack', foundSong);
+    state.localMusic.trackIdCounter++;
   }
+  return foundSong.id;
 }
+
+// updateAlbum({ state, commit }, albumID) {
+//   const matchAl = state.localMusic.albums.find(al => al.id === albumID);
+//   if (matchAl.matched) return;
+//   const keyword = {
+//     keywords: `${matchAl.song} ${matchAl.arForSearch}`,
+//     type: 10,
+//     limit: 16,
+//   };
+//   search(keyword).then(result => {
+//     let matchAlbum;
+//     matchAlbum =
+//       result.result.albums.find(obj => obj.containedSong === matchAl.song) ||
+//       result.result.albums.find(obj => obj.artist.name === matchAl.artist) ||
+//       result.result.albums[0];
+//     matchAlbum.rawName = matchAl.name;
+//     matchAlbum.rawID = matchAl.id;
+//     matchAlbum.matched = true;
+//     matchAlbum.show = matchAl.show;
+//     commit('updateAlbum', { ID: albumID, value: matchAlbum });
+//   });
+// }
+
+// 字段有变化，需要更改搜索逻辑
+// async function updateAlbum({ state, commit }, track) {
+//   const matchAl = state.localMusic.albums.find(
+//     al => al.id === track.al.id || al.rawID === track.al.id
+//   );
+//   if (matchAl.matched) {
+//     track.al = matchAl;
+//     return { code: 200 };
+//   }
+//   console.log('updateAlbum online');
+//   const keyword = {
+//     keywords: `${matchAl.song} ${matchAl.arForSearch}`,
+//     type: 10,
+//     limit: 16,
+//   };
+//   let result = await search(keyword).then(result1 => {
+//     return result1;
+//   });
+//   if (result.code !== 200) {
+//     return { code: result.code };
+//   }
+//   if (result.result.albumCount === 0) {
+//     const keyword = {
+//       keywords: `${matchAl.song}`,
+//       type: 10,
+//       limit: 5,
+//     };
+//     result = await search(keyword).then(result2 => {
+//       return result2;
+//     });
+//   }
+//   const matchAlbum =
+//     result.result.albums.find(obj => obj.containedSong === matchAl.song) ||
+//     result.result.albums.find(obj => obj.artist.name === matchAl.artist) ||
+//     result.result.albums[0];
+//   if (matchAlbum) {
+//     matchAlbum.rawName = matchAl.name;
+//     matchAlbum.rawID = matchAl.id;
+//     matchAlbum.matched = true;
+//     matchAlbum.show = matchAl.show;
+//     commit('updateAlbum', { ID: matchAl.id, value: matchAlbum });
+//     return { code: 200 };
+//   }
+// }
+
+// 字段有变化，需要更改搜索逻辑
+// async function updateArtists({ state, commit }, track) {
+//   const arList = [];
+//   for (const artist of track.ar) {
+//     const matchAr = state.localMusic.artists.find(
+//       obj => obj.name === artist.name
+//     );
+//     if (matchAr.matched) {
+//       arList.push(matchAr);
+//       return { code: 200 };
+//     }
+//     console.log('updateArtists online');
+//     const keyword = {
+//       keywords: matchAr.name,
+//       type: 100,
+//       limit: 16,
+//     };
+//     await search(keyword).then(result1 => {
+//       if (result1.code !== 200) {
+//         return { code: result1.code };
+//       }
+//       const matchAr = result1.result.artists.find(
+//         obj => obj.name === artist.name
+//       );
+//       matchAr.rawID = artist.id;
+//       matchAr.matched = true;
+//       matchAr.show = artist.show;
+//       commit('updateArtist', { ID: artist.id, value: matchAr });
+//       arList.push(matchAr);
+//     });
+//   }
+//   track.ar = arList;
+//   return { code: 200 };
+// }
+
+// async function updateTrack({ state }, track) {
+//   const matchTrack = state.localMusic.songs.find(
+//     a => a.id === track.id || a.rawID === track.id
+//   );
+//   if (matchTrack.matched) {
+//     return { code: 200 };
+//   }
+//   // const keyword = {
+//   //   keywords: `${matchTrack.name} ${matchTrack.arForSearch}`,
+//   //   type: 1,
+//   //   limit: 16,
+//   // };
+//   // console.log(keyword);
+//   // const result = await search(keyword).then(result => {
+//   //   return result;
+//   // });
+//   // console.log('result =', result);
+//   // console.log('track.duration = ', track.dt);
+// }
 
 export default {
   showToast({ state, commit }, text) {
@@ -145,9 +268,6 @@ export default {
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
     commit('clearLocalMusic');
-    const fs = require('fs');
-    const path = require('path');
-    const mm = require('music-metadata');
 
     const walk = async folder => {
       const files = fs.readdirSync(folder);
@@ -155,37 +275,27 @@ export default {
         const filePath = path.join(folder, file);
         const stats = fs.statSync(filePath);
         if (stats.isFile() && musicFileExtensions.test(filePath)) {
-          const birthDate = stats.ctime.toLocaleDateString();
-          const formatDate = new Date(birthDate).toISOString().slice(0, 10);
-          const metadata = await mm.parseFile(filePath);
-          getLocalSongs({ state, commit }, { metadata, filePath, formatDate });
+          const hasFilePath = state.localMusic.tracks.some(
+            track => track.filePath === filePath
+          );
+          const trackID = await getTrack({ state, commit }, filePath);
+          const albumID = await getAlbum({ state, commit }, filePath);
+          const artistIDs = await getArtists({ state, commit }, filePath);
+          if (!hasFilePath) {
+            const song = {
+              id: trackID,
+              trackID: trackID,
+              albumID: albumID,
+              artistIDs: artistIDs,
+            };
+            commit('addSong', song);
+          }
         } else if (stats.isDirectory()) {
           walk(filePath);
         }
       });
     };
     walk(folderPath);
-  },
-  updateAlbum({ state, commit }, albumID) {
-    const matchAl = state.localMusic.albums.find(al => al.id === albumID);
-    if (matchAl.matched) return;
-    const keyword = {
-      keywords: `${matchAl.song} ${matchAl.arForSearch}`,
-      type: 10,
-      limit: 16,
-    };
-    search(keyword).then(result => {
-      let matchAlbum;
-      matchAlbum =
-        result.result.albums.find(obj => obj.containedSong === matchAl.song) ||
-        result.result.albums.find(obj => obj.artist.name === matchAl.artist) ||
-        result.result.albums[0];
-      matchAlbum.rawName = matchAl.name;
-      matchAlbum.rawID = matchAl.id;
-      matchAlbum.matched = true;
-      matchAlbum.show = matchAl.show;
-      commit('updateAlbum', { ID: albumID, value: matchAlbum });
-    });
   },
   likeATrack({ state, commit, dispatch }, id) {
     if (!isAccountLoggedIn()) {

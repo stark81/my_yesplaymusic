@@ -48,12 +48,13 @@ let localStorage = {
     loginMode: null,
   },
   localMusic: {
-    songsIdCounter: 1,
+    trackIdCounter: 1,
     albumsIdCounter: 1,
     artistsIdCounter: 1,
     songs: [],
     songsWithDetails: [], // 只有前12首
     playlists: [],
+    tracks: [],
     albums: [],
     artists: [],
     sortBy: null,

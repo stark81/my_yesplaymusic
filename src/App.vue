@@ -34,7 +34,7 @@ import Toast from './components/Toast.vue';
 import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import MusicPlay from './views/musicPlay.vue';
-import { mapState } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 
 export default {
   name: 'App',
@@ -80,8 +80,12 @@ export default {
     if (this.isElectron) ipcRenderer(this);
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
+    this.loadLocalMusic();
+    // this.updateInfo4LocalMusic();
   },
   methods: {
+    // ...mapActions(['updateInfo4LocalMusic']),
+    ...mapActions(['loadLocalMusic']),
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;

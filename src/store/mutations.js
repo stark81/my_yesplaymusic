@@ -5,14 +5,13 @@ export default {
   updateLikedXXX(state, { name, data }) {
     state.liked[name] = data;
     if (name === 'songs') {
-      console.log('mutations.js updateLikedXXX');
       state.player.sendSelfToIpcMain();
     }
   },
   clearLocalMusic(state) {
-    const songs = state.localMusic.songs;
-    const newSongs = songs.map(obj => ({ ...obj, show: false }));
-    state.localMusic.songs = newSongs;
+    const tracks = state.localMusic.tracks;
+    const newTracks = tracks.map(obj => ({ ...obj, show: false }));
+    state.localMusic.tracks = newTracks;
 
     const albums = state.localMusic.albums;
     const newAlbums = albums.map(obj => ({ ...obj, show: false }));
@@ -29,9 +28,7 @@ export default {
     state.localMusic.artists.push(value);
   },
   updateArtist(state, value) {
-    const index = state.localMusic.artists.findIndex(
-      obj => obj.id === value.id
-    );
+    const index = state.localMusic.artists.findIndex(a => a.id === value.ID);
     if (index !== -1) {
       state.localMusic.artists.splice(index, 1, value);
     }
@@ -42,17 +39,20 @@ export default {
       state.localMusic.albums.splice(index, 1, value.value);
     }
   },
-  updateAsong(state, value) {
-    const index = state.localMusic.songs.findIndex(obj => obj.id === value.id);
+  updateATrack(state, value) {
+    const index = state.localMusic.tracks.findIndex(obj => obj.id === value.id);
     if (index !== -1) {
-      state.localMusic.songs.splice(index, 1, value);
+      state.localMusic.tracks.splice(index, 1, value);
     }
+  },
+  addSong(state, value) {
+    state.localMusic.songs.push(value);
   },
   changeFilter(state, value) {
     state.localMusic.sortBy = value;
   },
-  addAMusic(state, value) {
-    state.localMusic.songs.push(value);
+  addATrack(state, value) {
+    state.localMusic.tracks.push(value);
   },
   changeLang(state, lang) {
     state.settings.lang = lang;

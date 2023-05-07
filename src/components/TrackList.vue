@@ -74,6 +74,7 @@
     <div :style="listStyles">
       <TrackListItem
         v-for="(track, index) in tracks"
+        v-show="track.show !== false"
         :key="itemKey === 'id' ? track.id : `${track.id}${index}`"
         :track-prop="track"
         :track-no="index + 1"
