@@ -118,6 +118,10 @@ const routes = [
     path: '/local-music',
     name: 'localMusic',
     component: () => import('@/views/localMusic.vue'),
+    meta: {
+      keepAlive: true,
+      savePosition: true,
+    },
   },
   {
     path: '/settings',

@@ -34,6 +34,7 @@ import { mapState, mapActions } from 'vuex';
 import { getTrackDetail } from '@/api/track';
 import TrackList from '@/components/TrackList.vue';
 import state from '@/store/state';
+import { localTrackParser } from '@/utils/localSongParser';
 
 export default {
   name: 'Next',
@@ -100,14 +101,19 @@ export default {
       let loadedTrackIDs = this.tracks.map(t => t.id);
 
       if (trackIDs.length > 0) {
-        const matchTracks = state.localMusic.songs.filter(obj =>
+        const songs = state.localMusic.songs.filter(obj =>
           trackIDs.includes(obj.id)
         );
-        this.tracks.push(...matchTracks);
-        this.tracks = [...new Set(this.tracks)];
+        for (const song of songs) {
+          const track = localTrackParser(song.id);
+          if (track && !this.tracks.some(a => a.id === track.id)) {
+            this.tracks.push(track);
+          }
+        }
+        // this.tracks = [...new Set(this.tracks)];
 
         const filterIDs = trackIDs.filter(
-          a => !matchTracks.some(b => b.id === a)
+          a => !songs.some(b => b.trackID === a)
         );
         if (filterIDs.length !== 0) {
           getTrackDetail(filterIDs.join(',')).then(data => {

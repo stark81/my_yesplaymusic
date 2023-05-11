@@ -21,6 +21,9 @@ export default {
     const newArtists = artists.map(obj => ({ ...obj, show: false }));
     state.localMusic.artists = newArtists;
   },
+  updateLatestAddTracks(state, value) {
+    state.localMusic.latestAddTracks = value;
+  },
   addAnAlbum(state, value) {
     state.localMusic.albums.push(value);
   },

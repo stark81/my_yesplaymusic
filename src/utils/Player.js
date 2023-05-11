@@ -11,6 +11,7 @@ import { isCreateMpris, isCreateTray } from '@/utils/platform';
 import { Howl, Howler } from 'howler';
 import shuffle from 'lodash/shuffle';
 import { decode as base642Buffer } from '@/utils/base64';
+import { localTrackParser } from '@/utils/localSongParser';
 
 const PLAY_PAUSE_FADE_DURATION = 200;
 
@@ -505,9 +506,8 @@ export default class {
     }
     const getLocalMusic = id => {
       return new Promise(resolve => {
-        const track = store.state.localMusic.tracks.find(obj => obj.id === id);
-        const data = { songs: [track] };
-        resolve(data);
+        const track = localTrackParser(id, true);
+        resolve({ songs: [track] });
       });
     };
     return getLocalMusic(id)
@@ -878,7 +878,6 @@ export default class {
       type: playlistSourceType,
       id: playlistSourceID,
     };
-    console.log('this._isLocal = ', this._isLocal);
     if (this.shuffle) this._shuffleTheList(autoPlayTrackID);
     if (autoPlayTrackID === 'first') {
       this._replaceCurrentTrack(this.list[0]);

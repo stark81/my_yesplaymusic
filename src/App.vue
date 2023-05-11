@@ -81,11 +81,16 @@ export default {
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
     this.loadLocalMusic();
-    // this.updateInfo4LocalMusic();
+    this.updateTrack();
+    this.fetchLatestSongs();
   },
   methods: {
-    // ...mapActions(['updateInfo4LocalMusic']),
-    ...mapActions(['loadLocalMusic']),
+    ...mapActions([
+      'loadLocalMusic',
+      'updateAlbums',
+      'updateTrack',
+      'fetchLatestSongs',
+    ]),
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;

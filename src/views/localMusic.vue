@@ -13,9 +13,39 @@
       }}
     </h1>
 
-    <h1 v-if="!settings.localMusicFolderPath">请设置本地歌曲路径</h1>
+    <div class="section-one">
+      <div class="liked-songs">
+        <div class="top">
+          <p>
+            <span
+              v-for="(line, index) in pickedLyric"
+              v-show="line !== ''"
+              :key="`${line}${index}`"
+              >{{ line }}<br
+            /></span>
+          </p>
+        </div>
+        <div class="bottom">
+          <div class="titles">
+            <div class="title">{{ $t('localMusic.latedAdd') }}</div>
+            <div class="sub-title">
+              {{ changeLocalTrackFilter('descend').slice(0, 12).length
+              }}{{ $t('common.songs') }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="songs">
+        <TrackList
+          :id="sortedTracks.id"
+          :tracks="changeLocalTrackFilter('descend').slice(0, 12)"
+          :column-number="3"
+          type="tracklist"
+        />
+      </div>
+    </div>
 
-    <div v-else class="section-two">
+    <div class="section-two">
       <div class="tabs-row">
         <div class="tabs">
           <div
@@ -81,7 +111,7 @@
 
       <div v-show="currentTab === 'albums'">
         <CoverRow
-          :items="localMusic.albums"
+          :items="filterLocalAlbums"
           type="album"
           sub-text="artist"
           :show-play-button="true"
@@ -90,7 +120,7 @@
 
       <div v-show="currentTab === 'artists'">
         <CoverRow
-          :items="localMusic.artists"
+          :items="filterLocalArtists"
           type="artist"
           :show-play-button="true"
         />
@@ -111,21 +141,22 @@
         $t('contextMenu.ascendSort')
       }}</div>
     </ContextMenu>
-
-    <ContextMenu ref="playModeTabMenu">
-      <div class="item">{{ $t('library.likedSongs') }}</div>
-      <hr />
-      <div class="item">{{ $t('contextMenu.cardiacMode') }}</div>
-    </ContextMenu>
   </div>
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapMutations, mapActions } from 'vuex';
+import { randomNum } from '@/utils/common';
 import TrackList from '@/components/TrackList.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
 import CoverRow from '@/components/CoverRow.vue';
+import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
+import { localAlbumParser, localTracksFilter } from '@/utils/localSongParser';
+
+function extractLyricPart(rawLyric) {
+  return rawLyric.split(']').pop().trim();
+}
 
 export default {
   name: 'LocalMusic',
@@ -133,9 +164,8 @@ export default {
   data() {
     return {
       show: true,
-      likedSongs: [],
       sortedTracks: [],
-      lyric: [],
+      lyric: undefined,
       currentTab: 'localSongs',
     };
   },
@@ -153,9 +183,68 @@ export default {
       const tracks = this.changeLocalTrackFilter(type);
       return tracks;
     },
+    filterLocalAlbums() {
+      const albums = [];
+      const songs = this.localMusic.songs;
+      for (const song of songs) {
+        const al = localAlbumParser(song.id);
+        const alExist = albums.find(a => a.id === al.id && a.show === true);
+        if (!alExist) {
+          albums.push(al);
+        }
+      }
+      return [...new Set(albums)];
+    },
+    filterLocalArtists() {
+      const artists = [];
+      const ars = this.localMusic.artists;
+      for (const ar of ars) {
+        artists.push(ar.matched ? ar.onlineArtist : ar);
+      }
+      return artists;
+    },
+    pickedLyric() {
+      /** @type {string?} */
+      const lyric = this.lyric;
+
+      // Returns [] if we got no lyrics.
+      if (!lyric) return [];
+
+      const lyricLine = lyric
+        .split('\n')
+        .filter(line => !line.includes('作词') && !line.includes('作曲'));
+
+      // Pick 3 or fewer lyrics based on the lyric lines.
+      const lyricsToPick = Math.min(lyricLine.length, 3);
+
+      // The upperBound of the lyric line to pick
+      const randomUpperBound = lyricLine.length - lyricsToPick;
+      const startLyricLineIndex = randomNum(0, randomUpperBound - 1);
+
+      // Pick lyric lines to render.
+      return lyricLine
+        .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
+        .map(extractLyricPart);
+    },
+  },
+  created() {
+    this.fetchLatestSongs();
+    this.loadData();
+  },
+  activated() {
+    this.$parent.$refs.scrollbar.restorePosition();
+    this.fetchLatestSongs();
+    this.loadData();
   },
   methods: {
     ...mapMutations(['updateData', 'changeFilter']),
+    ...mapActions(['fetchLatestSongs']),
+    loadData() {
+      this.$store.dispatch('fetchLatestSongs');
+      if (this.localMusic.latestAddTracks.length > 0) {
+        this.getRandomLyric();
+      }
+    },
     updateCurrentTab(tab) {
       this.currentTab = tab;
       this.$parent.$refs.main.scrollTo({ top: 375, behavior: 'smooth' });
@@ -170,51 +259,26 @@ export default {
     openPlaylistTabMenu(e) {
       this.$refs.playlistTabMenu.openMenu(e);
     },
-    openPlayModeTabMenu(e) {
-      this.$refs.playModeTabMenu.openMenu(e);
-    },
     changeLocalTrackFilter(type) {
-      const tracks = this.localMusic.tracks;
-      if (
-        tracks.every(item => !Object.prototype.hasOwnProperty.call(item, 'al'))
-      ) {
-        const songs = this.localMusic.songs;
-        const albums = this.localMusic.albums;
-        const artists = this.localMusic.artists;
-        for (const song of songs) {
-          const track = tracks.find(t => t.id === song.trackID);
-          const album = albums.find(a => a.id === song.albumID);
-          const songArtists = artists.filter(a =>
-            song.artistIDs.includes(a.id)
-          );
-          track.al = album;
-          track.ar = songArtists;
-        }
-      }
-      // const result = [];
-      if (type === 'default') {
-        return tracks.sort((a, b) => a.id - b.id);
-      } else if (type === 'byname') {
-        const newTracks = tracks.sort((a, b) => {
-          return a['name'].localeCompare(b['name'], 'zh-CN', { numeric: true });
-        });
-        return newTracks;
-      } else if (type === 'descend') {
-        const trackList = tracks.sort((a, b) => {
-          const timeA = new Date(a.createTime).getTime();
-          const timeB = new Date(b.createTime).getTime();
-          return timeB - timeA;
-        });
-        return trackList;
-      } else if (type === 'ascend') {
-        const trackList = tracks.sort((a, b) => {
-          const timeA = new Date(a.createTime).getTime();
-          const timeB = new Date(b.createTime).getTime();
-          return timeA - timeB;
-        });
-        return trackList;
-      }
+      const tracks = localTracksFilter(type);
       window.scrollTo({ top: 375, behavior: 'smooth' });
+      return tracks;
+    },
+    getRandomLyric() {
+      getLyric(
+        this.localMusic.latestAddTracks[
+          randomNum(0, this.localMusic.latestAddTracks.length)
+        ]
+      ).then(data => {
+        if (data.lrc !== undefined) {
+          const isInstrumental = data.lrc.lyric
+            .split('\n')
+            .filter(l => l.includes('纯音乐，请欣赏'));
+          if (isInstrumental.length === 0) {
+            this.lyric = data.lrc.lyric;
+          }
+        }
+      });
     },
   },
 };

@@ -41,6 +41,7 @@ export default {
   },
   localMusic: {
     sLocalMusic: '的本地音乐',
+    latedAdd: '最近添加的音乐',
     playlist: '离线歌单',
     albums: '专辑',
     artists: '艺人',

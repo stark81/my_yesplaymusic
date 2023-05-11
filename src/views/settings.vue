@@ -781,6 +781,7 @@ import { auth as lastfmAuth } from '@/api/lastfm';
 import { changeAppearance, bytesToSize } from '@/utils/common';
 import { countDBSize, clearDB } from '@/utils/db';
 import pkg from '../../package.json';
+import { debounce } from 'lodash';
 
 const electron =
   process.env.IS_ELECTRON === true ? window.require('electron') : null;
@@ -788,6 +789,10 @@ const ipcRenderer =
   process.env.IS_ELECTRON === true ? electron.ipcRenderer : null;
 
 const validShortcutCodes = ['=', '-', '~', '[', ']', ';', "'", ',', '.', '/'];
+
+// function delay(ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 export default {
   name: 'Settings',
@@ -813,8 +818,11 @@ export default {
   },
   computed: {
     ...mapState(['player', 'settings', 'data', 'lastfm']),
-    localPathChange() {
+    localMusicPath() {
       return this.settings.localMusicFolderPath;
+    },
+    localSongsLength() {
+      return this.$store.state.localMusic.songs.length;
     },
     isElectron() {
       return process.env.IS_ELECTRON;
@@ -1292,8 +1300,18 @@ export default {
     },
   },
   watch: {
-    localPathChange() {
+    localMusicPath() {
       this.loadLocalMusic();
+    },
+    localSongsLength: {
+      handler: debounce(function () {
+        if (this.localSongsLength > 0) {
+          console.log('localSongsLength change');
+          this.updateTrack().then();
+        }
+        this.$store.dispatch('fetchLatestSongs');
+      }, 5000),
+      immediate: true,
     },
   },
   created() {
@@ -1305,7 +1323,12 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions(['showToast', 'loadLocalMusic']),
+    ...mapActions([
+      'showToast',
+      'loadLocalMusic',
+      'updateTrack',
+      'updateAlbums',
+    ]),
     async choseDir() {
       const { dialog } = require('electron').remote;
       const result = await dialog.showOpenDialog({
