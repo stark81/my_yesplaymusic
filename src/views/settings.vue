@@ -1301,15 +1301,16 @@ export default {
   },
   watch: {
     localMusicPath() {
-      this.loadLocalMusic();
+      this.loadLocalMusic(true);
     },
     localSongsLength: {
       handler: debounce(function () {
         if (this.localSongsLength > 0) {
           console.log('localSongsLength change');
-          this.updateTrack().then();
+          this.updateTrack().then(() => {
+            this.$store.dispatch('fetchLatestSongs');
+          });
         }
-        this.$store.dispatch('fetchLatestSongs');
       }, 5000),
       immediate: true,
     },
@@ -1323,12 +1324,7 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions([
-      'showToast',
-      'loadLocalMusic',
-      'updateTrack',
-      'updateAlbums',
-    ]),
+    ...mapActions(['showToast', 'loadLocalMusic', 'updateTrack']),
     async choseDir() {
       const { dialog } = require('electron').remote;
       const result = await dialog.showOpenDialog({

@@ -172,10 +172,16 @@ export default {
       return this.type === 'playlist';
     },
     isLiked() {
-      return this.$parent.liked.songs.includes(this.track?.id);
+      return (
+        this.$parent.liked.songs.includes(this.track?.id) ||
+        this.$parent.liked.songs.includes(this.track?.onlineTrack?.id)
+      );
     },
     isPlaying() {
-      return this.$store.state.player.currentTrack.id === this.track?.id;
+      return (
+        this.$store.state.player.currentTrack.id === this.track?.id ||
+        this.$store.state.player.currentTrack.id === this.track?.onlineTrack?.id
+      );
     },
     trackClass() {
       let trackClass = [this.type];

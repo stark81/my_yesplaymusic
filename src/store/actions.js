@@ -5,6 +5,7 @@ import { getTrackDetail } from '@/api/track';
 import { search } from '@/api/others';
 import { getAlbum } from '@/api/album';
 import { localTracksFilter } from '@/utils/localSongParser';
+import { randomNum } from '@/utils/common';
 import {
   userPlaylist,
   userPlayHistory,
@@ -40,7 +41,6 @@ async function getLocalAlbum({ state, commit }, filePath) {
   let album = state.localMusic.albums.find(a => a.name === common.album);
   if (album) {
     album.show = true;
-    commit('updateAlbum', album);
   } else {
     let arForSearch = common.albumartist || common.artist;
     arForSearch = splitArtist(arForSearch);
@@ -78,7 +78,10 @@ async function getArtists({ state, commit }, filePath) {
     const foundArtist = state.localMusic.artists.find(a => a.name === artist);
     if (foundArtist) {
       foundArtist.show = true;
-      commit('updateArtist', foundArtist);
+      if (!foundArtist.matched) {
+        foundArtist.picUrl =
+          'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg';
+      }
       artistIDs.push(foundArtist.id);
     } else {
       let arForSearch = common.albumartist || common.artist;
@@ -94,7 +97,7 @@ async function getArtists({ state, commit }, filePath) {
         isLocal: true,
         onlineArtist: null,
         picUrl:
-          'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+          'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
       };
       commit('addAnArtist', ar);
       artistIDs.push(ar.id);
@@ -104,7 +107,7 @@ async function getArtists({ state, commit }, filePath) {
   return artistIDs;
 }
 
-async function getTrack({ state, commit }, filePath) {
+async function getTrack({ state, commit }, filePath, clear = true) {
   const stats = fs.statSync(filePath);
   const birthDate = stats.ctime.toLocaleDateString();
   const formatDate = new Date(birthDate).toISOString().slice(0, 10);
@@ -117,8 +120,7 @@ async function getTrack({ state, commit }, filePath) {
     obj => obj.filePath === filePath
   );
   if (foundSong) {
-    foundSong.show = true;
-    commit('updateATrack', foundSong);
+    foundSong.show = clear ? true : foundSong.show;
   } else {
     let arForSearch = common.albumartist || common.artist;
     arForSearch = splitArtist(arForSearch);
@@ -142,14 +144,6 @@ async function getTrack({ state, commit }, filePath) {
   }
   return foundSong.id;
 }
-
-// async function updateInfo({ state }, song) {
-//   const albumCode = await updateAlbum({ state }, song).then();
-//   const artistCode = await updateArtists({ state }, song).then();
-//   const trackCode = await updateTrack({ state }, song).then();
-//   const code = Math.max(albumCode.code, trackCode.code);
-//   return code;
-// }
 
 function delay(time) {
   return new Promise(resolve => {
@@ -177,12 +171,13 @@ export default {
       }, 3200),
     });
   },
-  loadLocalMusic({ state, commit }) {
+  loadLocalMusic({ state, commit }, clear = true) {
     const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
-    commit('clearLocalMusic');
-
+    if (clear) {
+      commit('clearLocalMusic');
+    }
     const walk = async folder => {
       const files = fs.readdirSync(folder);
       files.forEach(async file => {
@@ -192,7 +187,7 @@ export default {
           const hasFilePath = state.localMusic.tracks.some(
             track => track.filePath === filePath
           );
-          const trackID = await getTrack({ state, commit }, filePath);
+          const trackID = await getTrack({ state, commit }, filePath, clear);
           const albumID = await getLocalAlbum({ state, commit }, filePath);
           const artistIDs = await getArtists({ state, commit }, filePath);
           if (!hasFilePath) {
@@ -211,67 +206,8 @@ export default {
     };
     walk(folderPath);
   },
-  async updateAlbums({ state }) {
-    console.log('updateAlbums start!!!');
-    const albums = state.localMusic.albums;
-    let rawDelay = 20 * 1000;
-    let code = 200;
-    for (let i = 0; i < albums.length; i++) {
-      const album = albums[i];
-      if (album.matched) {
-        code = 0;
-      } else {
-        console.log('updateAlbum online: album for :', album.songForSearch);
-        const keyword = {
-          keywords: `${album.songForSearch} ${album.arForSearch}`,
-          type: 10,
-          limit: 16,
-        };
-        const result = await search(keyword).then(async result => {
-          if (result.code !== 200) {
-            return result;
-          }
-          if (result.result.albumCount === 0) {
-            const keyword = {
-              keywords: `${album.songForSearch}`,
-              type: 10,
-              limit: 16,
-            };
-            const newResult = await search(keyword).then(result => {
-              return result;
-            });
-            return newResult;
-          }
-          return result;
-        });
-        if (result.code === 200 && Object.keys(result.result).length > 0) {
-          const matchAlbum =
-            result.result.albums.find(
-              obj => obj.artist.name === album.arForSearch
-            ) ||
-            result.result.albums.find(
-              a => a.containedSong === album.songForSearch
-            ) ||
-            result.result.albums[0];
-          if (matchAlbum) {
-            album.onlineAlbum = matchAlbum;
-            album.matched = true;
-            code = 200;
-          }
-        } else {
-          code = result.code;
-        }
-      }
-      const delayTime = code === 0 ? 0 : rawDelay;
-      await delay(delayTime);
-      if (i % 10 === 0) {
-        rawDelay += 5 * 1000;
-      }
-    }
-    console.log('updateAlbums finished!!!');
-  },
   async updateTrack({ state }) {
-    console.log('updateTrack start!!!');
+    console.log('updateSongs start!!!');
     const songs = state.localMusic.songs;
     const tracks = state.localMusic.tracks;
     const albums = state.localMusic.albums;
@@ -303,7 +239,8 @@ export default {
               });
               console.log('matchTrack = ', matchTrack);
               if (matchTrack.length > 0) {
-                track.onlineTrack = matchTrack[matchTrack.length - 1];
+                const trackIndex = randomNum(0, matchTrack.length - 1);
+                track.onlineTrack = matchTrack[trackIndex];
                 track.matched = true;
                 const onlineTrackAlbum = await getAlbum(
                   track.onlineTrack.album.id
@@ -320,7 +257,7 @@ export default {
                 console.log('not matched: matchTrack = ', matchTrack);
                 track.onlineTrack =
                   matchTrack.length !== 0
-                    ? matchTrack[matchTrack.length - 1]
+                    ? matchTrack[randomNum(0, matchTrack.length - 1)]
                     : result.result.songs[0];
                 track.matched = true;
                 const onlineTrackAlbum = await getAlbum(
@@ -339,60 +276,46 @@ export default {
       const delayTime = code === 0 ? 0 : rawDelay;
       await delay(delayTime);
     }
-    console.log('updateTrack finished!!!');
+    console.log('updateSongs finished!!!');
   },
   fetchLatestSongs({ commit }) {
     const trackIDs = localTracksFilter('descend')
       .filter(t => t.matched && t.show)
-      .map(t => t.onlineTrack.id)
-      .slice(0, 12);
+      .map(t => t.onlineTrack.id);
     commit('updateLatestAddTracks', trackIDs);
   },
-  // async updateArtists({ state }) {
-  //   let code = 0;
-  //   const artists = state.localMusic.artists.filter(a =>
-  //     song.artistIDs.includes(a.id)
-  //   );
-  //   for (const artist of artists) {
-  //     if (artist.matched) continue;
-  //     console.log('updateArtists online: artist.name = ', artist.name);
-  //     const keyword = {
-  //       keywords: artist.name,
-  //       type: 100,
-  //       limit: 5,
-  //     };
-  //     const newCode = await search(keyword).then(result => {
-  //       if (result.code === 200) {
-  //         if (result.result.artistCount > 0) {
-  //           const ar = result.result.artists.find(a => a.name === artist.name);
-  //           if (ar) {
-  //             artist.onlineArtist = ar;
-  //             artist.matched = true;
-  //           }
-  //         }
-  //       }
-  //       return result.code;
-  //     });
-  //     code = code === 0 ? newCode : code;
-  //   }
-  //   return { code: code };
-  // },
-  // async updateInfo4LocalMusic({ state }) {
-  //   const songs = state.localMusic.songs;
-  //   let rawTime = 20 * 1000;
-  //   let counter = 0;
-  //   for (const song of songs) {
-  //     const result = await updateInfo({ state }, song).then();
-  //     console.log('updateInfo result = ', result);
-  //     const delayTime = result === 0 ? 0 : rawTime;
-  //     await delay(delayTime);
-  //     if (result !== 0) counter++;
-  //     if (counter % 10 === 0) {
-  //       rawTime += 4 * 1000;
-  //     }
-  //   }
-  //   console.log('update finished');
-  // },
+  async updateArtists({ state }) {
+    console.log('updateArtists start!!!');
+    let code = 200;
+    let rawDelay = 20 * 1000;
+    const artists = state.localMusic.artists;
+    for (const artist of artists) {
+      if (artist.matched) {
+        code = 0;
+      } else {
+        console.log('updateArtists online: artist.name = ', artist.name);
+        const keyword = {
+          keywords: artist.name,
+          type: 100,
+          limit: 5,
+        };
+        code = await search(keyword).then(result => {
+          if (result.code === 200) {
+            if (result.result.artists && result.result.artists.length > 0) {
+              artist.onlineArtist =
+                result.result.artists.find(a => a.name === artist.name) ||
+                result.result.artists[0];
+              artist.matched = true;
+            }
+          }
+          return result.code;
+        });
+      }
+      const delayTime = code === 0 ? 0 : rawDelay;
+      await delay(delayTime);
+    }
+    console.log('updateArtists finished!!!');
+  },
   likeATrack({ state, commit, dispatch }, id) {
     if (!isAccountLoggedIn()) {
       dispatch('showToast', '此操作需要登录网易云账号');

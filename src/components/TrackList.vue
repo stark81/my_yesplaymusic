@@ -22,7 +22,13 @@
         @click="removeTrackFromQueue"
         >从队列删除</div
       >
-      <hr v-show="type !== 'cloudDisk'" />
+      <div
+        v-if="extraContextMenuItem.includes('removeLocalTrack')"
+        class="item"
+        @click="removeLocalTrack"
+        >移除歌曲</div
+      >
+      <hr v-show="type !== 'cloudDisk' || 'localtracks'" />
       <div
         v-show="
           !isRightClickedTrackLiked &&
@@ -193,7 +199,7 @@ export default {
   },
   methods: {
     ...mapMutations(['updateModal']),
-    ...mapActions(['nextTrack', 'showToast', 'likeATrack']),
+    ...mapActions(['nextTrack', 'showToast', 'likeATrack', 'fetchLatestSongs']),
     openMenu(e, track, index = -1) {
       this.rightClickedTrack = track;
       this.rightClickedTrackIndex = index;
@@ -265,6 +271,13 @@ export default {
         key: 'selectedTrackID',
         value: this.rightClickedTrack.id,
       });
+    },
+    removeLocalTrack() {
+      const track = this.$store.state.localMusic.tracks.find(
+        t => t.id === this.rightClickedTrack.id
+      );
+      track.show = false;
+      this.fetchLatestSongs();
     },
     removeTrackFromPlaylist() {
       if (!isAccountLoggedIn()) {

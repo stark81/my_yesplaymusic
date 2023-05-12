@@ -29,8 +29,7 @@
           <div class="titles">
             <div class="title">{{ $t('localMusic.latedAdd') }}</div>
             <div class="sub-title">
-              {{ changeLocalTrackFilter('descend').slice(0, 12).length
-              }}{{ $t('common.songs') }}
+              {{ filterLatestAdd.length }}{{ $t('common.songs') }}
             </div>
           </div>
         </div>
@@ -38,7 +37,7 @@
       <div class="songs">
         <TrackList
           :id="sortedTracks.id"
-          :tracks="changeLocalTrackFilter('descend').slice(0, 12)"
+          :tracks="filterLatestAdd"
           :column-number="3"
           type="tracklist"
         />
@@ -94,6 +93,7 @@
             :tracks="filterLocalTracks"
             :column-number="1"
             type="localtracks"
+            :extra-context-menu-item="['removeLocalTrack']"
           />
         </div>
       </div>
@@ -174,6 +174,12 @@ export default {
     sortBy() {
       return this.localMusic.sortBy;
     },
+    filterLatestAdd() {
+      const latest = this.changeLocalTrackFilter('descend')
+        .filter(obj => obj.show)
+        .slice(0, 12);
+      return latest;
+    },
     filterLocalTracks() {
       let type = this.sortBy;
       if (!type) {
@@ -201,7 +207,7 @@ export default {
       for (const ar of ars) {
         artists.push(ar.matched ? ar.onlineArtist : ar);
       }
-      return artists;
+      return [...new Set(artists)];
     },
     pickedLyric() {
       /** @type {string?} */
@@ -267,7 +273,7 @@ export default {
     getRandomLyric() {
       getLyric(
         this.localMusic.latestAddTracks[
-          randomNum(0, this.localMusic.latestAddTracks.length)
+          randomNum(0, this.localMusic.latestAddTracks.length - 1)
         ]
       ).then(data => {
         if (data.lrc !== undefined) {

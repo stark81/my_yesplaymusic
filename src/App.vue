@@ -80,14 +80,15 @@ export default {
     if (this.isElectron) ipcRenderer(this);
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    this.loadLocalMusic();
+    this.loadLocalMusic(false);
     this.updateTrack();
     this.fetchLatestSongs();
+    this.updateArtists();
   },
   methods: {
     ...mapActions([
       'loadLocalMusic',
-      'updateAlbums',
+      'updateArtists',
       'updateTrack',
       'fetchLatestSongs',
     ]),

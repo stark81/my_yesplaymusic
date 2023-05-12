@@ -30,24 +30,6 @@ export default {
   addAnArtist(state, value) {
     state.localMusic.artists.push(value);
   },
-  updateArtist(state, value) {
-    const index = state.localMusic.artists.findIndex(a => a.id === value.ID);
-    if (index !== -1) {
-      state.localMusic.artists.splice(index, 1, value);
-    }
-  },
-  updateAlbum(state, value) {
-    const index = state.localMusic.albums.findIndex(obj => obj.id === value.ID);
-    if (index !== -1) {
-      state.localMusic.albums.splice(index, 1, value.value);
-    }
-  },
-  updateATrack(state, value) {
-    const index = state.localMusic.tracks.findIndex(obj => obj.id === value.id);
-    if (index !== -1) {
-      state.localMusic.tracks.splice(index, 1, value);
-    }
-  },
   addSong(state, value) {
     state.localMusic.songs.push(value);
   },
