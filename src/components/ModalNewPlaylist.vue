@@ -3,7 +3,7 @@
     class="add-playlist-modal"
     :show="show"
     :close="close"
-    title="新建歌单"
+    :title="isLocal ? '新建离线歌单' : '新建歌单'"
     width="25vw"
   >
     <template slot="default">
@@ -13,7 +13,7 @@
         placeholder="歌单标题"
         maxlength="40"
       />
-      <div class="checkbox">
+      <div v-show="!isLocal" class="checkbox">
         <input
           id="checkbox-private"
           v-model="privatePlaylist"
@@ -64,41 +64,80 @@ export default {
         }
       },
     },
+    isLocal: {
+      get() {
+        return this.modals.newPlaylistModal.isLocal;
+      },
+      set(value) {
+        this.updateModal({
+          modalName: 'newPlaylistModal',
+          key: 'isLocal',
+          value,
+        });
+      },
+    },
   },
   methods: {
     ...mapMutations(['updateModal', 'updateData']),
-    ...mapActions(['showToast', 'fetchLikedPlaylist']),
+    ...mapActions([
+      'showToast',
+      'fetchLikedPlaylist',
+      'createLocalPlayList',
+      'addTrackToLocalPlaylist',
+    ]),
     close() {
       this.show = false;
+      this.isLocal = false;
       this.title = '';
       this.privatePlaylist = false;
       this.resetAfterCreateAddTrackID();
     },
     createPlaylist() {
       let params = { name: this.title };
-      if (this.private) params.type = 10;
-      createPlaylist(params).then(data => {
-        if (data.code === 200) {
+      if (this.isLocal) {
+        params.description = locale.t('localMusic.description');
+        this.createLocalPlayList(params).then(playlist => {
           if (this.modals.newPlaylistModal.afterCreateAddTrackID !== 0) {
-            addOrRemoveTrackFromPlaylist({
-              op: 'add',
-              pid: data.id,
+            this.addTrackToLocalPlaylist({
+              pid: playlist.id,
               tracks: this.modals.newPlaylistModal.afterCreateAddTrackID,
             }).then(data => {
-              if (data.body.code === 200) {
+              if (data.code === 200) {
                 this.showToast(locale.t('toast.savedToPlaylist'));
               } else {
-                this.showToast(data.body.message);
+                this.showToast(data.message);
               }
               this.resetAfterCreateAddTrackID();
             });
           }
           this.close();
-          this.showToast('成功创建歌单');
-          this.updateData({ key: 'libraryPlaylistFilter', value: 'mine' });
-          this.fetchLikedPlaylist();
-        }
-      });
+          this.showToast('成功创建本地歌单');
+        });
+      } else {
+        if (this.private) params.type = 10;
+        createPlaylist(params).then(data => {
+          if (data.code === 200) {
+            if (this.modals.newPlaylistModal.afterCreateAddTrackID !== 0) {
+              addOrRemoveTrackFromPlaylist({
+                op: 'add',
+                pid: data.id,
+                tracks: this.modals.newPlaylistModal.afterCreateAddTrackID,
+              }).then(data => {
+                if (data.body.code === 200) {
+                  this.showToast(locale.t('toast.savedToPlaylist'));
+                } else {
+                  this.showToast(data.body.message);
+                }
+                this.resetAfterCreateAddTrackID();
+              });
+            }
+            this.close();
+            this.showToast('成功创建歌单');
+            this.updateData({ key: 'libraryPlaylistFilter', value: 'mine' });
+            this.fetchLikedPlaylist();
+          }
+        });
+      }
     },
     resetAfterCreateAddTrackID() {
       this.updateModal({

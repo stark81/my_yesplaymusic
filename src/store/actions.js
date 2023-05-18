@@ -4,7 +4,7 @@ import { getPlaylistDetail } from '@/api/playlist';
 import { getTrackDetail } from '@/api/track';
 import { search } from '@/api/others';
 import { getAlbum } from '@/api/album';
-import { localTracksFilter } from '@/utils/localSongParser';
+import { localTracksFilter, localTrackParser } from '@/utils/localSongParser';
 import { randomNum } from '@/utils/common';
 import {
   userPlaylist,
@@ -275,6 +275,38 @@ export default {
       await delay(delayTime);
     }
     console.log('updateSongs finished!!!');
+  },
+  createLocalPlayList({ state, commit }, params) {
+    const playlist = {
+      id: state.localMusic.playlistIdCounter,
+      name: params.name,
+      description: params.description,
+      coverImgUrl:
+        'https://p1.music.126.net/jWE3OEZUlwdz0ARvyQ9wWw==/109951165474121408.jpg',
+      updateTime: new Date().getTime(),
+      trackCount: 0,
+      trackIds: [],
+    };
+    commit('addLocalXXX', { name: 'playlists', data: playlist });
+    state.localMusic.playlistIdCounter++;
+    return playlist;
+  },
+  addTrackToLocalPlaylist({ state }, params) {
+    console.log('actions.js params = ', params);
+    const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
+    if (playlist) {
+      const song = state.localMusic.songs.find(s => s.id === params.tracks);
+      const track = localTrackParser(song.id);
+      if (playlist.trackIds.includes(track.id)) {
+        return { code: 500, message: '歌曲已存在' };
+      }
+      playlist.trackIds.push(track.id);
+      playlist.coverImgUrl = track.picUrl;
+      playlist.trackCount = playlist.trackIds.length;
+      playlist.updateTime = new Date().getTime();
+      return { code: 200 };
+    }
+    return { code: 404, message: '歌单不存在' };
   },
   fetchLatestSongs({ commit }) {
     const trackIDs = localTracksFilter('descend')

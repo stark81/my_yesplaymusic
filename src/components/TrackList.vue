@@ -17,6 +17,12 @@
         $t('contextMenu.addToQueue')
       }}</div>
       <div
+        v-if="extraContextMenuItem.includes('addToLocalList')"
+        class="item"
+        @click="addTrack2LocalPlaylist"
+        >添加至离线歌单</div
+      >
+      <div
         v-if="extraContextMenuItem.includes('removeTrackFromQueue')"
         class="item"
         @click="removeTrackFromQueue"
@@ -80,7 +86,6 @@
     <div :style="listStyles">
       <TrackListItem
         v-for="(track, index) in tracks"
-        v-show="track.show !== false"
         :key="itemKey === 'id' ? track.id : `${track.id}${index}`"
         :track-prop="track"
         :track-no="index + 1"
@@ -243,7 +248,7 @@ export default {
         let trackIDs = this.tracks.map(t => t.id);
         this.player.replacePlaylist(trackIDs, this.id, 'artist', trackID);
       } else if (this.type === 'localtracks') {
-        let trackIDs = this.tracks.filter(t => t.show === true).map(t => t.id);
+        let trackIDs = this.tracks.map(t => t.id);
         this.player.replacePlaylist(trackIDs, this.id, 'localMusic', trackID);
       }
     },
@@ -278,6 +283,23 @@ export default {
       );
       song.show = false;
       this.fetchLatestSongs();
+    },
+    addTrack2LocalPlaylist() {
+      this.updateModal({
+        modalName: 'addTrackToPlaylistModal',
+        key: 'isLocal',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'addTrackToPlaylistModal',
+        key: 'show',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'addTrackToPlaylistModal',
+        key: 'selectedTrackID',
+        value: this.rightClickedTrack.id,
+      });
     },
     removeTrackFromPlaylist() {
       if (!isAccountLoggedIn()) {

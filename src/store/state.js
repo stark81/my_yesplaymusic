@@ -44,10 +44,12 @@ export default {
     addTrackToPlaylistModal: {
       show: false,
       selectedTrackID: 0,
+      isLocal: false,
     },
     newPlaylistModal: {
       show: false,
       afterCreateAddTrackID: 0,
+      isLocal: false,
     },
   },
   dailyTracks: [],

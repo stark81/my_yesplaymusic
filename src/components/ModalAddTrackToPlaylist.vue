@@ -4,7 +4,7 @@
     :show="show"
     :close="close"
     :show-footer="false"
-    title="添加到歌单"
+    :title="isLocal ? '添加至离线歌单' : '添加到歌单'"
     width="25vw"
   >
     <template slot="default">
@@ -44,7 +44,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals', 'data', 'liked']),
+    ...mapState(['modals', 'data', 'liked', 'localMusic']),
     show: {
       get() {
         return this.modals.addTrackToPlaylistModal.show;
@@ -62,35 +62,72 @@ export default {
         }
       },
     },
+    isLocal: {
+      get() {
+        return this.modals.addTrackToPlaylistModal.isLocal;
+      },
+      set(value) {
+        this.updateModal({
+          modalName: 'addTrackToPlaylistModal',
+          key: 'isLocal',
+          value,
+        });
+      },
+    },
     ownPlaylists() {
-      return this.liked.playlists.filter(
-        p =>
-          p.creator.userId === this.data.user.userId &&
-          p.id !== this.data.likedSongPlaylistID
-      );
+      if (this.isLocal) {
+        return this.localMusic.playlists;
+      } else {
+        return this.liked.playlists.filter(
+          p =>
+            p.creator.userId === this.data.user.userId &&
+            p.id !== this.data.likedSongPlaylistID
+        );
+      }
     },
   },
   methods: {
     ...mapMutations(['updateModal']),
-    ...mapActions(['showToast']),
+    ...mapActions(['showToast', 'addTrackToLocalPlaylist']),
     close() {
+      this.isLocal = false;
       this.show = false;
     },
     addTrackToPlaylist(playlistID) {
-      addOrRemoveTrackFromPlaylist({
-        op: 'add',
-        pid: playlistID,
-        tracks: this.modals.addTrackToPlaylistModal.selectedTrackID,
-      }).then(data => {
-        if (data.body.code === 200) {
-          this.show = false;
-          this.showToast(locale.t('toast.savedToPlaylist'));
-        } else {
-          this.showToast(data.body.message);
-        }
-      });
+      if (this.isLocal) {
+        this.addTrackToLocalPlaylist({
+          pid: playlistID,
+          tracks: this.modals.addTrackToPlaylistModal.selectedTrackID,
+        }).then(result => {
+          if (result.code === 200) {
+            this.isLocal = false;
+            this.show = false;
+            this.showToast(locale.t('toast.savedToPlaylist'));
+          } else {
+            this.showToast(result.message);
+          }
+        });
+      } else {
+        addOrRemoveTrackFromPlaylist({
+          op: 'add',
+          pid: playlistID,
+          tracks: this.modals.addTrackToPlaylistModal.selectedTrackID,
+        }).then(data => {
+          if (data.body.code === 200) {
+            this.show = false;
+            this.showToast(locale.t('toast.savedToPlaylist'));
+          } else {
+            this.showToast(data.body.message);
+          }
+        });
+      }
     },
     newPlaylist() {
+      this.updateModal({
+        modalName: 'newPlaylistModal',
+        key: 'isLocal',
+        value: this.isLocal,
+      });
       this.updateModal({
         modalName: 'newPlaylistModal',
         key: 'afterCreateAddTrackID',

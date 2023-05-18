@@ -16,8 +16,8 @@
       <Player v-if="enablePlayer" v-show="showPlayer" ref="player" />
     </transition>
     <Toast />
-    <ModalAddTrackToPlaylist v-if="isAccountLoggedIn" />
-    <ModalNewPlaylist v-if="isAccountLoggedIn" />
+    <ModalAddTrackToPlaylist />
+    <ModalNewPlaylist />
     <transition v-if="enablePlayer" name="slide-up">
       <MusicPlay v-show="showLyrics" />
     </transition>

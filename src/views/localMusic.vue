@@ -59,8 +59,8 @@
           </div>
           <div
             class="tab"
-            :class="{ active: currentTab === 'playlist' }"
-            @click="updateCurrentTab('playlist')"
+            :class="{ active: currentTab === 'playlists' }"
+            @click="updateCurrentTab('playlists')"
           >
             {{ $t('localMusic.playlist') }}
           </div>
@@ -108,7 +108,7 @@
             :tracks="filterLocalTracks"
             :column-number="1"
             type="localtracks"
-            :extra-context-menu-item="['removeLocalTrack']"
+            :extra-context-menu-item="['removeLocalTrack', 'addToLocalList']"
           />
         </div>
       </div>
@@ -118,7 +118,6 @@
           <CoverRow
             :items="filterPlaylists"
             type="playlist"
-            sub-text="creator"
             :show-play-button="true"
           />
         </div>
@@ -267,6 +266,9 @@ export default {
       }
       return [...new Set(artists)];
     },
+    filterPlaylists() {
+      return this.localMusic.playlists;
+    },
     pickedLyric() {
       /** @type {string?} */
       const lyric = this.lyric;
@@ -301,7 +303,7 @@ export default {
     this.loadData();
   },
   methods: {
-    ...mapMutations(['updateData', 'updateLocalXXX']),
+    ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
     ...mapActions(['fetchLatestSongs']),
     loadData() {
       this.$store.dispatch('fetchLatestSongs');
@@ -320,6 +322,11 @@ export default {
       this.$parent.$refs.main.scrollTo({ top: 375, behavior: 'smooth' });
     },
     openAddPlaylistModal() {
+      this.updateModal({
+        modalName: 'newPlaylistModal',
+        key: 'isLocal',
+        value: true,
+      });
       this.updateModal({
         modalName: 'newPlaylistModal',
         key: 'show',
