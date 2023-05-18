@@ -79,6 +79,21 @@
             {{ $t('library.artists') }}
           </div>
         </div>
+        <div v-show="currentTab === 'localSongs'" class="search-box">
+          <div class="container" :class="{ active: inputFocus }">
+            <svg-icon icon-class="search" />
+            <div class="input">
+              <input
+                v-model.trim="inputSearchKeyWords"
+                v-focus
+                :placeholder="inputFocus ? '' : $t('localMusic.search')"
+                @input="inputDebounce()"
+                @focus="inputFocus = true"
+                @blur="inputFocus = false"
+              />
+            </div>
+          </div>
+        </div>
         <button
           v-show="currentTab === 'playlists'"
           class="tab-button"
@@ -170,12 +185,22 @@ function extractLyricPart(rawLyric) {
 export default {
   name: 'LocalMusic',
   components: { SvgIcon, CoverRow, ContextMenu, TrackList },
+  directives: {
+    focus: {
+      inserted: function (el) {
+        el.focus();
+      },
+    },
+  },
   data() {
     return {
       show: true,
       sortedTracks: [],
       lyric: undefined,
       currentTab: 'localSongs',
+      searchKeyWords: '', // 搜索使用的关键字
+      inputSearchKeyWords: '', // 搜索框中正在输入的关键字
+      inputFocus: false,
     };
   },
   computed: {
@@ -194,7 +219,24 @@ export default {
         this.updateLocalXXX({ name: 'sortBy', data: type });
       }
       const tracks = this.changeLocalTrackFilter(type);
-      return tracks;
+      return tracks.filter(
+        track =>
+          (track.name &&
+            track.name
+              .toLowerCase()
+              .includes(this.searchKeyWords.toLowerCase())) ||
+          (track.al.name &&
+            track.al.name
+              .toLowerCase()
+              .includes(this.searchKeyWords.toLowerCase())) ||
+          track.ar.find(
+            artist =>
+              artist.name &&
+              artist.name
+                .toLowerCase()
+                .includes(this.searchKeyWords.toLowerCase())
+          )
+      );
     },
     filterLocalAlbums() {
       const albums = [];
@@ -266,6 +308,12 @@ export default {
       if (this.localMusic.latestAddTracks.length > 0) {
         this.getRandomLyric();
       }
+    },
+    inputDebounce() {
+      if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        this.searchKeyWords = this.inputSearchKeyWords;
+      }, 600);
     },
     updateCurrentTab(tab) {
       this.currentTab = tab;
@@ -411,6 +459,51 @@ h1 {
   display: flex;
   justify-content: space-between;
   margin-bottom: 24px;
+}
+.search-box {
+  display: flex;
+  right: 20px;
+  justify-content: flex-end;
+  -webkit-app-region: no-drag;
+
+  .container {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    background: var(--color-secondary-bg-for-transparent);
+    border-radius: 8px;
+    width: 200px;
+  }
+
+  .svg-icon {
+    height: 15px;
+    width: 15px;
+    color: var(--color-text);
+    opacity: 0.28;
+    margin: {
+      left: 8px;
+      right: 4px;
+    }
+  }
+
+  input {
+    font-size: 16px;
+    border: none;
+    background: transparent;
+    width: 96%;
+    font-weight: 600;
+    margin-top: -1px;
+    color: var(--color-text);
+  }
+
+  .active {
+    background: var(--color-primary-bg-for-transparent);
+    input,
+    .svg-icon {
+      opacity: 1;
+      color: var(--color-primary);
+    }
+  }
 }
 
 .tabs {

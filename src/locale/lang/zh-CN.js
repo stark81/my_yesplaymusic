@@ -46,6 +46,7 @@ export default {
     albums: '专辑',
     artists: '艺人',
     changeScanningPath: '更改扫描路径',
+    search: '搜索本地音乐',
   },
   explore: {
     explore: '发现',
