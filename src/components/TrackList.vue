@@ -273,10 +273,10 @@ export default {
       });
     },
     removeLocalTrack() {
-      const track = this.$store.state.localMusic.tracks.find(
-        t => t.id === this.rightClickedTrack.id
+      const song = this.$store.state.localMusic.songs.find(
+        s => s.id === this.rightClickedTrack.id
       );
-      track.show = false;
+      song.show = false;
       this.fetchLatestSongs();
     },
     removeTrackFromPlaylist() {

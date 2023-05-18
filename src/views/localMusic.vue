@@ -128,18 +128,26 @@
     </div>
 
     <ContextMenu ref="playlistTabMenu">
-      <div class="item" @click="changeFilter('default')">{{
-        $t('contextMenu.defaultSort')
-      }}</div>
-      <div class="item" @click="changeFilter('byname')">{{
-        $t('contextMenu.sortByName')
-      }}</div>
-      <div class="item" @click="changeFilter('descend')">{{
-        $t('contextMenu.descendSort')
-      }}</div>
-      <div class="item" @click="changeFilter('ascend')">{{
-        $t('contextMenu.ascendSort')
-      }}</div>
+      <div
+        class="item"
+        @click="updateLocalXXX({ name: 'sortBy', data: 'default' })"
+        >{{ $t('contextMenu.defaultSort') }}</div
+      >
+      <div
+        class="item"
+        @click="updateLocalXXX({ name: 'sortBy', data: 'byname' })"
+        >{{ $t('contextMenu.sortByName') }}</div
+      >
+      <div
+        class="item"
+        @click="updateLocalXXX({ name: 'sortBy', data: 'descend' })"
+        >{{ $t('contextMenu.descendSort') }}</div
+      >
+      <div
+        class="item"
+        @click="updateLocalXXX({ name: 'sortBy', data: 'ascend' })"
+        >{{ $t('contextMenu.ascendSort') }}</div
+      >
     </ContextMenu>
   </div>
 </template>
@@ -153,6 +161,7 @@ import CoverRow from '@/components/CoverRow.vue';
 import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
 import { localAlbumParser, localTracksFilter } from '@/utils/localSongParser';
+import { localArtistsParser } from '@/utils/localSongParser';
 
 function extractLyricPart(rawLyric) {
   return rawLyric.split(']').pop().trim();
@@ -175,16 +184,14 @@ export default {
       return this.localMusic.sortBy;
     },
     filterLatestAdd() {
-      const latest = this.changeLocalTrackFilter('descend')
-        .filter(obj => obj.show)
-        .slice(0, 12);
+      const latest = this.changeLocalTrackFilter('descend').slice(0, 12);
       return latest;
     },
     filterLocalTracks() {
       let type = this.sortBy;
       if (!type) {
         type = 'default';
-        this.changeFilter(type);
+        this.updateLocalXXX({ name: 'sortBy', data: type });
       }
       const tracks = this.changeLocalTrackFilter(type);
       return tracks;
@@ -193,19 +200,28 @@ export default {
       const albums = [];
       const songs = this.localMusic.songs;
       for (const song of songs) {
-        const al = localAlbumParser(song.id);
-        const alExist = albums.find(a => a.id === al.id && a.show === true);
-        if (!alExist) {
-          albums.push(al);
+        if (song.show) {
+          const al = localAlbumParser(song.id);
+          const alExist = albums.find(a => a.id === al.id);
+          if (!alExist) {
+            albums.push(al);
+          }
         }
       }
       return [...new Set(albums)];
     },
     filterLocalArtists() {
       const artists = [];
-      const ars = this.localMusic.artists;
-      for (const ar of ars) {
-        artists.push(ar.matched ? ar.onlineArtist : ar);
+      const songs = this.localMusic.songs;
+      for (const song of songs) {
+        if (song.show) {
+          const ars = localArtistsParser(song.id);
+          for (const ar of ars) {
+            if (!artists.some(a => a.id === ar.id)) {
+              artists.push(ar);
+            }
+          }
+        }
       }
       return [...new Set(artists)];
     },
@@ -243,7 +259,7 @@ export default {
     this.loadData();
   },
   methods: {
-    ...mapMutations(['updateData', 'changeFilter']),
+    ...mapMutations(['updateData', 'updateLocalXXX']),
     ...mapActions(['fetchLatestSongs']),
     loadData() {
       this.$store.dispatch('fetchLatestSongs');

@@ -39,15 +39,15 @@ async function getLocalAlbum({ state, commit }, filePath) {
   const { common } = metadata;
 
   let album = state.localMusic.albums.find(a => a.name === common.album);
+  console.log('foundAlbum = ', album);
   if (album) {
-    album.show = true;
+    return album.id;
   } else {
     let arForSearch = common.albumartist || common.artist;
     arForSearch = splitArtist(arForSearch);
     arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
     album = {
       id: state.localMusic.albumsIdCounter,
-      show: true,
       isLocal: true,
       arForSearch: arForSearch,
       songForSearch: common.title,
@@ -58,9 +58,9 @@ async function getLocalAlbum({ state, commit }, filePath) {
         'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
     };
     state.localMusic.albumsIdCounter++;
-    commit('addAnAlbum', album);
+    commit('addLocalXXX', { name: 'albums', data: album });
+    return album.id;
   }
-  return album.id;
 }
 
 async function getArtists({ state, commit }, filePath) {
@@ -77,7 +77,6 @@ async function getArtists({ state, commit }, filePath) {
   for (const artist of artists) {
     const foundArtist = state.localMusic.artists.find(a => a.name === artist);
     if (foundArtist) {
-      foundArtist.show = true;
       if (!foundArtist.matched) {
         foundArtist.picUrl =
           'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg';
@@ -90,7 +89,6 @@ async function getArtists({ state, commit }, filePath) {
       const ar = {
         id: state.localMusic.artistsIdCounter,
         name: artist,
-        show: true,
         matched: false,
         arForSearch: arForSearch,
         songForSearch: common.title,
@@ -99,7 +97,7 @@ async function getArtists({ state, commit }, filePath) {
         picUrl:
           'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
       };
-      commit('addAnArtist', ar);
+      commit('addLocalXXX', { name: 'artists', data: ar });
       artistIDs.push(ar.id);
       state.localMusic.artistsIdCounter++;
     }
@@ -107,7 +105,7 @@ async function getArtists({ state, commit }, filePath) {
   return artistIDs;
 }
 
-async function getTrack({ state, commit }, filePath, clear = true) {
+async function getTrack({ state, commit }, filePath) {
   const stats = fs.statSync(filePath);
   const birthDate = stats.ctime.toLocaleDateString();
   const formatDate = new Date(birthDate).toISOString().slice(0, 10);
@@ -120,7 +118,7 @@ async function getTrack({ state, commit }, filePath, clear = true) {
     obj => obj.filePath === filePath
   );
   if (foundSong) {
-    foundSong.show = clear ? true : foundSong.show;
+    return foundSong.id;
   } else {
     let arForSearch = common.albumartist || common.artist;
     arForSearch = splitArtist(arForSearch);
@@ -133,16 +131,15 @@ async function getTrack({ state, commit }, filePath, clear = true) {
       isLocal: true,
       arForSearch: arForSearch,
       matched: false,
-      show: true,
       filePath: filePath,
       onlineTrack: null,
       picUrl:
         'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
     };
-    commit('addATrack', foundSong);
+    commit('addLocalXXX', { name: 'tracks', data: foundSong });
     state.localMusic.trackIdCounter++;
+    return foundSong.id;
   }
-  return foundSong.id;
 }
 
 function delay(time) {
@@ -180,7 +177,7 @@ export default {
     }
     const walk = async folder => {
       const files = fs.readdirSync(folder);
-      files.forEach(async file => {
+      for (const file of files) {
         const filePath = path.join(folder, file);
         const stats = fs.statSync(filePath);
         if (stats.isFile() && musicFileExtensions.test(filePath)) {
@@ -193,16 +190,17 @@ export default {
           if (!hasFilePath) {
             const song = {
               id: trackID,
+              show: true,
               trackID: trackID,
               albumID: albumID,
               artistIDs: artistIDs,
             };
-            commit('addSong', song);
+            commit('addLocalXXX', { name: 'songs', data: song });
           }
         } else if (stats.isDirectory()) {
-          walk(filePath);
+          await walk(filePath);
         }
-      });
+      }
     };
     walk(folderPath);
   },
@@ -280,9 +278,9 @@ export default {
   },
   fetchLatestSongs({ commit }) {
     const trackIDs = localTracksFilter('descend')
-      .filter(t => t.matched && t.show)
+      .filter(t => t.matched)
       .map(t => t.onlineTrack.id);
-    commit('updateLatestAddTracks', trackIDs);
+    commit('updateLocalXXX', { name: 'latestAddTracks', data: trackIDs });
   },
   async updateArtists({ state }) {
     console.log('updateArtists start!!!');

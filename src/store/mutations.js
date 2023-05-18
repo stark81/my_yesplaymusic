@@ -8,36 +8,16 @@ export default {
       state.player.sendSelfToIpcMain();
     }
   },
+  addLocalXXX(state, { name, data }) {
+    state.localMusic[name].push(data);
+  },
+  updateLocalXXX(state, { name, data }) {
+    state.localMusic[name] = data;
+  },
   clearLocalMusic(state) {
-    const tracks = state.localMusic.tracks;
-    const newTracks = tracks.map(obj => ({ ...obj, show: false }));
-    state.localMusic.tracks = newTracks;
-
-    const albums = state.localMusic.albums;
-    const newAlbums = albums.map(obj => ({ ...obj, show: false }));
-    state.localMusic.albums = newAlbums;
-
-    const artists = state.localMusic.artists;
-    const newArtists = artists.map(obj => ({ ...obj, show: false }));
-    state.localMusic.artists = newArtists;
-  },
-  updateLatestAddTracks(state, value) {
-    state.localMusic.latestAddTracks = value;
-  },
-  addAnAlbum(state, value) {
-    state.localMusic.albums.push(value);
-  },
-  addAnArtist(state, value) {
-    state.localMusic.artists.push(value);
-  },
-  addSong(state, value) {
-    state.localMusic.songs.push(value);
-  },
-  changeFilter(state, value) {
-    state.localMusic.sortBy = value;
-  },
-  addATrack(state, value) {
-    state.localMusic.tracks.push(value);
+    const songs = state.localMusic.songs;
+    const newSongs = songs.map(obj => ({ ...obj, show: false }));
+    state.localMusic.songs = newSongs;
   },
   changeLang(state, lang) {
     state.settings.lang = lang;
