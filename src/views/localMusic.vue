@@ -40,6 +40,7 @@
           :tracks="filterLatestAdd"
           :column-number="3"
           type="tracklist"
+          :extra-context-menu-item="['removeLocalTrack', 'addToLocalList']"
         />
       </div>
     </div>
