@@ -39,7 +39,6 @@ async function getLocalAlbum({ state, commit }, filePath) {
   const { common } = metadata;
 
   let album = state.localMusic.albums.find(a => a.name === common.album);
-  console.log('foundAlbum = ', album);
   if (album) {
     return album.id;
   } else {
@@ -118,6 +117,9 @@ async function getTrack({ state, commit }, filePath) {
     obj => obj.filePath === filePath
   );
   if (foundSong) {
+    if (!foundSong.lyricDelay) {
+      foundSong.lyricDelay = 0;
+    }
     return foundSong.id;
   } else {
     let arForSearch = common.albumartist || common.artist;
@@ -129,6 +131,7 @@ async function getTrack({ state, commit }, filePath) {
       name: common.title,
       dt: metadata.format.duration * 1000,
       isLocal: true,
+      lyricDelay: 0,
       arForSearch: arForSearch,
       matched: false,
       filePath: filePath,
@@ -197,9 +200,12 @@ export default {
             };
             commit('addLocalXXX', { name: 'songs', data: song });
           } else {
-            state.localMusic.songs.find(
+            const song = state.localMusic.songs.find(
               s => s.trackID === foundTrack.id
-            ).show = true;
+            );
+            if (clear) {
+              song.show = true;
+            }
           }
         } else if (stats.isDirectory()) {
           await walk(filePath);
@@ -209,7 +215,6 @@ export default {
     walk(folderPath);
   },
   async updateTrack({ state }) {
-    console.log('updateSongs start!!!');
     const songs = state.localMusic.songs;
     const tracks = state.localMusic.tracks;
     const albums = state.localMusic.albums;
@@ -222,7 +227,6 @@ export default {
       if (track.matched && album.matched) {
         code = 0;
       } else {
-        console.log('updateTrack online: track.name = ', track.name);
         const keyword = {
           keywords: `${track.name} ${track.arForSearch}`,
           type: 1,
@@ -230,7 +234,6 @@ export default {
         };
         code = await search(keyword).then(async result => {
           if (result.code === 200) {
-            console.log('search result = ', result);
             if (result.result.songs?.length > 0) {
               const matchTrack = result.result.songs.filter(item => {
                 return (
@@ -239,7 +242,6 @@ export default {
                   Math.abs(item.duration - track.dt) <= 5 * 1000
                 );
               });
-              console.log('matchTrack = ', matchTrack);
               if (matchTrack.length > 0) {
                 const trackIndex = randomNum(0, matchTrack.length - 1);
                 track.onlineTrack = matchTrack[trackIndex];
@@ -256,7 +258,6 @@ export default {
                     Math.abs(item.duration - track.dt) <= 5 * 1000
                   );
                 });
-                console.log('not matched: matchTrack = ', matchTrack);
                 track.onlineTrack =
                   matchTrack.length !== 0
                     ? matchTrack[randomNum(0, matchTrack.length - 1)]
@@ -278,7 +279,6 @@ export default {
       const delayTime = code === 0 ? 0 : rawDelay;
       await delay(delayTime);
     }
-    console.log('updateSongs finished!!!');
   },
   createLocalPlayList({ state, commit }, params) {
     const playlist = {
@@ -346,7 +346,6 @@ export default {
     commit('updateLocalXXX', { name: 'latestAddTracks', data: trackIDs });
   },
   async updateArtists({ state }) {
-    console.log('updateArtists start!!!');
     let code = 200;
     let rawDelay = 20 * 1000;
     const artists = state.localMusic.artists;
@@ -354,7 +353,6 @@ export default {
       if (artist.matched) {
         code = 0;
       } else {
-        console.log('updateArtists online: artist.name = ', artist.name);
         const keyword = {
           keywords: artist.name,
           type: 100,
@@ -375,7 +373,6 @@ export default {
       const delayTime = code === 0 ? 0 : rawDelay;
       await delay(delayTime);
     }
-    console.log('updateArtists finished!!!');
   },
   likeATrack({ state, commit, dispatch }, id) {
     if (!isAccountLoggedIn()) {

@@ -232,6 +232,7 @@ export default {
     saveToLibrary: '保存到音乐库',
     removeFromLibrary: '从音乐库删除',
     addToPlaylist: '添加到歌单',
+    changeLyricTime: '调整歌词时间',
     showLyric: '查看歌词',
     showComment: '查看评论',
     searchInPlaylist: '歌单内搜索',

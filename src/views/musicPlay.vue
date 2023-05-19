@@ -116,6 +116,13 @@
                     <svg-icon icon-class="plus" />
                   </button-icon>
                   <button-icon
+                    v-if="isLocal"
+                    :title="$t('contextMenu.changeLyricTime')"
+                    @click.native="changeLyricTime"
+                  >
+                    <svg-icon icon-class="lyricChange" />
+                  </button-icon>
+                  <button-icon
                     class="lyric_comment_btn"
                     :title="
                       $t(
@@ -279,6 +286,9 @@ export default {
       },
       set() {},
     },
+    isLocal() {
+      return this.player.currentTrack.isLocal === true;
+    },
     volume: {
       get() {
         return this.player.volume;
@@ -379,6 +389,16 @@ export default {
         key: 'selectedTrackID',
         value: this.currentTrack?.id,
       });
+    },
+    changeLyricTime() {
+      const data = {
+        operation: 'delayTime',
+        title: '请输入歌词调整时间(秒)',
+        comment: null,
+        type: null,
+        filePath: this.currentTrack.filePath,
+      };
+      this.Bus.$emit('showConfirm', data);
     },
     playPrevTrack() {
       this.player.playPrevTrack();

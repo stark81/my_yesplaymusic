@@ -62,6 +62,12 @@ export default {
     currentTrack() {
       return this.player.currentTrack;
     },
+    lyricDelay() {
+      return this.isLocal ? Number(this.currentTrack.lyricDelay) : 0;
+    },
+    isLocal() {
+      return this.player.currentTrack.isLocal === true;
+    },
     volume: {
       get() {
         return this.player.volume;
@@ -245,7 +251,7 @@ export default {
     },
     setLyricsInterval() {
       this.lyricsInterval = setInterval(() => {
-        const progress = this.player.seek() ?? 0;
+        const progress = this.player.seek() + this.lyricDelay ?? 0;
         let oldHighlightLyricIndex = this.highlightLyricIndex;
         this.highlightLyricIndex = this.lyric.findIndex((l, index) => {
           const nextLyric = this.lyric[index + 1];

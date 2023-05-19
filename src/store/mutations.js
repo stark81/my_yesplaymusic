@@ -14,6 +14,10 @@ export default {
   updateLocalXXX(state, { name, data }) {
     state.localMusic[name] = data;
   },
+  setDelayTime(state, { filePath, delayTime }) {
+    const track = state.localMusic.tracks.find(t => t.filePath === filePath);
+    track.lyricDelay = delayTime;
+  },
   clearLocalMusic(state) {
     const songs = state.localMusic.songs;
     const newSongs = songs.map(obj => ({ ...obj, show: false }));

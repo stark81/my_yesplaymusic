@@ -78,7 +78,8 @@ export class Lyric extends Canvas {
     // this.findCurrentLyric();
   }
   findCurrentLyric() {
-    const progress = player.seek() ?? 0;
+    const lyricDelay = Number(player.currentTrack.lyricDelay || 0);
+    const progress = player.seek() + lyricDelay ?? 0;
     let currentIndex = this.allLyric?.findIndex((l, index) => {
       const nextLyric = this.allLyric[index + 1];
       return (
