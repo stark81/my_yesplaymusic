@@ -114,10 +114,10 @@
       </div>
 
       <div v-show="currentTab === 'playlists'">
-        <div v-if="localMusic.playlists.length > 1">
+        <div v-if="localMusic.playlists.length > 0">
           <CoverRow
             :items="filterPlaylists"
-            type="playlist"
+            type="localPlaylist"
             :show-play-button="true"
           />
         </div>
@@ -267,7 +267,7 @@ export default {
       return [...new Set(artists)];
     },
     filterPlaylists() {
-      return this.localMusic.playlists;
+      return this.localMusic.playlists.slice().reverse();
     },
     pickedLyric() {
       /** @type {string?} */

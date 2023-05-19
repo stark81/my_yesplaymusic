@@ -78,8 +78,22 @@ export default {
         album: player.playAlbumByID,
         playlist: player.playPlaylistByID,
         artist: player.playArtistByID,
+        localPlaylist: player.replacePlaylist,
       };
-      playActions[this.type].bind(player)(this.id);
+      if (this.type === 'localPlaylist') {
+        const playlist = this.$store.state.localMusic.playlists.find(
+          p => p.id === this.id
+        );
+        const trackIDs = playlist.trackIds;
+        playActions[this.type].bind(player)(
+          trackIDs.slice().reverse(),
+          this.id,
+          'localMusic',
+          'first'
+        );
+      } else {
+        playActions[this.type].bind(player)(this.id);
+      }
     },
     goTo() {
       this.$router.push({ name: this.type, params: { id: this.id } });

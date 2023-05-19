@@ -1,7 +1,62 @@
 <template>
   <div v-show="show" class="playlist">
+    <div v-if="isLocal" class="playlist-info">
+      <Cover
+        :id="playlist.id"
+        :image-url="playlist.coverImgUrl | resizeImage(1024)"
+        :show-play-button="true"
+        :always-show-shadow="true"
+        :click-cover-to-play="true"
+        :fixed-size="288"
+        type="localPlaylist"
+        :cover-hover="false"
+        :play-button-size="18"
+      />
+      <div class="info">
+        <div class="title">{{ playlist.name }}</div>
+        <div class="artist">
+          离线歌单 {{ data.user.nickname ? `by ${data.user.nickname}` : `` }}
+        </div>
+        <div class="date-and-count">
+          {{ $t('playlist.updatedAt') }}
+          {{ playlist.updateTime | formatDate }} · {{ playlist.trackCount }}
+          {{ $t('common.songs') }}
+        </div>
+        <div class="description" @click="toggleFullDescription">
+          {{ playlist.description }}
+        </div>
+        <div class="buttons">
+          <ButtonTwoTone icon-class="play" @click.native="playPlaylistByID()">
+            {{ $t('common.play') }}
+          </ButtonTwoTone>
+          <ButtonTwoTone
+            icon-class="more"
+            :icon-button="true"
+            :horizontal-padding="0"
+            color="grey"
+            @click.native="openMenu"
+          >
+          </ButtonTwoTone>
+        </div>
+      </div>
+      <div v-if="displaySearchInPlaylist" class="search-box">
+        <div class="container" :class="{ active: inputFocus }">
+          <svg-icon icon-class="search" />
+          <div class="input">
+            <input
+              v-model.trim="inputSearchKeyWords"
+              v-focus
+              :placeholder="inputFocus ? '' : $t('playlist.search')"
+              @input="inputDebounce()"
+              @focus="inputFocus = true"
+              @blur="inputFocus = false"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
     <div
-      v-if="specialPlaylistInfo === undefined && !isLikeSongsPage"
+      v-if="specialPlaylistInfo === undefined && !isLikeSongsPage && !isLocal"
       class="playlist-info"
     >
       <Cover
@@ -136,7 +191,6 @@
         </ButtonTwoTone>
       </div>
     </div>
-
     <div v-if="isLikeSongsPage" class="user-info">
       <h1>
         <img
@@ -167,7 +221,7 @@
     <TrackList
       :id="playlist.id"
       :tracks="filteredTracks"
-      type="playlist"
+      :type="isLocal ? 'localtracks' : 'playlist'"
       :extra-context-menu-item="
         isUserOwnPlaylist ? ['removeTrackFromPlaylist'] : []
       "
@@ -189,12 +243,13 @@
       :show-footer="false"
       :click-outside-hide="true"
       title="歌单介绍"
+      style="white-space: pre-wrap"
       >{{ playlist.description }}</Modal
     >
 
     <ContextMenu ref="playlistMenu">
       <!-- <div class="item">{{ $t('contextMenu.addToQueue') }}</div> -->
-      <div class="item" @click="likePlaylist(true)">{{
+      <div v-if="!isLocal" class="item" @click="likePlaylist(true)">{{
         playlist.subscribed
           ? $t('contextMenu.removeFromLibrary')
           : $t('contextMenu.saveToLibrary')
@@ -203,13 +258,13 @@
         $t('contextMenu.searchInPlaylist')
       }}</div>
       <div
-        v-if="playlist.creator.userId === data.user.userId"
+        v-if="isLocal || playlist.creator.userId === data.user.userId"
         class="item"
         @click="editPlaylist"
         >编辑歌单信息</div
       >
       <div
-        v-if="playlist.creator.userId === data.user.userId"
+        v-if="isLocal || playlist.creator.userId === data.user.userId"
         class="item"
         @click="deletePlaylist"
         >删除歌单</div
@@ -236,6 +291,7 @@ import ContextMenu from '@/components/ContextMenu.vue';
 import TrackList from '@/components/TrackList.vue';
 import Cover from '@/components/Cover.vue';
 import Modal from '@/components/Modal.vue';
+import { localTrackParser } from '@/utils/localSongParser';
 
 const specialPlaylist = {
   2829816518: {
@@ -373,13 +429,17 @@ export default {
     isLikeSongsPage() {
       return this.$route.name === 'likedSongs';
     },
+    isLocal() {
+      return this.$route.name === 'localPlaylist';
+    },
     specialPlaylistInfo() {
       return specialPlaylist[this.playlist.id];
     },
     isUserOwnPlaylist() {
       return (
-        this.playlist.creator.userId === this.data.user.userId &&
-        this.playlist.id !== this.data.likedSongPlaylistID
+        this.isLocal ||
+        (this.playlist.creator.userId === this.data.user.userId &&
+          this.playlist.id !== this.data.likedSongPlaylistID)
       );
     },
     filteredTracks() {
@@ -404,7 +464,9 @@ export default {
     },
   },
   created() {
-    if (this.$route.name === 'likedSongs') {
+    if (this.isLocal) {
+      this.loadLocalData(this.$route.params.id);
+    } else if (this.$route.name === 'likedSongs') {
       this.loadData(this.data.likedSongPlaylistID);
     } else {
       this.loadData(this.$route.params.id);
@@ -415,15 +477,33 @@ export default {
   },
   methods: {
     ...mapMutations(['appendTrackToPlayerList']),
-    ...mapActions(['playFirstTrackOnList', 'playTrackOnListByID', 'showToast']),
+    ...mapActions([
+      'playFirstTrackOnList',
+      'playTrackOnListByID',
+      'showToast',
+      'deleteLocalPlaylist',
+    ]),
     playPlaylistByID(trackID = 'first') {
-      let trackIDs = this.playlist.trackIds.map(t => t.id);
-      this.$store.state.player.replacePlaylist(
-        trackIDs,
-        this.playlist.id,
-        'playlist',
-        trackID
-      );
+      if (this.isLocal) {
+        const playlist = this.$store.state.localMusic.playlists.find(
+          p => p.id === this.playlist.id
+        );
+        const trackIDs = playlist.trackIds;
+        this.$store.state.player.replacePlaylist(
+          trackIDs.slice().reverse(),
+          this.playlist.id,
+          'localMusic',
+          trackID
+        );
+      } else {
+        let trackIDs = this.playlist.trackIds.map(t => t.id);
+        this.$store.state.player.replacePlaylist(
+          trackIDs,
+          this.playlist.id,
+          'playlist',
+          trackID
+        );
+      }
     },
     likePlaylist(toast = false) {
       if (!isAccountLoggedIn()) {
@@ -465,6 +545,22 @@ export default {
           }
         });
     },
+    loadLocalData(id) {
+      const tracks = [];
+      const localMusic = this.$store.state.localMusic;
+      const playlist = localMusic.playlists.find(p => p.id === parseInt(id));
+      const songIDs = localMusic.songs
+        .filter(s => playlist.trackIds.includes(s.id))
+        .map(s => s.id);
+      for (const songID of songIDs) {
+        const track = localTrackParser(songID);
+        tracks.push(track);
+      }
+      this.playlist = playlist;
+      this.tracks = tracks.slice().reverse();
+      NProgress.done();
+      this.show = true;
+    },
     loadMore(loadNum = 100) {
       let trackIDs = this.playlist.trackIds.filter((t, index) => {
         if (
@@ -490,20 +586,31 @@ export default {
       this.$refs.playlistMenu.openMenu(e);
     },
     deletePlaylist() {
-      if (!isAccountLoggedIn()) {
+      if (!this.isLocal && !isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
       let confirmation = confirm(`确定要删除歌单 ${this.playlist.name}？`);
       if (confirmation === true) {
-        deletePlaylist(this.playlist.id).then(data => {
-          if (data.code === 200) {
-            nativeAlert(`已删除歌单 ${this.playlist.name}`);
-            this.$router.go(-1);
-          } else {
-            nativeAlert('发生错误');
-          }
-        });
+        if (this.isLocal) {
+          this.deleteLocalPlaylist(this.playlist.id).then(data => {
+            if (data.code === 200) {
+              nativeAlert(`已删除歌单 ${this.playlist.name}`);
+              this.$router.go(-1);
+            } else {
+              nativeAlert(data.message);
+            }
+          });
+        } else {
+          deletePlaylist(this.playlist.id).then(data => {
+            if (data.code === 200) {
+              nativeAlert(`已删除歌单 ${this.playlist.name}`);
+              this.$router.go(-1);
+            } else {
+              nativeAlert('发生错误');
+            }
+          });
+        }
       }
     },
     editPlaylist() {
@@ -521,7 +628,7 @@ export default {
       }
     },
     removeTrack(trackID) {
-      if (!isAccountLoggedIn()) {
+      if (!this.isLocal && !isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
@@ -587,6 +694,7 @@ export default {
       margin-top: 2px;
     }
     .description {
+      white-space: pre-wrap;
       font-size: 14px;
       opacity: 0.68;
       color: var(--color-text);

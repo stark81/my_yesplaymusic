@@ -292,7 +292,6 @@ export default {
     return playlist;
   },
   addTrackToLocalPlaylist({ state }, params) {
-    console.log('actions.js params = ', params);
     const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
     if (playlist) {
       const song = state.localMusic.songs.find(s => s.id === params.tracks);
@@ -304,6 +303,34 @@ export default {
       playlist.coverImgUrl = track.picUrl;
       playlist.trackCount = playlist.trackIds.length;
       playlist.updateTime = new Date().getTime();
+      return { code: 200 };
+    }
+    return { code: 404, message: '歌单不存在' };
+  },
+  rmTrackFromLocalPlaylist({ state }, params) {
+    const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
+    if (playlist) {
+      const idx = playlist.trackIds.indexOf(params.tracks);
+      if (idx !== -1) {
+        playlist.trackIds.splice(idx, 1);
+        playlist.trackCount = playlist.trackIds.length;
+        const showSongId = playlist.trackIds[playlist.trackIds.length - 1];
+        const showTrack = localTrackParser(showSongId);
+        playlist.coverImgUrl =
+          showTrack?.picUrl ||
+          'https://p1.music.126.net/jWE3OEZUlwdz0ARvyQ9wWw==/109951165474121408.jpg';
+        playlist.updateTime = new Date().getTime();
+        return { code: 200 };
+      }
+      return { code: 404, message: '歌曲不存在于歌单中' };
+    }
+    return { code: 404, message: '歌单不存在' };
+  },
+  deleteLocalPlaylist({ state }, pid) {
+    const playlists = state.localMusic.playlists;
+    const idx = playlists.findIndex(p => p.id === pid);
+    if (idx !== -1) {
+      playlists.splice(idx, 1);
       return { code: 200 };
     }
     return { code: 404, message: '歌单不存在' };

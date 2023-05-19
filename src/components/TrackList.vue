@@ -204,7 +204,13 @@ export default {
   },
   methods: {
     ...mapMutations(['updateModal']),
-    ...mapActions(['nextTrack', 'showToast', 'likeATrack', 'fetchLatestSongs']),
+    ...mapActions([
+      'nextTrack',
+      'showToast',
+      'likeATrack',
+      'fetchLatestSongs',
+      'rmTrackFromLocalPlaylist',
+    ]),
     openMenu(e, track, index = -1) {
       this.rightClickedTrack = track;
       this.rightClickedTrackIndex = index;
@@ -302,24 +308,41 @@ export default {
       });
     },
     removeTrackFromPlaylist() {
-      if (!isAccountLoggedIn()) {
-        this.showToast(locale.t('toast.needToLogin'));
-        return;
-      }
-      if (confirm(`确定要从歌单删除 ${this.rightClickedTrack.name}？`)) {
-        let trackID = this.rightClickedTrack.id;
-        addOrRemoveTrackFromPlaylist({
-          op: 'del',
-          pid: this.id,
-          tracks: trackID,
-        }).then(data => {
-          this.showToast(
-            data.body.code === 200
-              ? locale.t('toast.removedFromPlaylist')
-              : data.body.message
-          );
-          this.$parent.removeTrack(trackID);
-        });
+      if (this.type === 'localtracks') {
+        if (confirm(`确定要从歌单删除 ${this.rightClickedTrack.name}？`)) {
+          let trackID = this.rightClickedTrack.id;
+          this.rmTrackFromLocalPlaylist({
+            pid: this.id,
+            tracks: trackID,
+          }).then(data => {
+            this.showToast(
+              data.code === 200
+                ? locale.t('toast.removedFromPlaylist')
+                : data.message
+            );
+            this.$parent.removeTrack(trackID);
+          });
+        }
+      } else {
+        if (!isAccountLoggedIn()) {
+          this.showToast(locale.t('toast.needToLogin'));
+          return;
+        }
+        if (confirm(`确定要从歌单删除 ${this.rightClickedTrack.name}？`)) {
+          let trackID = this.rightClickedTrack.id;
+          addOrRemoveTrackFromPlaylist({
+            op: 'del',
+            pid: this.id,
+            tracks: trackID,
+          }).then(data => {
+            this.showToast(
+              data.body.code === 200
+                ? locale.t('toast.removedFromPlaylist')
+                : data.body.message
+            );
+            this.$parent.removeTrack(trackID);
+          });
+        }
       }
     },
     copyLink() {
