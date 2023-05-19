@@ -181,13 +181,13 @@ export default {
         const filePath = path.join(folder, file);
         const stats = fs.statSync(filePath);
         if (stats.isFile() && musicFileExtensions.test(filePath)) {
-          const hasFilePath = state.localMusic.tracks.some(
+          const foundTrack = state.localMusic.tracks.find(
             track => track.filePath === filePath
           );
           const trackID = await getTrack({ state, commit }, filePath, clear);
           const albumID = await getLocalAlbum({ state, commit }, filePath);
           const artistIDs = await getArtists({ state, commit }, filePath);
-          if (!hasFilePath) {
+          if (!foundTrack) {
             const song = {
               id: trackID,
               show: true,
@@ -196,6 +196,10 @@ export default {
               artistIDs: artistIDs,
             };
             commit('addLocalXXX', { name: 'songs', data: song });
+          } else {
+            state.localMusic.songs.find(
+              s => s.trackID === foundTrack.id
+            ).show = true;
           }
         } else if (stats.isDirectory()) {
           await walk(filePath);
