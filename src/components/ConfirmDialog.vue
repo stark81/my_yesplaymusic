@@ -8,7 +8,7 @@
           v-model="inputValue"
           class="inputdiv"
           type="text"
-          placeholder="正数为延后，负数为提前"
+          :placeholder="placeholder"
           @input="handleInput"
         />
       </div>
@@ -37,6 +37,7 @@ export default {
       type: null,
       trackID: null,
       inputValue: null,
+      placeholder: 0,
       isValidNumber: true,
     };
   },
@@ -48,6 +49,7 @@ export default {
       this.comment = data.comment;
       this.type = data.type;
       this.filePath = data.filePath;
+      this.placeholder = data.lyricDelay;
       this.isShow = true;
     });
   },

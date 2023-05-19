@@ -397,6 +397,7 @@ export default {
         comment: null,
         type: null,
         filePath: this.currentTrack.filePath,
+        lyricDelay: Number(this.currentTrack.lyricDelay || 0),
       };
       this.Bus.$emit('showConfirm', data);
     },
