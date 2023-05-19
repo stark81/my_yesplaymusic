@@ -54,9 +54,13 @@
             }}</p>
             <div class="reply-count">
               <span>{{ comment.replyCount }}条回复</span>
-              <span v-if="comment.owner" class="seperate_line">|</span>
               <span
-                v-if="comment.owner"
+                v-if="isAccountLoggedIn && comment.owner"
+                class="seperate_line"
+                >|</span
+              >
+              <span
+                v-if="isAccountLoggedIn && comment.owner"
                 class="delect_reply"
                 @click="handleDeleteComment(comment)"
               >
@@ -123,6 +127,9 @@ export default {
     ...mapState(['player']),
     currentTrack() {
       return this.player.currentTrack;
+    },
+    isAccountLoggedIn() {
+      return isAccountLoggedIn();
     },
     containerStyle() {
       const height = this.clientHeight - 180;

@@ -47,7 +47,10 @@
           </div>
           <div class="comment-content">
             <div @click="replyFloor(comment)">{{ comment.content }}</div>
-            <div v-if="comment.owner" class="p2" @click="DeleteFloor(comment)"
+            <div
+              v-if="isAccountLoggedIn && comment.owner"
+              class="p2"
+              @click="DeleteFloor(comment)"
               >删除</div
             >
           </div>
@@ -107,6 +110,9 @@ export default {
     ...mapState(['player']),
     currentTrack() {
       return this.player.currentTrack;
+    },
+    sAccountLoggedIn() {
+      return isAccountLoggedIn();
     },
     containerStyle() {
       const height = this.clientHeight - 180;
