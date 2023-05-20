@@ -549,15 +549,13 @@ export default {
       const tracks = [];
       const localMusic = this.$store.state.localMusic;
       const playlist = localMusic.playlists.find(p => p.id === parseInt(id));
-      const songIDs = localMusic.songs
-        .filter(s => playlist.trackIds.includes(s.id))
-        .map(s => s.id);
+      const songIDs = playlist.trackIds;
       for (const songID of songIDs) {
         const track = localTrackParser(songID);
         tracks.push(track);
       }
       this.playlist = playlist;
-      this.tracks = tracks.slice().reverse();
+      this.tracks = tracks.reverse();
       NProgress.done();
       this.show = true;
     },
