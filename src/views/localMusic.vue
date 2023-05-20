@@ -197,6 +197,7 @@ export default {
       show: true,
       sortedTracks: [],
       lyric: undefined,
+      lyricSong: undefined,
       currentTab: 'localSongs',
       searchKeyWords: '', // 搜索使用的关键字
       inputSearchKeyWords: '', // 搜索框中正在输入的关键字
@@ -289,9 +290,11 @@ export default {
       const startLyricLineIndex = randomNum(0, randomUpperBound - 1);
 
       // Pick lyric lines to render.
-      return lyricLine
+      const returnLyricLine = lyricLine
         .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
         .map(extractLyricPart);
+      returnLyricLine.push(`————《${this.lyricSong}》`);
+      return returnLyricLine;
     },
   },
   created() {
@@ -343,11 +346,15 @@ export default {
       return tracks;
     },
     getRandomLyric() {
-      getLyric(
+      const randomTrackID =
         this.localMusic.latestAddTracks[
           randomNum(0, this.localMusic.latestAddTracks.length - 1)
-        ]
-      ).then(data => {
+        ];
+      const track = this.localMusic.tracks.find(
+        t => t.onlineTrack.id === randomTrackID
+      );
+      this.lyricSong = track.name;
+      getLyric(randomTrackID).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric
             .split('\n')
