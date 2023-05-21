@@ -2,8 +2,8 @@ import store from '@/store';
 import cloneDeep from 'lodash/cloneDeep';
 
 export function localTrackParser(songID, replaceID = false) {
-  const localMusic = store.state.localMusic;
-  const song = localMusic.songs.find(s => s.id === songID);
+  const localMusic = store?.state.localMusic;
+  const song = localMusic?.songs.find(s => s.id === songID);
   if (!song) return;
   const tr = localMusic.tracks.find(t => t.id === song.trackID);
   const al = localMusic.albums.find(a => a.id === song.albumID);

@@ -14,8 +14,10 @@ import like from './assets/like.png';
 import like_white from './assets/like_white.png';
 import like_fill from './assets/like_fill.png';
 import like_fill_white from './assets/like_fill_white.png';
-import icon from './assets/icon@88.png';
-import icon_white from './assets/icon@88_white.png';
+import icon from './assets/icon.png';
+import icon_white from './assets/icon_white.png';
+import thumbs_down_icon from './assets/thumbs_down.png';
+import thumbs_down_white_icon from './assets/thumbs_down_white.png';
 
 import store from '@/store';
 const player = store.state.player;
@@ -25,7 +27,7 @@ let controlShow = trayShow && store.state.settings.showControl;
 let lyricShow = trayShow && store.state.settings.showStatusBarLyric;
 
 let useDarkMode = false;
-let previous, playing, next, paused, liked, like_solid, tray_icon;
+let previous, thumbs_down, playing, next, paused, liked, like_solid, tray_icon;
 let LyricIcon, ControlIcon, TrayIcon, CombineIcon;
 let currrentLyric;
 const setTray = remote.getGlobal('setTray');
@@ -35,13 +37,22 @@ function getControlIcon(isDarkMode) {
   return isDarkMode
     ? [
         image_previous_white,
+        thumbs_down_white_icon,
         play_white,
         skip_next_white,
         pause_white,
         like_white,
         like_fill_white,
       ]
-    : [image_previous, play, skip_next, pause, like, like_fill];
+    : [
+        image_previous,
+        thumbs_down_icon,
+        play,
+        skip_next,
+        pause,
+        like,
+        like_fill,
+      ];
 }
 
 // 根据深浅色模式，获取托盘小图标
@@ -54,10 +65,10 @@ function getIcon(useDarkMode) {
   return new Control([tray_icon]);
 }
 function getControl(useDarkMode) {
-  [previous, playing, next, paused, liked, like_solid] =
+  [previous, thumbs_down, playing, next, paused, liked, like_solid] =
     getControlIcon(useDarkMode);
   return new Control([
-    previous,
+    player.isPersonalFM ? thumbs_down : previous,
     player.playing ? paused : playing,
     next,
     player.isCurrentTrackLiked ? like_solid : liked,
@@ -70,6 +81,7 @@ function getLyric(useDarkMode) {
 }
 
 function updateTray(show_lyric, show_control, show_tray) {
+  const x_add = player.isPersonalFM ? 14 : 0;
   CombineIcon.ctx.clearRect(
     0,
     0,
@@ -79,7 +91,7 @@ function updateTray(show_lyric, show_control, show_tray) {
   let x = 0;
   if (show_lyric) {
     CombineIcon.ctx.drawImage(LyricIcon.canvas, x, 0);
-    x += LyricIcon.canvas.width;
+    x += LyricIcon.canvas.width + x_add;
   }
   if (show_control) {
     CombineIcon.ctx.drawImage(ControlIcon.canvas, x, 0);
@@ -122,6 +134,7 @@ function changeStatus({
     TrayIcon.draw();
   }
   if (changeControl) {
+    ControlIcon.updateImage(0, player.isPersonalFM ? thumbs_down : previous);
     ControlIcon.updateImage(1, player.playing ? paused : playing);
     ControlIcon.updateImage(3, player.isCurrentTrackLiked ? like_solid : liked);
     ControlIcon.draw();
@@ -165,7 +178,21 @@ export default async function initMacStatusbarLyric() {
     if (x > 0) {
       switch (parseInt(x / ControlIcon.singleWidth)) {
         case 0:
-          player.playPrevTrack();
+          if (player.isPersonalFM) {
+            player.moveToFMTrash();
+            changeStatus({
+              changeLyric: false,
+              changeControl: true,
+              changeTray: false,
+            });
+          } else {
+            player.playPrevTrack();
+            changeStatus({
+              changeLyric: false,
+              changeControl: true,
+              changeTray: false,
+            });
+          }
           break;
         case 1:
           player.playOrPause();
