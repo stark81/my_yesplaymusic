@@ -350,6 +350,7 @@ export default {
         this.localMusic.latestAddTracks[
           randomNum(0, this.localMusic.latestAddTracks.length - 1)
         ];
+      if (!randomTrackID) return;
       const track = this.localMusic.tracks.find(
         t => t.onlineTrack.id === randomTrackID
       );
@@ -456,7 +457,7 @@ h1 {
     flex: 1;
     display: flex;
     flex-wrap: wrap;
-    font-size: 14px;
+    font-size: 16px;
     opacity: 0.88;
     color: var(--color-primary);
     p {
