@@ -147,8 +147,10 @@ export default {
         ipcRenderer.send('sendLyrics', lyric);
       }
       await this.getLyric();
-      if (isMac && this.lyric.length > 1) {
-        ipcRenderer.send('sendLyrics', this.lyric);
+      if (isMac) {
+        if (this.lyric.length > 0) {
+          ipcRenderer.send('sendLyrics', this.lyric);
+        }
       }
     },
     showLyrics(show) {

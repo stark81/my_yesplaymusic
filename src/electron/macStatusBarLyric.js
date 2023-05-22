@@ -145,7 +145,7 @@ function changeStatus({
   }
 }
 
-export default async function initMacStatusbarLyric() {
+export default function initMacStatusbarLyric() {
   ipcRenderer.invoke('getNativeTheme').then(isDarkMode => {
     useDarkMode = isDarkMode;
     [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray(useDarkMode);
@@ -174,8 +174,57 @@ export default async function initMacStatusbarLyric() {
     changeStatus({ changeControl: true });
   });
   ipcRenderer.on('trayClick', (event, { position }) => {
-    const x = position.x - LyricIcon?.canvas.width / TrayIcon.devicePixelRatio;
-    if (x > 0) {
+    if (lyricShow && controlShow) {
+      const x = position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio;
+      if (x > 0) {
+        switch (parseInt(x / ControlIcon.singleWidth)) {
+          case 0:
+            if (player.isPersonalFM) {
+              player.moveToFMTrash();
+              changeStatus({
+                changeLyric: false,
+                changeControl: true,
+                changeTray: false,
+              });
+            } else {
+              player.playPrevTrack();
+              changeStatus({
+                changeLyric: false,
+                changeControl: true,
+                changeTray: false,
+              });
+            }
+            break;
+          case 1:
+            player.playOrPause();
+            changeStatus({
+              changeLyric: false,
+              changeControl: true,
+              changeTray: false,
+            });
+            break;
+          case 2:
+            if (player.isPersonalFM) {
+              player.playNextFMTrack();
+            } else {
+              player.playNextTrack();
+            }
+            break;
+          case 3:
+            store.dispatch('likeATrack', player.currentTrack.id);
+            changeStatus({
+              changeLyric: false,
+              changeControl: true,
+              changeTray: false,
+            });
+            break;
+          case 4:
+            ipcRenderer.send('windowShow');
+            break;
+        }
+      }
+    } else if (controlShow) {
+      const x = position.x;
       switch (parseInt(x / ControlIcon.singleWidth)) {
         case 0:
           if (player.isPersonalFM) {
@@ -220,6 +269,11 @@ export default async function initMacStatusbarLyric() {
         case 4:
           ipcRenderer.send('windowShow');
           break;
+      }
+    } else if (lyricShow) {
+      const x = position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio;
+      if (x > 0) {
+        ipcRenderer.send('windowShow');
       }
     }
   });

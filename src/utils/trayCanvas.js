@@ -22,19 +22,16 @@ export class Control extends Canvas {
     this.imageList = imageList;
   }
 
-  setButtons(imageList) {
-    this.imageList = imageList;
-  }
-
   async draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     for (let index in this.imageList) {
       const item = this.imageList[index];
       await this.drawImage(index, item);
-      if (parseInt(index) + 1 === this.imageList.length) {
-        eventBus.$emit('control-draw');
-      }
+      // if (parseInt(index) + 1 === this.imageList.length) {
+      //   eventBus.$emit('control-draw');
+      // }
     }
+    eventBus.$emit('control-draw');
   }
 
   drawImage(index, item) {
@@ -63,7 +60,7 @@ export class Lyric extends Canvas {
     this.fontSize = 14;
     this.allLyric = null;
     this.lyric = {
-      text: '听你想听的音乐',
+      text: player.currentTrack.name || '听你想听的音乐',
       width: 0,
       time: 0, // 单句歌词的播放时间
     };
@@ -171,7 +168,6 @@ export class Lyric extends Canvas {
     }
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.fillText(this.lyric.text, x, this.canvas.height / 2 + 2);
-    // document.body.appendChild(this.canvas)
     eventBus.$emit('lyric-draw');
   }
 }

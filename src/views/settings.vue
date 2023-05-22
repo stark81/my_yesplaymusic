@@ -1306,7 +1306,6 @@ export default {
     localSongsLength: {
       handler: debounce(function () {
         if (this.localSongsLength > 0) {
-          console.log('localSongsLength change');
           this.updateTrack().then(() => {
             this.$store.dispatch('fetchLatestSongs');
           });

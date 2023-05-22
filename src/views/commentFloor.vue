@@ -216,11 +216,9 @@ export default {
         this.commentId
       );
       if (response.code === 200) {
-        console.log(response.comment);
         const reply_comment = response.comment;
         reply_comment.beReplied = [];
         this.comments.push(response.comment);
-        console.log(this.comments);
       } else {
         alert(response.data.dialog.subtitle);
       }
