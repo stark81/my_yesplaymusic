@@ -124,6 +124,11 @@ export default {
             this.tracks = [...new Set(this.tracks)];
           });
         }
+        this.tracks.sort((a, b) => {
+          const indexA = trackIDs.indexOf(a.id);
+          const indexB = trackIDs.indexOf(b.id);
+          return indexA - indexB;
+        });
       }
     },
   },

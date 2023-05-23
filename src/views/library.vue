@@ -264,7 +264,21 @@ export default {
 
       const lyricLine = lyric
         .split('\n')
-        .filter(line => !line.includes('作词') && !line.includes('作曲'));
+        .filter(
+          line =>
+            !line.includes('作词') &&
+            !line.includes('作曲') &&
+            !line.includes('编曲') &&
+            !line.includes('混音') &&
+            !line.includes('海报') &&
+            !line.includes('后期') &&
+            !line.includes('出品') &&
+            !line.includes('演唱') &&
+            !line.includes('词作') &&
+            !line.includes('和声') &&
+            !line.includes('统筹') &&
+            !line.includes('制作人')
+        );
 
       // Pick 3 or fewer lyrics based on the lyric lines.
       const lyricsToPick = Math.min(lyricLine.length, 3);

@@ -168,7 +168,7 @@
 </template>
 
 <script>
-import { mapState, mapMutations, mapActions } from 'vuex';
+import { mapState, mapMutations } from 'vuex';
 import { randomNum } from '@/utils/common';
 import TrackList from '@/components/TrackList.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
@@ -280,7 +280,21 @@ export default {
 
       const lyricLine = lyric
         .split('\n')
-        .filter(line => !line.includes('作词') && !line.includes('作曲'));
+        .filter(
+          line =>
+            !line.includes('作词') &&
+            !line.includes('作曲') &&
+            !line.includes('编曲') &&
+            !line.includes('混音') &&
+            !line.includes('海报') &&
+            !line.includes('后期') &&
+            !line.includes('出品') &&
+            !line.includes('演唱') &&
+            !line.includes('词作') &&
+            !line.includes('和声') &&
+            !line.includes('统筹') &&
+            !line.includes('制作人')
+        );
 
       // Pick 3 or fewer lyrics based on the lyric lines.
       const lyricsToPick = Math.min(lyricLine.length, 3);
@@ -298,23 +312,15 @@ export default {
     },
   },
   created() {
-    this.fetchLatestSongs();
-    this.loadData();
+    this.getRandomLyric();
   },
   activated() {
     this.$parent.$refs.scrollbar.restorePosition();
-    this.fetchLatestSongs();
-    this.loadData();
+    this.getRandomLyric();
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
-    ...mapActions(['fetchLatestSongs']),
-    loadData() {
-      this.$store.dispatch('fetchLatestSongs');
-      if (this.localMusic.latestAddTracks.length > 0) {
-        this.getRandomLyric();
-      }
-    },
+    ...mapState(['localMusic']),
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -346,10 +352,8 @@ export default {
       return tracks;
     },
     getRandomLyric() {
-      const randomTrackID =
-        this.localMusic.latestAddTracks[
-          randomNum(0, this.localMusic.latestAddTracks.length - 1)
-        ];
+      const tracksID = this.localMusic.latestAddTracks;
+      const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
       if (!randomTrackID) return;
       const track = this.localMusic.tracks.find(
         t => t.onlineTrack.id === randomTrackID
