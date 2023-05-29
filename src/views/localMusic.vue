@@ -307,7 +307,9 @@ export default {
       const returnLyricLine = lyricLine
         .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
         .map(extractLyricPart);
-      returnLyricLine.push(`————《${this.lyricSong}》`);
+      if (this.lyricSong) {
+        returnLyricLine.push(`————《${this.lyricSong}》`);
+      }
       return returnLyricLine;
     },
   },
@@ -320,7 +322,6 @@ export default {
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
-    ...mapState(['localMusic']),
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -355,10 +356,10 @@ export default {
       const tracksID = this.localMusic.latestAddTracks;
       const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
       if (!randomTrackID) return;
-      const track = this.localMusic.tracks.find(
+      const track = this.localMusic.tracks?.find(
         t => t.onlineTrack.id === randomTrackID
       );
-      this.lyricSong = track.name;
+      this.lyricSong = track ? track.name : null;
       getLyric(randomTrackID).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric

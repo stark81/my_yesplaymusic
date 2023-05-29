@@ -248,6 +248,7 @@ function createMacTray(win, eventEmitter) {
   // tray.setHighlightMode('never');
   global.setTray = function (img, width, height) {
     const Image = nativeImage.createFromDataURL(img).resize({ width, height });
+    Image.setTemplateImage(true);
     tray.setImage(Image);
   };
   return new YPMTrayMacImpl(tray, win, eventEmitter);

@@ -3,21 +3,13 @@ import eventBus from '@/utils/eventBus';
 import { Lyric, Control, Canvas } from '@/utils/trayCanvas';
 
 import image_previous from './assets/skip_previous.png';
-import image_previous_white from './assets/skip_previous_white.png';
 import play from './assets/play_arrow.png';
-import play_white from './assets/play_arrow_white.png';
 import skip_next from './assets/skip_next.png';
-import skip_next_white from './assets/skip_next_white.png';
 import pause from './assets/pause.png';
-import pause_white from './assets/pause_white.png';
 import like from './assets/like.png';
-import like_white from './assets/like_white.png';
 import like_fill from './assets/like_fill.png';
-import like_fill_white from './assets/like_fill_white.png';
 import icon from './assets/icon.png';
-import icon_white from './assets/icon_white.png';
 import thumbs_down_icon from './assets/thumbs_down.png';
-import thumbs_down_white_icon from './assets/thumbs_down_white.png';
 
 import store from '@/store';
 const player = store.state.player;
@@ -26,47 +18,35 @@ let trayShow = store.state.settings.showTray;
 let controlShow = trayShow && store.state.settings.showControl;
 let lyricShow = trayShow && store.state.settings.showStatusBarLyric;
 
-let useDarkMode = false;
 let previous, thumbs_down, playing, next, paused, liked, like_solid, tray_icon;
 let LyricIcon, ControlIcon, TrayIcon, CombineIcon;
 let currrentLyric;
 const setTray = remote.getGlobal('setTray');
 
 // 根据深浅色模式， 获取控制组件里每一个小图标
-function getControlIcon(isDarkMode) {
-  return isDarkMode
-    ? [
-        image_previous_white,
-        thumbs_down_white_icon,
-        play_white,
-        skip_next_white,
-        pause_white,
-        like_white,
-        like_fill_white,
-      ]
-    : [
-        image_previous,
-        thumbs_down_icon,
-        play,
-        skip_next,
-        pause,
-        like,
-        like_fill,
-      ];
+function getControlIcon() {
+  return [
+    image_previous,
+    thumbs_down_icon,
+    play,
+    skip_next,
+    pause,
+    like,
+    like_fill,
+  ];
 }
 
 // 根据深浅色模式，获取托盘小图标
-function getTrayIcon(isDarkMode) {
-  return isDarkMode ? icon_white : icon;
-}
+// function getTrayIcon() {
+//   return icon;
+// }
 
-function getIcon(useDarkMode) {
-  tray_icon = getTrayIcon(useDarkMode);
-  return new Control([tray_icon]);
+function getIcon() {
+  return new Control([icon]);
 }
-function getControl(useDarkMode) {
+function getControl() {
   [previous, thumbs_down, playing, next, paused, liked, like_solid] =
-    getControlIcon(useDarkMode);
+    getControlIcon();
   return new Control([
     player.isPersonalFM ? thumbs_down : previous,
     player.playing ? paused : playing,
@@ -74,9 +54,8 @@ function getControl(useDarkMode) {
     player.isCurrentTrackLiked ? like_solid : liked,
   ]);
 }
-function getLyric(useDarkMode) {
+function getLyric() {
   let lyric = new Lyric();
-  lyric.ctx.fillStyle = useDarkMode ? '#FFFFFF' : '#000000';
   return lyric;
 }
 
@@ -107,8 +86,8 @@ function updateTray(show_lyric, show_control, show_tray) {
   );
 }
 
-function getSeperateTray(useDarkMode) {
-  return [getLyric(useDarkMode), getControl(useDarkMode), getIcon(useDarkMode)];
+function getSeperateTray() {
+  return [getLyric(), getControl(), getIcon()];
 }
 
 function getCombineTray(LyricIcon, ControlIcon, TrayIcon) {
@@ -140,23 +119,15 @@ function changeStatus({
     ControlIcon.draw();
   }
   if (changeLyric) {
-    LyricIcon.ctx.fillStyle = useDarkMode ? '#FFFFFF' : '#000000';
     LyricIcon.draw();
   }
 }
 
 export default function initMacStatusbarLyric() {
-  ipcRenderer.invoke('getNativeTheme').then(isDarkMode => {
-    useDarkMode = isDarkMode;
-    [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray(useDarkMode);
+  ipcRenderer.invoke('getNativeTheme').then(() => {
+    [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray();
     CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
     updateTray(lyricShow, controlShow, trayShow);
-    changeStatus({ changeLyric: true, changeControl: true, changeTray: true });
-  });
-
-  ipcRenderer.on('changeTheme', (event, isDarkMode) => {
-    useDarkMode = isDarkMode;
-    [, ControlIcon, TrayIcon] = getSeperateTray(useDarkMode);
     changeStatus({ changeLyric: true, changeControl: true, changeTray: true });
   });
 
