@@ -166,8 +166,8 @@
         </div>
       </div>
 
-      <h3 v-show="isMac">状态栏</h3>
-      <div v-show="isMac" class="item">
+      <h3 v-show="isMac && isElectron">状态栏</h3>
+      <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showTray') }}</div>
         </div>
@@ -183,7 +183,7 @@
           </div>
         </div>
       </div>
-      <div v-show="isMac" class="item">
+      <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showControl') }}</div>
         </div>
@@ -200,7 +200,7 @@
           </div>
         </div>
       </div>
-      <div v-show="isMac" class="item">
+      <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showStatusBarLyric') }}</div>
         </div>
@@ -498,7 +498,7 @@
       </div>
 
       <h3>其他</h3>
-      <div class="item">
+      <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
             >本地歌曲扫描路径: {{ settings.localMusicFolderPath }}</div

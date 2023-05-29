@@ -26,6 +26,7 @@
           >{{ $t('nav.library') }}</router-link
         >
         <router-link
+          v-if="isElectron"
           to="/local-music"
           :class="{ active: $route.name === 'localMusic' }"
           >{{ $t('nav.localMusic') }}</router-link
@@ -113,6 +114,9 @@ export default {
     ...mapState(['settings', 'data']),
     isLooseLoggedIn() {
       return isLooseLoggedIn();
+    },
+    isElectron() {
+      return process.env.IS_ELECTRON;
     },
     avatarUrl() {
       return this.data?.user?.avatarUrl && this.isLooseLoggedIn

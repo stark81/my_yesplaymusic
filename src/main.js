@@ -11,7 +11,6 @@ import { dailyTask } from '@/utils/common';
 import '@/assets/css/global.scss';
 import NProgress from 'nprogress';
 import '@/assets/css/nprogress.css';
-import initMacStatusbarLyric from './electron/macStatusBarLyric';
 import { isMac } from './utils/platform';
 
 window.resetApp = () => {
@@ -43,8 +42,11 @@ Vue.config.productionTip = false;
 NProgress.configure({ showSpinner: false, trickleSpeed: 100 });
 dailyTask();
 
-if (isMac) {
-  initMacStatusbarLyric();
+if (isMac && process.env.IS_ELECTRON) {
+  import('./electron/macStatusBarLyric').then(module => {
+    const initMacStatusbarLyric = module.default;
+    initMacStatusbarLyric();
+  });
 }
 
 new Vue({
