@@ -145,8 +145,10 @@ export default function initMacStatusbarLyric() {
     changeStatus({ changeControl: true });
   });
   ipcRenderer.on('trayClick', (event, { position }) => {
+    const x_add = player.isPersonalFM ? 14 : 0;
     if (lyricShow && controlShow) {
-      const x = position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio;
+      const x =
+        position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio - x_add;
       if (x > 0) {
         switch (parseInt(x / ControlIcon.singleWidth)) {
           case 0:
@@ -195,7 +197,7 @@ export default function initMacStatusbarLyric() {
         }
       }
     } else if (controlShow) {
-      const x = position.x;
+      const x = position.x - x_add;
       switch (parseInt(x / ControlIcon.singleWidth)) {
         case 0:
           if (player.isPersonalFM) {
