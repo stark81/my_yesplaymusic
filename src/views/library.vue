@@ -218,7 +218,7 @@ import { mapActions, mapMutations, mapState } from 'vuex';
 import { randomNum, dailyTask } from '@/utils/common';
 import { isAccountLoggedIn } from '@/utils/auth';
 import { uploadSong } from '@/api/user';
-import { getLyric } from '@/api/track';
+import { getLyric, getTrackDetail } from '@/api/track';
 import NProgress from 'nprogress';
 import locale from '@/locale';
 
@@ -244,6 +244,7 @@ export default {
   data() {
     return {
       show: false,
+      lyricSong: undefined,
       likedSongs: [],
       lyric: undefined,
       currentTab: 'playlists',
@@ -288,9 +289,13 @@ export default {
       const startLyricLineIndex = randomNum(0, randomUpperBound - 1);
 
       // Pick lyric lines to render.
-      return lyricLine
+      const returnLyricLine = lyricLine
         .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
         .map(extractLyricPart);
+      if (this.lyricSong) {
+        returnLyricLine.push(`————《${this.lyricSong}》`);
+      }
+      return returnLyricLine;
     },
     playlistFilter() {
       return this.data.libraryPlaylistFilter || 'all';
@@ -377,9 +382,11 @@ export default {
     },
     getRandomLyric() {
       if (this.liked.songs.length === 0) return;
-      getLyric(
-        this.liked.songs[randomNum(0, this.liked.songs.length - 1)]
-      ).then(data => {
+      const id = this.liked.songs[randomNum(0, this.liked.songs.length - 1)];
+      getTrackDetail(id).then(data => {
+        this.lyricSong = data.songs[0].name;
+      });
+      getLyric(id).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric
             .split('\n')

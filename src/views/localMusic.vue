@@ -355,11 +355,9 @@ export default {
     getRandomLyric() {
       const tracksID = this.localMusic.latestAddTracks;
       const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
-      if (!randomTrackID) return;
-      const track = this.localMusic.tracks?.find(
-        t => t.onlineTrack.id === randomTrackID
-      );
-      this.lyricSong = track ? track.name : null;
+      const track = this.localMusic.tracks
+        .filter(t => t.matched)
+        .find(t => t.onlineTrack.id === randomTrackID);
       getLyric(randomTrackID).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric
@@ -368,6 +366,7 @@ export default {
           if (isInstrumental.length === 0) {
             this.lyric = data.lrc.lyric;
           }
+          this.lyricSong = track.name;
         }
       });
     },
