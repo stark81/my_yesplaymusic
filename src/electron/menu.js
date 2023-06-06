@@ -181,7 +181,7 @@ export function createMenu(win, store) {
           click: async () => {
             const { shell } = require('electron');
             await shell.openExternal(
-              'https://github.com/stark81/my_yesplaymusic/'
+              'https://github.com/stark81/YesPlayMusic/'
             );
           },
         },
