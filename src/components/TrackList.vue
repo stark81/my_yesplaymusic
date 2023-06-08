@@ -17,6 +17,12 @@
         $t('contextMenu.addToQueue')
       }}</div>
       <div
+        v-if="extraContextMenuItem.includes('reMatch')"
+        class="item"
+        @click="reMatchTrack"
+        >重新匹配歌曲</div
+      >
+      <div
         v-if="extraContextMenuItem.includes('addToLocalList')"
         class="item"
         @click="addTrack2LocalPlaylist"
@@ -210,6 +216,7 @@ export default {
       'likeATrack',
       'fetchLatestSongs',
       'rmTrackFromLocalPlaylist',
+      'rematchSong',
     ]),
     openMenu(e, track, index = -1) {
       this.rightClickedTrack = track;
@@ -266,6 +273,12 @@ export default {
     },
     like() {
       this.likeATrack(this.rightClickedTrack.id);
+    },
+    reMatchTrack() {
+      const song = this.$store.state.localMusic.songs.find(
+        s => s.id === this.rightClickedTrack.id
+      );
+      this.rematchSong(song.id);
     },
     addTrackToPlaylist() {
       if (!isAccountLoggedIn()) {

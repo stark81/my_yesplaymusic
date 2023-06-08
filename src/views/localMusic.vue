@@ -40,7 +40,11 @@
           :tracks="filterLatestAdd"
           :column-number="3"
           type="tracklist"
-          :extra-context-menu-item="['removeLocalTrack', 'addToLocalList']"
+          :extra-context-menu-item="[
+            'removeLocalTrack',
+            'addToLocalList',
+            'reMatch',
+          ]"
         />
       </div>
     </div>
@@ -109,7 +113,11 @@
             :tracks="filterLocalTracks"
             :column-number="1"
             type="localtracks"
-            :extra-context-menu-item="['removeLocalTrack', 'addToLocalList']"
+            :extra-context-menu-item="[
+              'removeLocalTrack',
+              'addToLocalList',
+              'reMatch',
+            ]"
           />
         </div>
       </div>

@@ -214,7 +214,55 @@ export default {
     };
     walk(folderPath);
   },
-  async updateTrack({ state }) {
+  rematchSong({ state }, pid) {
+    const song = state.localMusic.songs.find(s => s.id === pid);
+    const track = state.localMusic.tracks.find(t => t.id === song.trackID);
+    const album = state.localMusic.albums.find(a => a.id === song.albumID);
+
+    const keyword = {
+      keywords: `${track.name} ${track.arForSearch}`,
+      type: 1,
+      limit: 50,
+    };
+
+    search(keyword).then(async result => {
+      if (result.code === 200) {
+        if (result.result.songs?.length > 0) {
+          const matchTrack = result.result.songs.filter(item => {
+            return (
+              item.name === track.name &&
+              item.artists.some(i => i.name === track.arForSearch) &&
+              Math.abs(item.duration - track.dt) <= 5 * 1000
+            );
+          });
+          if (matchTrack.length > 0) {
+            const trackIndex = randomNum(0, matchTrack.length - 1);
+            track.onlineTrack = matchTrack[trackIndex];
+            track.matched = true;
+            const onlineTrackAlbum = await getAlbum(track.onlineTrack.album.id);
+            album.onlineAlbum = onlineTrackAlbum.album;
+            album.matched = true;
+          } else {
+            const matchTrack = result.result.songs.filter(item => {
+              return (
+                item.name === track.name &&
+                Math.abs(item.duration - track.dt) <= 5 * 1000
+              );
+            });
+            track.onlineTrack =
+              matchTrack.length !== 0
+                ? matchTrack[randomNum(0, matchTrack.length - 1)]
+                : result.result.songs[0];
+            track.matched = true;
+            const onlineTrackAlbum = await getAlbum(track.onlineTrack.album.id);
+            album.onlineAlbum = onlineTrackAlbum.album;
+            album.matched = true;
+          }
+        }
+      }
+    });
+  },
+  async updateTracks({ state }) {
     const songs = state.localMusic.songs;
     const tracks = state.localMusic.tracks;
     const albums = state.localMusic.albums;

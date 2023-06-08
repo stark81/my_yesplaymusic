@@ -100,6 +100,7 @@
                 </div>
                 <div class="buttons">
                   <button-icon
+                    v-if="!isLocal"
                     :title="$t('player.like')"
                     @click.native="likeATrack(player.currentTrack.id)"
                   >
@@ -110,17 +111,17 @@
                     />
                   </button-icon>
                   <button-icon
-                    :title="$t('contextMenu.addToPlaylist')"
-                    @click.native="addToPlaylist"
-                  >
-                    <svg-icon icon-class="plus" />
-                  </button-icon>
-                  <button-icon
                     v-if="isLocal"
                     :title="$t('contextMenu.changeLyricTime')"
                     @click.native="changeLyricTime"
                   >
                     <svg-icon icon-class="lyricChange" />
+                  </button-icon>
+                  <button-icon
+                    :title="$t('contextMenu.addToPlaylist')"
+                    @click.native="addToPlaylist"
+                  >
+                    <svg-icon icon-class="plus" />
                   </button-icon>
                   <button-icon
                     class="lyric_comment_btn"
@@ -374,11 +375,19 @@ export default {
       this.show = show_option;
     },
     addToPlaylist() {
-      if (!isAccountLoggedIn()) {
-        this.showToast(locale.t('toast.needToLogin'));
-        return;
+      if (this.isLocal) {
+        this.updateModal({
+          modalName: 'addTrackToPlaylistModal',
+          key: 'isLocal',
+          value: true,
+        });
+      } else {
+        if (!isAccountLoggedIn()) {
+          this.showToast(locale.t('toast.needToLogin'));
+          return;
+        }
+        this.$store.dispatch('fetchLikedPlaylist');
       }
-      this.$store.dispatch('fetchLikedPlaylist');
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'show',

@@ -81,7 +81,7 @@ export default {
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
     this.loadLocalMusic(false);
-    this.updateTrack();
+    this.updateTracks();
     this.fetchLatestSongs();
     this.updateArtists();
   },
@@ -89,7 +89,7 @@ export default {
     ...mapActions([
       'loadLocalMusic',
       'updateArtists',
-      'updateTrack',
+      'updateTracks',
       'fetchLatestSongs',
     ]),
     handleKeydown(e) {

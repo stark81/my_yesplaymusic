@@ -1306,7 +1306,7 @@ export default {
     localSongsLength: {
       handler: debounce(function () {
         if (this.localSongsLength > 0) {
-          this.updateTrack().then(() => {
+          this.updateTracks().then(() => {
             this.$store.dispatch('fetchLatestSongs');
           });
         }
@@ -1323,7 +1323,7 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions(['showToast', 'loadLocalMusic', 'updateTrack']),
+    ...mapActions(['showToast', 'loadLocalMusic', 'updateTracks']),
     async choseDir() {
       const { dialog } = require('electron').remote;
       const result = await dialog.showOpenDialog({
