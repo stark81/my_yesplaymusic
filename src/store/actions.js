@@ -219,6 +219,15 @@ export default {
     const track = state.localMusic.tracks.find(t => t.id === song.trackID);
     const album = state.localMusic.albums.find(a => a.id === song.albumID);
 
+    mm.parseFile(track.filePath).then(metadata => {
+      const { common } = metadata;
+      let arForSearch = common.albumartist || common.artist;
+      arForSearch = splitArtist(arForSearch);
+      track.arForSearch = Array.isArray(arForSearch)
+        ? arForSearch[0]
+        : arForSearch;
+    });
+
     const keyword = {
       keywords: `${track.name} ${track.arForSearch}`,
       type: 1,
