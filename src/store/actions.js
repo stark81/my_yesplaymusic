@@ -214,10 +214,13 @@ export default {
     };
     walk(folderPath);
   },
-  rematchSong({ state }, pid) {
+  rematchSong({ state, commit }, pid) {
     const song = state.localMusic.songs.find(s => s.id === pid);
     const track = state.localMusic.tracks.find(t => t.id === song.trackID);
     const album = state.localMusic.albums.find(a => a.id === song.albumID);
+    getArtists({ state, commit }, track.filePath).then(artistIDs => {
+      song.artistIDs = artistIDs;
+    });
 
     mm.parseFile(track.filePath).then(metadata => {
       const { common } = metadata;
