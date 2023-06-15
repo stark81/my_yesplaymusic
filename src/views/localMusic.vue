@@ -29,7 +29,8 @@
           <div class="titles">
             <div class="title">{{ $t('localMusic.latedAdd') }}</div>
             <div class="sub-title">
-              {{ filterLatestAdd.length }}{{ $t('common.songs') }}
+              {{ changeLocalTrackFilter('descend').length
+              }}{{ $t('common.songs') }}
             </div>
           </div>
         </div>
@@ -251,7 +252,7 @@ export default {
       const albums = [];
       const songs = this.localMusic.songs;
       for (const song of songs) {
-        if (song.show) {
+        if (song.show && song.delete !== true) {
           const al = localAlbumParser(song.id);
           const alExist = albums.find(a => a.id === al.id);
           if (!alExist) {
@@ -265,7 +266,7 @@ export default {
       const artists = [];
       const songs = this.localMusic.songs;
       for (const song of songs) {
-        if (song.show) {
+        if (song.show && song.delete !== true) {
           const ars = localArtistsParser(song.id);
           for (const ar of ars) {
             if (!artists.some(a => a.id === ar.id)) {
@@ -315,17 +316,19 @@ export default {
       const returnLyricLine = lyricLine
         .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
         .map(extractLyricPart);
-      if (this.lyricSong) {
+      if (returnLyricLine.length > 0 && this.lyricSong) {
         returnLyricLine.push(`————《${this.lyricSong}》`);
       }
       return returnLyricLine;
     },
   },
   created() {
+    this.$store.dispatch('fetchLatestSongs');
     this.getRandomLyric();
   },
   activated() {
     this.$parent.$refs.scrollbar.restorePosition();
+    this.$store.dispatch('fetchLatestSongs');
     this.getRandomLyric();
   },
   methods: {
@@ -362,6 +365,7 @@ export default {
     },
     getRandomLyric() {
       const tracksID = this.localMusic.latestAddTracks;
+      if (tracksID.length < 1) return;
       const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
       const track = this.localMusic.tracks
         .filter(t => t.matched)

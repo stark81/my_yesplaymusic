@@ -109,9 +109,7 @@ async function getTrack({ state, commit }, filePath) {
   const birthDate = stats.ctime.toLocaleDateString();
   const formatDate = new Date(birthDate).toISOString().slice(0, 10);
   const metadata = await mm.parseFile(filePath);
-
   const { common } = metadata;
-  if (!common.title) return;
 
   let foundSong = state.localMusic.tracks.find(
     obj => obj.filePath === filePath
@@ -171,13 +169,10 @@ export default {
       }, 3200),
     });
   },
-  loadLocalMusic({ state, commit }, clear = true) {
+  loadLocalMusic({ state, commit }) {
     const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
-    if (clear) {
-      commit('clearLocalMusic');
-    }
     const walk = async folder => {
       const files = fs.readdirSync(folder);
       for (const file of files) {
@@ -187,13 +182,18 @@ export default {
           const foundTrack = state.localMusic.tracks.find(
             track => track.filePath === filePath
           );
-          const trackID = await getTrack({ state, commit }, filePath, clear);
+          const metadata = await mm.parseFile(filePath);
+          const { common } = metadata;
+          if (!common.title) return;
+
+          const trackID = await getTrack({ state, commit }, filePath);
           const albumID = await getLocalAlbum({ state, commit }, filePath);
           const artistIDs = await getArtists({ state, commit }, filePath);
           if (!foundTrack) {
             const song = {
               id: trackID,
               show: true,
+              delete: false,
               trackID: trackID,
               albumID: albumID,
               artistIDs: artistIDs,
@@ -203,9 +203,8 @@ export default {
             const song = state.localMusic.songs.find(
               s => s.trackID === foundTrack.id
             );
-            if (clear) {
-              song.show = true;
-            }
+            song.show = true;
+            song.delete = song.delete === undefined ? false : song.delete;
           }
         } else if (stats.isDirectory()) {
           await walk(filePath);

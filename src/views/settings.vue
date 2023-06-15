@@ -781,7 +781,7 @@ import { auth as lastfmAuth } from '@/api/lastfm';
 import { changeAppearance, bytesToSize } from '@/utils/common';
 import { countDBSize, clearDB } from '@/utils/db';
 import pkg from '../../package.json';
-import { debounce } from 'lodash';
+// import { debounce } from 'lodash';
 
 const electron =
   process.env.IS_ELECTRON === true ? window.require('electron') : null;
@@ -821,9 +821,9 @@ export default {
     localMusicPath() {
       return this.settings.localMusicFolderPath;
     },
-    localSongsLength() {
-      return this.$store.state.localMusic.songs.length;
-    },
+    // localSongsLength() {
+    //   return this.$store.state.localMusic.songs.length;
+    // },
     isElectron() {
       return process.env.IS_ELECTRON;
     },
@@ -1301,18 +1301,22 @@ export default {
   },
   watch: {
     localMusicPath() {
-      this.loadLocalMusic(true);
+      this.$store.commit('clearLocalMusic');
+      this.loadLocalMusic();
+      setTimeout(() => {
+        this.updateTracks().then();
+        this.$store.dispatch('fetchLatestSongs');
+      }, 5000);
     },
-    localSongsLength: {
-      handler: debounce(function () {
-        if (this.localSongsLength > 0) {
-          this.updateTracks().then(() => {
-            this.$store.dispatch('fetchLatestSongs');
-          });
-        }
-      }, 5000),
-      immediate: true,
-    },
+    // localSongsLength: {
+    //   handler: debounce(function () {
+    //     if (this.localSongsLength > 0) {
+    //       this.updateTracks().then();
+    //       this.$store.dispatch('fetchLatestSongs');
+    //     }
+    //   }, 5000),
+    //   immediate: true,
+    // },
   },
   created() {
     this.countDBSize('tracks');

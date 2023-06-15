@@ -57,7 +57,7 @@ export function localTracksFilter(type) {
   const songs = store.state.localMusic.songs;
   const tracks = [];
   songs.every(item => {
-    if (item.show) {
+    if (item.show && item.delete !== true) {
       const track = localTrackParser(item.id, false);
       tracks.push(track);
     }

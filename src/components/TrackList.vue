@@ -300,7 +300,7 @@ export default {
       const song = this.$store.state.localMusic.songs.find(
         s => s.id === this.rightClickedTrack.id
       );
-      song.show = false;
+      song.delete = true;
       this.fetchLatestSongs();
     },
     addTrack2LocalPlaylist() {
