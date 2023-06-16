@@ -23,8 +23,18 @@ window.resetApp = () => {
   });
   return '已重置应用，请刷新页面（按Ctrl/Command + R）';
 };
+window.resetPlayer = () => {
+  localStorage.removeItem('player');
+  return '已重置播放器，请刷新页面（按Ctrl/Command + R）';
+};
+
 console.log(
   '如出现问题，可尝试在本页输入 %cresetApp()%c 然后按回车重置应用。',
+  'background: #eaeffd;color:#335eea;padding: 4px 6px;border-radius:3px;',
+  'background:unset;color:unset;'
+);
+console.log(
+  '也可以输入 %cresetPlayer()%c 然后回车清除播放器状态。',
   'background: #eaeffd;color:#335eea;padding: 4px 6px;border-radius:3px;',
   'background:unset;color:unset;'
 );
