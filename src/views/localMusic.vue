@@ -64,25 +64,43 @@
             /></span>
           </div>
           <div
+            v-if="!isBatchOp"
             class="tab"
             :class="{ active: currentTab === 'playlists' }"
             @click="updateCurrentTab('playlists')"
           >
             {{ $t('localMusic.playlist') }}
           </div>
+          <div v-if="isBatchOp" class="tab" @click="batchOperation('playlist')">
+            {{ $t('contextMenu.addToLocalPlaylist') }}
+          </div>
           <div
+            v-if="!isBatchOp"
             class="tab"
             :class="{ active: currentTab === 'albums' }"
             @click="updateCurrentTab('albums')"
           >
             {{ $t('library.albums') }}
           </div>
+          <div v-if="isBatchOp" class="tab" @click="batchOperation('queue')">
+            {{ $t('contextMenu.addToQueue') }}
+          </div>
           <div
+            v-if="!isBatchOp"
             class="tab"
             :class="{ active: currentTab === 'artists' }"
             @click="updateCurrentTab('artists')"
           >
             {{ $t('library.artists') }}
+          </div>
+          <div v-if="isBatchOp" class="tab" @click="batchOperation('remove')">
+            {{ $t('contextMenu.removeLocalTrack') }}
+          </div>
+          <div v-if="isBatchOp" class="tab" @click="batchOperation('recovery')">
+            {{ $t('contextMenu.recoveryTrack') }}
+          </div>
+          <div v-if="isBatchOp" class="tab" @click="batchOpSwitch">
+            {{ $t('contextMenu.finish') }}
           </div>
         </div>
         <div v-show="currentTab === 'localSongs'" class="search-box">
@@ -111,9 +129,12 @@
       <div v-show="currentTab === 'localSongs'">
         <div v-if="localMusic.tracks.length > 1">
           <TrackList
+            ref="trackListRef"
             :tracks="filterLocalTracks"
             :column-number="1"
             type="localtracks"
+            :is-batch-op="isBatchOp"
+            :selected-track-ids="selectedTrackIds"
             :extra-context-menu-item="[
               'removeLocalTrack',
               'addToLocalList',
@@ -172,12 +193,16 @@
         @click="updateLocalXXX({ name: 'sortBy', data: 'ascend' })"
         >{{ $t('contextMenu.ascendSort') }}</div
       >
+      <hr />
+      <div class="item" @click="batchOpSwitch">{{
+        $t('contextMenu.batchOperation')
+      }}</div>
     </ContextMenu>
   </div>
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapMutations, mapActions } from 'vuex';
 import { randomNum } from '@/utils/common';
 import TrackList from '@/components/TrackList.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
@@ -207,6 +232,8 @@ export default {
       sortedTracks: [],
       lyric: undefined,
       lyricSong: undefined,
+      isBatchOp: false,
+      selectedTrackIds: [],
       currentTab: 'localSongs',
       searchKeyWords: '', // 搜索使用的关键字
       inputSearchKeyWords: '', // 搜索框中正在输入的关键字
@@ -333,6 +360,7 @@ export default {
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
+    ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -342,6 +370,48 @@ export default {
     updateCurrentTab(tab) {
       this.currentTab = tab;
       this.$parent.$refs.main.scrollTo({ top: 375, behavior: 'smooth' });
+    },
+    batchOpSwitch() {
+      this.isBatchOp = !this.isBatchOp;
+      this.$refs.trackListRef.$refs.trackListItemRef.forEach(item => {
+        item.isSelected = false;
+      });
+    },
+    batchOperation(type) {
+      const trackIDs = this.$refs.trackListRef.$refs.trackListItemRef
+        .filter(t => t.isSelected)
+        .map(t => t.track.id);
+      if (type === 'playlist') {
+        this.$refs.trackListRef.addTrack2LocalPlaylist(trackIDs);
+      } else if (type === 'queue') {
+        for (const trackID of trackIDs) {
+          this.$refs.trackListRef.addToQueue(trackID);
+        }
+        this.showToast('已添加至队列');
+      } else if (type === 'recovery') {
+        const songs = this.$store.state.localMusic.songs;
+        songs.forEach(song => {
+          song.delete = false;
+        });
+      } else if (type === 'remove') {
+        trackIDs.forEach(id => {
+          const song = this.$store.state.localMusic.songs.find(
+            s => s.id === id
+          );
+          song.delete = true;
+          const playlists = this.$store.state.localMusic.playlists.filter(p =>
+            p.trackIds.includes(id)
+          );
+          playlists.forEach(playlist => {
+            this.rmTrackFromLocalPlaylist({
+              pid: playlist.id,
+              tracks: id,
+            });
+          });
+          this.$store.dispatch('fetchLatestSongs');
+        });
+      }
+      this.batchOpSwitch();
     },
     openAddPlaylistModal() {
       this.updateModal({

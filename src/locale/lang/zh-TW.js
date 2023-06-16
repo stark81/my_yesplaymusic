@@ -227,6 +227,13 @@ export default {
   contextMenu: {
     play: '播放',
     addToQueue: '新增至佇列',
+    reMatchTrack: '重新配對歌曲',
+    addToLocalPlaylist: '新增至本地歌單',
+    removeFromQueue: '從佇列刪除',
+    removeLocalTrack: '移除歌曲',
+    recoveryTrack: '恢復移除歌曲',
+    finish: '完成',
+    batchOperation: '批次操作',
     saveToMyLikedSongs: '新增至我喜歡的音樂',
     removeFromMyLikedSongs: '從喜歡的音樂中刪除',
     saveToLibrary: '新增至音樂庫',

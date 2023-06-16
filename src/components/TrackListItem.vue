@@ -1,5 +1,6 @@
 <template>
   <div
+    ref
     class="track"
     :class="trackClass"
     :style="trackStyle"
@@ -7,6 +8,7 @@
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
+    <input v-if="batchOp" v-model="isSelected" type="checkbox" />
     <img
       v-if="!isAlbum"
       :src="imgUrl"
@@ -103,6 +105,10 @@ export default {
   props: {
     trackProp: Object,
     trackNo: Number,
+    batchOp: {
+      type: Boolean,
+      default: false,
+    },
     highlightPlayingTrack: {
       type: Boolean,
       default: true,
@@ -110,7 +116,11 @@ export default {
   },
 
   data() {
-    return { hover: false, trackStyle: {} };
+    return {
+      hover: false,
+      trackStyle: {},
+      isSelected: false,
+    };
   },
 
   computed: {

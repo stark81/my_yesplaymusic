@@ -13,32 +13,32 @@
       </div>
       <hr v-show="type !== 'cloudDisk'" />
       <div class="item" @click="play">{{ $t('contextMenu.play') }}</div>
-      <div class="item" @click="addToQueue">{{
+      <div class="item" @click="addToQueue(rightClickedTrack.id)">{{
         $t('contextMenu.addToQueue')
       }}</div>
       <div
         v-if="extraContextMenuItem.includes('reMatch')"
         class="item"
         @click="reMatchTrack"
-        >重新匹配歌曲</div
+        >{{ $t('contextMenu.reMatchTrack') }}</div
       >
       <div
         v-if="extraContextMenuItem.includes('addToLocalList')"
         class="item"
-        @click="addTrack2LocalPlaylist"
-        >添加至离线歌单</div
+        @click="addTrack2LocalPlaylist([rightClickedTrack.id])"
+        >{{ $t('contextMenu.addToLocalPlaylist') }}</div
       >
       <div
         v-if="extraContextMenuItem.includes('removeTrackFromQueue')"
         class="item"
         @click="removeTrackFromQueue"
-        >从队列删除</div
+        >{{ $t('contextMenu.removeFromQueue') }}</div
       >
       <div
         v-if="extraContextMenuItem.includes('removeLocalTrack')"
         class="item"
         @click="removeLocalTrack"
-        >移除歌曲</div
+        >{{ $t('contextMenu.removeLocalTrack') }}</div
       >
       <hr v-show="type !== 'cloudDisk' || 'localtracks'" />
       <div
@@ -92,9 +92,11 @@
     <div :style="listStyles">
       <TrackListItem
         v-for="(track, index) in tracks"
+        ref="trackListItemRef"
         :key="itemKey === 'id' ? track.id : `${track.id}${index}`"
         :track-prop="track"
         :track-no="index + 1"
+        :batch-op="isBatchOp"
         :highlight-playing-track="highlightPlayingTrack"
         @dblclick.native="playThisList(track.id || track.songId)"
         @click.right.native="openMenu($event, track, index)"
@@ -165,6 +167,10 @@ export default {
     highlightPlayingTrack: {
       type: Boolean,
       default: true,
+    },
+    isBatchOp: {
+      type: Boolean,
+      default: false,
     },
     itemKey: {
       type: String,
@@ -268,8 +274,8 @@ export default {
     play() {
       this.player.addTrackToPlayNext(this.rightClickedTrack.id, true);
     },
-    addToQueue() {
-      this.player.addTrackToPlayNext(this.rightClickedTrack.id);
+    addToQueue(trackID) {
+      this.player.addTrackToPlayNext(trackID);
     },
     like() {
       this.likeATrack(this.rightClickedTrack.id);
@@ -301,9 +307,18 @@ export default {
         s => s.id === this.rightClickedTrack.id
       );
       song.delete = true;
+      const playlists = this.$store.state.localMusic.playlists.filter(p =>
+        p.trackIds.includes(song.id)
+      );
+      playlists.forEach(playlist => {
+        this.rmTrackFromLocalPlaylist({
+          pid: playlist.id,
+          tracks: song.id,
+        });
+      });
       this.fetchLatestSongs();
     },
-    addTrack2LocalPlaylist() {
+    addTrack2LocalPlaylist(trackIDs) {
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'isLocal',
@@ -317,7 +332,7 @@ export default {
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'selectedTrackID',
-        value: this.rightClickedTrack.id,
+        value: trackIDs,
       });
     },
     removeTrackFromPlaylist() {

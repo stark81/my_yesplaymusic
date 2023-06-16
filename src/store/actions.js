@@ -357,15 +357,15 @@ export default {
   addTrackToLocalPlaylist({ state }, params) {
     const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
     if (playlist) {
-      const song = state.localMusic.songs.find(s => s.id === params.tracks);
-      const track = localTrackParser(song.id);
-      if (playlist.trackIds.includes(track.id)) {
-        return { code: 500, message: '歌曲已存在' };
+      for (const trackid of params.tracks) {
+        const song = state.localMusic.songs.find(s => s.id === trackid);
+        const track = localTrackParser(song.id);
+        if (playlist.trackIds.includes(track.id)) continue;
+        playlist.trackIds.push(track.id);
+        playlist.coverImgUrl = track.picUrl;
+        playlist.trackCount = playlist.trackIds.length;
+        playlist.updateTime = new Date().getTime();
       }
-      playlist.trackIds.push(track.id);
-      playlist.coverImgUrl = track.picUrl;
-      playlist.trackCount = playlist.trackIds.length;
-      playlist.updateTime = new Date().getTime();
       return { code: 200 };
     }
     return { code: 404, message: '歌单不存在' };

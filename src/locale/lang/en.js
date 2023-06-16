@@ -226,6 +226,13 @@ export default {
   contextMenu: {
     play: 'Play',
     addToQueue: 'Add to queue',
+    reMatchTrack: 'Rematch track',
+    addToLocalPlaylist: 'Add to local playlist',
+    removeFromQueue: 'Remove from queue',
+    removeLocalTrack: 'Remove local track',
+    recoveryTrack: 'Recover track',
+    finish: 'finish',
+    batchOperation: 'Batch operation',
     saveToMyLikedSongs: 'Save to my Liked Songs',
     removeFromMyLikedSongs: 'Remove from my Liked Songs',
     saveToLibrary: 'Save to library',

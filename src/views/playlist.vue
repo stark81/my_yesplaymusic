@@ -551,11 +551,13 @@ export default {
       const playlist = localMusic.playlists.find(p => p.id === parseInt(id));
       const songIDs = playlist.trackIds;
       for (const songID of songIDs) {
+        const song = localMusic.songs.find(s => s.id === songID);
+        if (!song.show || song.delete) continue;
         const track = localTrackParser(songID);
         tracks.push(track);
       }
-      this.playlist = playlist;
       this.tracks = tracks.reverse();
+      this.playlist = playlist;
       NProgress.done();
       this.show = true;
     },
