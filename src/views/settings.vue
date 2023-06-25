@@ -1328,18 +1328,17 @@ export default {
   },
   methods: {
     ...mapActions(['showToast', 'loadLocalMusic', 'updateTracks']),
-    async choseDir() {
-      const { dialog } = require('electron').remote;
-      const result = await dialog.showOpenDialog({
-        properties: ['openDirectory'],
+    choseDir() {
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.send('selectFolder');
+      ipcRenderer.on('selected-folder', (event, folderPath) => {
+        if (folderPath) {
+          this.$store.commit('updateSettings', {
+            key: 'localMusicFolderPath',
+            value: folderPath,
+          });
+        }
       });
-      if (!result.canceled) {
-        const folderPath = result.filePaths[0];
-        this.$store.commit('updateSettings', {
-          key: 'localMusicFolderPath',
-          value: folderPath,
-        });
-      }
     },
     getAllOutputDevices() {
       navigator.mediaDevices.enumerateDevices().then(devices => {

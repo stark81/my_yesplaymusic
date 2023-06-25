@@ -339,5 +339,15 @@ export function initIpcMain(win, store, trayEventEmitter) {
     ipcMain.on('switchShowTray', (_, ops) => {
       trayEventEmitter.emit('ifShowTray', ops);
     });
+    ipcMain.on('selectFolder', event => {
+      dialog
+        .showOpenDialog({
+          properties: ['openDirectory'],
+        })
+        .then(result => {
+          const folderPath = result.filePaths[0];
+          event.sender.send('selected-folder', folderPath);
+        });
+    });
   }
 }
