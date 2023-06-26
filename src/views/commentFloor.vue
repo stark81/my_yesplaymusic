@@ -111,7 +111,7 @@ export default {
     currentTrack() {
       return this.player.currentTrack;
     },
-    sAccountLoggedIn() {
+    isAccountLoggedIn() {
       return isAccountLoggedIn();
     },
     containerStyle() {
