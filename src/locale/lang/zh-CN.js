@@ -233,6 +233,7 @@ export default {
     removeLocalTrack: '移除歌曲',
     recoveryTrack: '恢复移除歌曲',
     finish: '完成',
+    reloadLocalMusic: '重新扫描',
     batchOperation: '批量操作',
     saveToMyLikedSongs: '添加到我喜欢的音乐',
     removeFromMyLikedSongs: '从喜欢的音乐中删除',

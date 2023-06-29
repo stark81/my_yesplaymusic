@@ -1306,17 +1306,9 @@ export default {
       setTimeout(() => {
         this.updateTracks().then();
         this.$store.dispatch('fetchLatestSongs');
+        this.updateArtists();
       }, 5000);
     },
-    // localSongsLength: {
-    //   handler: debounce(function () {
-    //     if (this.localSongsLength > 0) {
-    //       this.updateTracks().then();
-    //       this.$store.dispatch('fetchLatestSongs');
-    //     }
-    //   }, 5000),
-    //   immediate: true,
-    // },
   },
   created() {
     this.countDBSize('tracks');
@@ -1327,7 +1319,12 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions(['showToast', 'loadLocalMusic', 'updateTracks']),
+    ...mapActions([
+      'showToast',
+      'loadLocalMusic',
+      'updateTracks',
+      'updateArtists',
+    ]),
     choseDir() {
       const { ipcRenderer } = require('electron');
       ipcRenderer.send('selectFolder');

@@ -54,7 +54,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['showLyrics', 'settings', 'player', 'enableScrolling']),
+    ...mapState(['showLyrics', 'player', 'enableScrolling']),
     isAccountLoggedIn() {
       return isAccountLoggedIn();
     },
@@ -80,18 +80,10 @@ export default {
     if (this.isElectron) ipcRenderer(this);
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    this.loadLocalMusic(false);
-    this.updateTracks();
     this.fetchLatestSongs();
-    this.updateArtists();
   },
   methods: {
-    ...mapActions([
-      'loadLocalMusic',
-      'updateArtists',
-      'updateTracks',
-      'fetchLatestSongs',
-    ]),
+    ...mapActions(['fetchLatestSongs']),
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;

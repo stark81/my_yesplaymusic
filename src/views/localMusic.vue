@@ -109,7 +109,6 @@
             <div class="input">
               <input
                 v-model.trim="inputSearchKeyWords"
-                v-focus
                 :placeholder="inputFocus ? '' : $t('localMusic.search')"
                 @input="inputDebounce()"
                 @focus="inputFocus = true"
@@ -194,6 +193,9 @@
         >{{ $t('contextMenu.ascendSort') }}</div
       >
       <hr />
+      <div class="item" @click="reloadLocalMusic">{{
+        $t('contextMenu.reloadLocalMusic')
+      }}</div>
       <div class="item" @click="batchOpSwitch">{{
         $t('contextMenu.batchOperation')
       }}</div>
@@ -360,12 +362,19 @@ export default {
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
-    ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
+    ...mapActions([
+      'showToast',
+      'rmTrackFromLocalPlaylist',
+      'loadLocalMusic',
+      'updateArtists',
+      'updateTracks',
+      'fetchLatestSongs',
+    ]),
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
         this.searchKeyWords = this.inputSearchKeyWords;
-      }, 600);
+      }, 400);
     },
     updateCurrentTab(tab) {
       this.currentTab = tab;
@@ -375,6 +384,13 @@ export default {
       this.isBatchOp = !this.isBatchOp;
       this.$refs.trackListRef.$refs.trackListItemRef.forEach(item => {
         item.isSelected = false;
+      });
+    },
+    reloadLocalMusic() {
+      this.loadLocalMusic(false).then();
+      this.updateTracks().then(() => {
+        this.fetchLatestSongs().then();
+        this.updateArtists();
       });
     },
     batchOperation(type) {

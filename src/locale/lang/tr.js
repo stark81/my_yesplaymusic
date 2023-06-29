@@ -229,6 +229,7 @@ export default {
     removeLocalTrack: 'Şarkıyı kaldır',
     recoveryTrack: 'Kaldırılan şarkıyı geri al',
     finish: 'Tamamla',
+    reloadLocalMusic: 'Yeniden tarama',
     batchOperation: 'Toplu işlemler',
     saveToMyLikedSongs: 'Beğendiğim Müziklere Kaydet',
     removeFromMyLikedMüzikler: 'Beğendiğim Müziklerden Kaldır',
