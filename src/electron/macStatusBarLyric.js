@@ -2,14 +2,14 @@ import { ipcRenderer, remote } from 'electron';
 import eventBus from '@/utils/eventBus';
 import { Lyric, Control, Canvas } from '@/utils/trayCanvas';
 
-import image_previous from './assets/skip_previous.png';
-import play from './assets/play_arrow.png';
-import skip_next from './assets/skip_next.png';
-import pause from './assets/pause.png';
-import like from './assets/like.png';
-import like_fill from './assets/like_fill.png';
-import icon from './assets/icon.png';
-import thumbs_down_icon from './assets/thumbs_down.png';
+import previous from './assets/skip_previous.png';
+import playing from './assets/play_arrow.png';
+import next from './assets/skip_next.png';
+import paused from './assets/pause.png';
+import liked from './assets/like.png';
+import like_solid from './assets/like_fill.png';
+import tray_icon from './assets/icon.png';
+import thumbs_down from './assets/thumbs_down.png';
 
 import store from '@/store';
 const player = store.state.player;
@@ -18,46 +18,9 @@ let trayShow = store.state.settings.showTray;
 let controlShow = trayShow && store.state.settings.showControl;
 let lyricShow = trayShow && store.state.settings.showStatusBarLyric;
 
-let previous, thumbs_down, playing, next, paused, liked, like_solid, tray_icon;
 let LyricIcon, ControlIcon, TrayIcon, CombineIcon;
 let currrentLyric;
 const setTray = remote.getGlobal('setTray');
-
-// 根据深浅色模式， 获取控制组件里每一个小图标
-function getControlIcon() {
-  return [
-    image_previous,
-    thumbs_down_icon,
-    play,
-    skip_next,
-    pause,
-    like,
-    like_fill,
-  ];
-}
-
-// 根据深浅色模式，获取托盘小图标
-// function getTrayIcon() {
-//   return icon;
-// }
-
-function getIcon() {
-  return new Control([icon]);
-}
-function getControl() {
-  [previous, thumbs_down, playing, next, paused, liked, like_solid] =
-    getControlIcon();
-  return new Control([
-    player.isPersonalFM ? thumbs_down : previous,
-    player.playing ? paused : playing,
-    next,
-    player.isCurrentTrackLiked ? like_solid : liked,
-  ]);
-}
-function getLyric() {
-  let lyric = new Lyric();
-  return lyric;
-}
 
 function updateTray(show_lyric, show_control, show_tray) {
   const x_add = player.isPersonalFM ? 14 : 0;
@@ -87,17 +50,25 @@ function updateTray(show_lyric, show_control, show_tray) {
 }
 
 function getSeperateTray() {
-  return [getLyric(), getControl(), getIcon()];
+  let lyric = new Lyric();
+  let control = new Control([
+    player.isPersonalFM ? thumbs_down : previous,
+    player.playing ? paused : playing,
+    next,
+    player.isCurrentTrackLiked ? like_solid : liked,
+  ]);
+  let tray = new Control([tray_icon]);
+  return [lyric, control, tray];
 }
 
-function getCombineTray(LyricIcon, ControlIcon, TrayIcon) {
-  const lyricWidth = lyricShow ? LyricIcon.canvas.width : 0;
-  const contorlWidth = controlShow ? ControlIcon.canvas.width : 0;
-  const trayWidth = trayShow ? TrayIcon.canvas.width : 0;
+function getCombineTray(lyric_icon, control_icon, tray_icon) {
+  const lyricWidth = lyricShow ? lyric_icon.canvas.width : 0;
+  const contorlWidth = controlShow ? control_icon.canvas.width : 0;
+  const trayWidth = trayShow ? tray_icon.canvas.width : 0;
   const width = lyricWidth + contorlWidth + trayWidth;
-  const height = trayShow ? TrayIcon.canvas.height : 0;
+  const height = trayShow ? tray_icon.canvas.height : 0;
   const devicePixelRatio =
-    LyricIcon?.devicePixelRatio || TrayIcon?.devicePixelRatio || 1;
+    lyric_icon?.devicePixelRatio || tray_icon?.devicePixelRatio || 1;
   const CombineIcon = new Canvas({ width, height });
   CombineIcon.devicePixelRatio = devicePixelRatio;
   return CombineIcon;
@@ -124,12 +95,10 @@ function changeStatus({
 }
 
 export default function initMacStatusbarLyric() {
-  ipcRenderer.invoke('getNativeTheme').then(() => {
-    [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray();
-    CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
-    updateTray(lyricShow, controlShow, trayShow);
-    changeStatus({ changeLyric: true, changeControl: true, changeTray: true });
-  });
+  [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray();
+  CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
+  updateTray(lyricShow, controlShow, trayShow);
+  changeStatus({ changeLyric: true, changeControl: true, changeTray: true });
 
   ipcRenderer.on('showTrayLyric', (event, arg) => {
     currrentLyric = arg;
