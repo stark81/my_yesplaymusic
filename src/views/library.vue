@@ -263,23 +263,10 @@ export default {
       // Returns [] if we got no lyrics.
       if (!lyric) return [];
 
-      const lyricLine = lyric
-        .split('\n')
-        .filter(
-          line =>
-            !line.includes('作词') &&
-            !line.includes('作曲') &&
-            !line.includes('编曲') &&
-            !line.includes('混音') &&
-            !line.includes('海报') &&
-            !line.includes('后期') &&
-            !line.includes('出品') &&
-            !line.includes('演唱') &&
-            !line.includes('词作') &&
-            !line.includes('和声') &&
-            !line.includes('统筹') &&
-            !line.includes('制作人')
-        );
+      let lyricLine = lyric.split('\n').slice(line => line !== '');
+      if (lyricLine.length > 16) {
+        lyricLine = lyricLine.slice(7, -7);
+      }
 
       // Pick 3 or fewer lyrics based on the lyric lines.
       const lyricsToPick = Math.min(lyricLine.length, 3);
