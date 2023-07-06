@@ -284,7 +284,10 @@ export default {
       const song = this.$store.state.localMusic.songs.find(
         s => s.id === this.rightClickedTrack.id
       );
-      this.rematchSong(song.id);
+      const code = this.rematchSong(song.id);
+      if (code === 'err') {
+        this.rematchSong(song.id, false);
+      }
     },
     addTrackToPlaylist() {
       if (!isAccountLoggedIn()) {

@@ -213,7 +213,7 @@ export default {
     };
     walk(folderPath);
   },
-  rematchSong({ state, commit }, pid) {
+  async rematchSong({ state, commit }, pid, use_arts = false) {
     const song = state.localMusic.songs.find(s => s.id === pid);
     const track = state.localMusic.tracks.find(t => t.id === song.trackID);
     const album = state.localMusic.albums.find(a => a.id === song.albumID);
@@ -230,13 +230,16 @@ export default {
         : arForSearch;
     });
 
+    const searchName = use_arts
+      ? `${track.name} ${track.arForSearch}`
+      : track.name;
     const keyword = {
-      keywords: `${track.name} ${track.arForSearch}`,
+      keywords: searchName,
       type: 1,
       limit: 50,
     };
 
-    search(keyword).then(async result => {
+    const matchResult = await search(keyword).then(async result => {
       if (result.code === 200) {
         if (result.result.songs?.length > 0) {
           const matchTrack = result.result.songs.filter(item => {
@@ -269,9 +272,12 @@ export default {
             album.onlineAlbum = onlineTrackAlbum.album;
             album.matched = true;
           }
+          return 'ok';
         }
       }
+      return 'err';
     });
+    return matchResult;
   },
   async updateTracks({ state }) {
     const songs = state.localMusic.songs;

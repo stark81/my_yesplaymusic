@@ -126,21 +126,19 @@
       </div>
 
       <div v-show="currentTab === 'localSongs'">
-        <div v-if="localMusic.tracks.length > 1">
-          <TrackList
-            ref="trackListRef"
-            :tracks="filterLocalTracks"
-            :column-number="1"
-            type="localtracks"
-            :is-batch-op="isBatchOp"
-            :selected-track-ids="selectedTrackIds"
-            :extra-context-menu-item="[
-              'removeLocalTrack',
-              'addToLocalList',
-              'reMatch',
-            ]"
-          />
-        </div>
+        <TrackList
+          ref="trackListRef"
+          :tracks="filterLocalTracks"
+          :column-number="1"
+          type="localtracks"
+          :is-batch-op="isBatchOp"
+          :selected-track-ids="selectedTrackIds"
+          :extra-context-menu-item="[
+            'removeLocalTrack',
+            'addToLocalList',
+            'reMatch',
+          ]"
+        />
       </div>
 
       <div v-show="currentTab === 'playlists'">
