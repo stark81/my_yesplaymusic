@@ -246,7 +246,7 @@ export default {
       return this.localMusic.sortBy;
     },
     filterLatestAdd() {
-      const latest = this.changeLocalTrackFilter('descend').slice(0, 12);
+      const latest = localTracksFilter('descend').slice(0, 12);
       return latest;
     },
     filterLocalTracks() {
@@ -255,7 +255,7 @@ export default {
         type = 'default';
         this.updateLocalXXX({ name: 'sortBy', data: type });
       }
-      const tracks = this.changeLocalTrackFilter(type);
+      const tracks = localTracksFilter(type);
       return tracks.filter(
         track =>
           (track.name &&
@@ -431,7 +431,6 @@ export default {
     },
     changeLocalTrackFilter(type) {
       const tracks = localTracksFilter(type);
-      window.scrollTo({ top: 375, behavior: 'smooth' });
       return tracks;
     },
     getRandomLyric() {
