@@ -1303,8 +1303,8 @@ export default {
     localMusicPath() {
       this.$store.commit('clearLocalMusic');
       this.loadLocalMusic();
-      setTimeout(() => {
-        this.updateTracks().then();
+      setTimeout(async () => {
+        await this.updateTracks();
         this.$store.dispatch('fetchLatestSongs');
         this.updateArtists();
       }, 5000);

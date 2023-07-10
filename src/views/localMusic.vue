@@ -191,9 +191,6 @@
         >{{ $t('contextMenu.ascendSort') }}</div
       >
       <hr />
-      <div class="item" @click="reloadLocalMusic">{{
-        $t('contextMenu.reloadLocalMusic')
-      }}</div>
       <div class="item" @click="batchOpSwitch">{{
         $t('contextMenu.batchOperation')
       }}</div>
@@ -337,24 +334,15 @@ export default {
     },
   },
   created() {
-    this.$store.dispatch('fetchLatestSongs');
     this.getRandomLyric();
   },
   activated() {
     this.$parent.$refs.scrollbar.restorePosition();
-    this.$store.dispatch('fetchLatestSongs');
     this.getRandomLyric();
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
-    ...mapActions([
-      'showToast',
-      'rmTrackFromLocalPlaylist',
-      'loadLocalMusic',
-      'updateArtists',
-      'updateTracks',
-      'fetchLatestSongs',
-    ]),
+    ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -369,13 +357,6 @@ export default {
       this.isBatchOp = !this.isBatchOp;
       this.$refs.trackListRef.$refs.trackListItemRef.forEach(item => {
         item.isSelected = false;
-      });
-    },
-    reloadLocalMusic() {
-      this.loadLocalMusic(false).then();
-      this.updateTracks().then(() => {
-        this.fetchLatestSongs().then();
-        this.updateArtists();
       });
     },
     batchOperation(type) {
