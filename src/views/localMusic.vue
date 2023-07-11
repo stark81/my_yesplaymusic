@@ -195,6 +195,15 @@
         $t('contextMenu.batchOperation')
       }}</div>
     </ContextMenu>
+
+    <div class="position">
+      <div
+        v-if="isLocal && currentTab === 'localSongs'"
+        @click="playingTrackPosition"
+        >定位歌曲</div
+      >
+      <div @click="scrollToTop">返回顶部</div>
+    </div>
   </div>
 </template>
 
@@ -239,6 +248,9 @@ export default {
   },
   computed: {
     ...mapState(['data', 'localMusic', 'settings']),
+    isLocal() {
+      return this.$store.state.player.isLocal;
+    },
     sortBy() {
       return this.localMusic.sortBy;
     },
@@ -343,6 +355,17 @@ export default {
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
     ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
+    scrollToTop() {
+      this.$parent.$refs.main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    playingTrackPosition() {
+      const trackref = this.$refs.trackListRef.$refs.trackListItemRef.find(
+        t => t.isPlaying
+      );
+      if (trackref) {
+        trackref.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
@@ -684,6 +707,32 @@ button.playHistory-button--selected {
   font-weight: 700;
   &:active {
     transform: none;
+  }
+}
+
+.position {
+  position: fixed;
+  width: 100px;
+  line-height: 40px;
+  padding: 10px 0;
+  border-radius: 10px;
+  text-align: center;
+  background: var(--color-secondary-bg-for-transparent);
+  border: 1px solid rgba(60, 60, 60, 0.08);
+  opacity: 0.75;
+  color: var(--color-text);
+  top: 50%;
+  right: 30px;
+  transform: translate(0, -50%);
+  transition: opacity 0.3s ease;
+}
+.position:hover {
+  opacity: 0.9;
+  cursor: pointer;
+}
+[data-theme='dark'] {
+  .position {
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
 </style>
