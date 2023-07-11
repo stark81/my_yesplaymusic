@@ -178,6 +178,13 @@ export default {
     showPlaylistsByAppleMusic: "Apple Music'in Çalma Listelerini Göster",
     enableDiscordRichPresence: 'Discord gösterimini aktifleştir',
     showLibraryDefault: 'Kitaplık Varsayılanını göster',
+    localMusicShowDefault: {
+      text: 'Yerel Müzik Varsayılan Görüntüleme',
+      localSongs: 'Yerel Şarkılar',
+      playlists: 'Çevrimdışı Çalma Listesi',
+      albums: 'Albüm',
+      artists: 'Sanatçı',
+    },
     subTitleDefault: 'Show Alias for Subtitle by default',
     enableReversedMode: 'Enable Reversed Mode (Experimental)',
     enableCustomTitlebar: 'Enable custom title bar (Need restart)',

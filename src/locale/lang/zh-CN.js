@@ -182,6 +182,13 @@ export default {
     enableDiscordRichPresence: '启用 Discord Rich Presence',
     enableGlobalShortcut: '启用全局快捷键',
     showLibraryDefault: '启动后显示音乐库',
+    localMusicShowDefault: {
+      text: '本地音乐默认显示',
+      localSongs: '本地歌曲',
+      playlists: '离线歌单',
+      albums: '专辑',
+      artists: '艺人',
+    },
     subTitleDefault: '副标题使用别名',
     enableReversedMode: '启用倒序播放功能 (实验性功能)',
     enableCustomTitlebar: '启用自定义标题栏 (重启后生效)',

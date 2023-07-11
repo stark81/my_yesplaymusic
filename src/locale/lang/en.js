@@ -180,6 +180,13 @@ export default {
     enableDiscordRichPresence: 'Enable Discord Rich Presence',
     enableGlobalShortcut: 'Enable Global Shortcut',
     showLibraryDefault: 'Show Library after App Launched',
+    localMusicShowDefault: {
+      text: 'LocalMusic Page Default Show',
+      localSongs: 'Local Tracks',
+      playlists: 'Offline Playlist',
+      albums: 'Albums',
+      artists: 'Artists',
+    },
     subTitleDefault: 'Show Alias for Subtitle by default',
     enableReversedMode: 'Enable Reversed Mode (Experimental)',
     enableCustomTitlebar: 'Enable custom title bar (Need restart)',

@@ -500,6 +500,30 @@
       <h3>其他</h3>
       <div v-if="isElectron" class="item">
         <div class="left">
+          <div class="title">
+            {{ $t('settings.localMusicShowDefault.text') }}
+          </div>
+        </div>
+        <div class="right">
+          <select v-model="showDefault">
+            <option value="localSongs">{{
+              $t('settings.localMusicShowDefault.localSongs')
+            }}</option>
+            <option value="playlists">{{
+              $t('settings.localMusicShowDefault.playlists')
+            }}</option>
+            <option value="albums">{{
+              $t('settings.localMusicShowDefault.albums')
+            }}</option>
+            <option value="artists">{{
+              $t('settings.localMusicShowDefault.artists')
+            }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div v-if="isElectron" class="item">
+        <div class="left">
           <div class="title"
             >本地歌曲扫描路径: {{ settings.localMusicFolderPath }}</div
           >
@@ -892,6 +916,17 @@ export default {
       set(lang) {
         this.$i18n.locale = lang;
         this.$store.commit('changeLang', lang);
+      },
+    },
+    showDefault: {
+      get() {
+        return this.settings.localMusicShowDefault;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'localMusicShowDefault',
+          value,
+        });
       },
     },
     musicLanguage: {

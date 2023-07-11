@@ -125,7 +125,7 @@
         </button>
       </div>
 
-      <div v-show="currentTab === 'localSongs'">
+      <div v-if="currentTab === 'localSongs'">
         <TrackList
           ref="trackListRef"
           :tracks="filterLocalTracks"
@@ -141,7 +141,7 @@
         />
       </div>
 
-      <div v-show="currentTab === 'playlists'">
+      <div v-if="currentTab === 'playlists'">
         <div v-if="localMusic.playlists.length > 0">
           <CoverRow
             :items="filterPlaylists"
@@ -240,7 +240,7 @@ export default {
       lyricSong: undefined,
       isBatchOp: false,
       selectedTrackIds: [],
-      currentTab: 'localSongs',
+      currentTab: null,
       searchKeyWords: '', // 搜索使用的关键字
       inputSearchKeyWords: '', // 搜索框中正在输入的关键字
       inputFocus: false,
@@ -255,7 +255,11 @@ export default {
       return this.localMusic.sortBy;
     },
     filterLatestAdd() {
-      const latest = localTracksFilter('descend').slice(0, 12);
+      const songIDs = this.$store.state.localMusic.songs
+        .filter(s => s.show && s.delete !== true)
+        .map(s => s.id);
+      const randomTrackID = songIDs[randomNum(0, songIDs.length - 12)];
+      const latest = localTracksFilter('descend', randomTrackID, 12);
       return latest;
     },
     filterLocalTracks() {
@@ -346,6 +350,7 @@ export default {
     },
   },
   created() {
+    this.currentTab = this.$store.state.settings.localMusicShowDefault;
     this.getRandomLyric();
   },
   activated() {

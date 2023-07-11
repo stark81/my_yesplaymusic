@@ -53,14 +53,15 @@ export function localArtistsParser(songID) {
   return newAr;
 }
 
-export function localTracksFilter(type) {
+export function localTracksFilter(type, startID = 0, length = 'all') {
   const songs = store.state.localMusic.songs;
   const tracks = [];
   songs.every(item => {
-    if (item.show && item.delete !== true) {
+    if (item.show && item.delete !== true && item.id >= startID) {
       const track = localTrackParser(item.id, false);
       tracks.push(track);
     }
+    if (length !== 'all' && tracks.length >= parseInt(length)) return false;
     return true;
   });
   if (type === 'default') {
