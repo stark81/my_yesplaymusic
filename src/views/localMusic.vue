@@ -200,9 +200,9 @@
       <div
         v-if="isLocal && currentTab === 'localSongs'"
         @click="playingTrackPosition"
-        >定位歌曲</div
+        >{{ $t('localMusic.positionTrack') }}</div
       >
-      <div @click="scrollToTop">返回顶部</div>
+      <div @click="scrollToTop">{{ $t('localMusic.scrollToTop') }}</div>
     </div>
   </div>
 </template>

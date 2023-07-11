@@ -51,6 +51,8 @@ export default {
     changeScanningPath: 'Change Scanning Path',
     search: 'Search',
     description: `Due to the lack of editing functionality for playlist descriptions that is currently under development, \n a default description for the local playlist has been set. \n Please wait until the relevant features are completed before making any changes.`,
+    positionTrack: 'Locate Track',
+    scrollToTop: 'Scroll To Top',
   },
   explore: {
     explore: 'Explore',

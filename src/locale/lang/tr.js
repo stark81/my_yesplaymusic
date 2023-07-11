@@ -51,6 +51,8 @@ export default {
     changeScanningPath: 'Tarama yolu değiştirme',
     search: 'Yerel müzik arama',
     description: `Çalma listesi açıklaması düzenleme özelliği henüz geliştirilmediğinden, \n yerel çalma listesi için varsayılan bir açıklama ayarlandı. \n Lütfen ilgili özellikler tamamlandıktan sonra ayarlamaları yapınız`,
+    positionTrack: 'Şarkıyı Bul',
+    scrollToTop: 'Başa Dön',
   },
   explore: {
     explore: 'Keşfet',

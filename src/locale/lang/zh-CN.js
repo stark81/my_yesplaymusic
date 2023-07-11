@@ -48,6 +48,8 @@ export default {
     changeScanningPath: '更改扫描路径',
     search: '搜索本地音乐',
     description: `由于歌单简介的编辑功能并没有开发,\n因此这里是设置了一段本地歌单的默认简介,\n请待到相关功能完成后再进行设置吧~`,
+    positionTrack: '定位歌曲',
+    scrollToTop: '返回顶部',
   },
   explore: {
     explore: '发现',
