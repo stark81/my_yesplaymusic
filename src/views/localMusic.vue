@@ -721,8 +721,9 @@ button.playHistory-button--selected {
   line-height: 40px;
   padding: 10px 0;
   border-radius: 10px;
+  box-shadow: 0 8px 12px -6px rgba(0, 0, 0, 0.1);
   text-align: center;
-  background: var(--color-secondary-bg-for-transparent);
+  background: var(--color-secondary-bg);
   border: 1px solid rgba(60, 60, 60, 0.08);
   opacity: 0.75;
   color: var(--color-text);
