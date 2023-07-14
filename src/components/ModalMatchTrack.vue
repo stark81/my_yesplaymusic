@@ -15,7 +15,7 @@
       />
     </template>
     <template slot="footer">
-      <button class="primary block" @click="accurateMatchTrack">创建</button>
+      <button class="primary block" @click="accurateMatchTrack">匹配</button>
     </template>
   </Modal>
 </template>
