@@ -115,6 +115,7 @@ export default {
         addedCountList: [],
         comments: [],
       },
+      deleteComment: null,
       setLikedStyle: {
         backgroundColor: 'blue',
         height: '26px',
@@ -124,7 +125,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player']),
+    ...mapState(['player', 'modals']),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -135,10 +136,24 @@ export default {
       const height = this.clientHeight - 180;
       return { height: `${height}px` };
     },
+    isFloorComment() {
+      return this.modals.deleteCommentModal.isFloorComment;
+    },
+    finish() {
+      return this.modals.deleteCommentModal.finish;
+    },
   },
   watch: {
     currentTrack() {
+      this.deleteComment = null;
       this.switchComment(this.sourceComments.activate);
+    },
+    finish(newVal) {
+      if (this.$parent.show === 'comment' && newVal === true) {
+        this.sourceComments.comments = this.sourceComments.comments.filter(
+          c => c.commentId !== this.deleteComment.commentId
+        );
+      }
     },
   },
   mounted: function () {
@@ -147,21 +162,6 @@ export default {
   },
   created() {
     this.getComment();
-    this.$parent.Bus.$on('Confirm', data => {
-      if (data.code === 'ok' && !this.sourceComments.isDelete) {
-        handleSubmitComment(
-          0,
-          data.type,
-          this.player.currentTrack.id,
-          null,
-          data.comment.commentId
-        );
-        this.sourceComments.comments = this.sourceComments.comments.filter(
-          comment => comment.commentId !== data.comment.commentId
-        );
-        this.sourceComments.isDelete = true;
-      }
-    });
   },
   beforeDestroy() {
     this.comment2Top();
@@ -169,7 +169,7 @@ export default {
   },
   methods: {
     ...mapActions(['showToast']),
-    ...mapMutations(['showDialog']),
+    ...mapMutations(['updateModal']),
     switch2FloorComment(comment_id) {
       this.$parent.Bus.$emit('showFloors', {
         show: 'floor_comment',
@@ -281,12 +281,33 @@ export default {
     },
     // 删除评论
     handleDeleteComment(comment) {
-      this.$parent.Bus.$emit('showConfirm', {
-        operation: 'comment',
-        title: '是否删除歌曲评论:',
-        comment: comment,
+      this.deleteComment = comment;
+      const rmComment = {
         type: 0,
+        trackID: this.player.currentTrack.id,
+        beRmComment: comment.content,
+        commentID: comment.commentId,
+      };
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'isFloorComment',
+        value: false,
       });
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'show',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'comment',
+        value: rmComment,
+      });
+      // setTimeout(() => {
+      //   this.sourceComments.comments = this.sourceComments.comments.filter(
+      //     c => c.commentId !== comment.commentId
+      //   );
+      // }, 1000);
     },
     async addComment(comment) {
       if (!isAccountLoggedIn()) {
@@ -299,7 +320,7 @@ export default {
         this.player.currentTrack.id,
         comment
       );
-      if (response.code === 200) {
+      if (response && response.code === 200) {
         this.sourceComments.sortType = 3;
         this.switchComment(this.sourceComments.sortType);
         const data = response.comment;

@@ -137,6 +137,7 @@
             'removeLocalTrack',
             'addToLocalList',
             'reMatch',
+            'accurateMatch',
           ]"
         />
       </div>

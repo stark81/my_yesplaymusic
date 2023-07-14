@@ -522,6 +522,20 @@
         </div>
       </div>
 
+      <div class="item">
+        <div class="left">
+          <div class="title">
+            {{ $t('settings.showTimeOrID.text') }}
+          </div>
+        </div>
+        <div class="right">
+          <select v-model="showTrackTimeOrID">
+            <option value="time">{{ $t('settings.showTimeOrID.time') }}</option>
+            <option value="ID">{{ $t('settings.showTimeOrID.ID') }}</option>
+          </select>
+        </div>
+      </div>
+
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
@@ -925,6 +939,17 @@ export default {
       set(value) {
         this.$store.commit('updateSettings', {
           key: 'localMusicShowDefault',
+          value,
+        });
+      },
+    },
+    showTrackTimeOrID: {
+      get() {
+        return this.settings.showTimeOrID;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'showTimeOrID',
           value,
         });
       },

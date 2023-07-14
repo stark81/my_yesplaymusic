@@ -27,6 +27,7 @@ let localStorage = {
     showStatusBarLyric: true,
     localMusicFolderPath: null,
     localMusicShowDefault: 'localSongs',
+    showTimeOrID: 'time',
     lyricsBackground: true,
     closeAppOption: 'ask',
     enableDiscordRichPresence: false,

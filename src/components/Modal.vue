@@ -151,7 +151,7 @@ export default {
   margin: 16px 24px 24px 24px;
   border-top: 1px solid rgba(128, 128, 128, 0.18);
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-bottom: -8px;
   button {
     color: var(--color-text);

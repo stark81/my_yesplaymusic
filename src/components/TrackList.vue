@@ -23,6 +23,12 @@
         >{{ $t('contextMenu.reMatchTrack') }}</div
       >
       <div
+        v-if="extraContextMenuItem.includes('accurateMatch')"
+        class="item"
+        @click="accurateMatchTrack"
+        >{{ $t('contextMenu.accurateMatch') }}</div
+      >
+      <div
         v-if="extraContextMenuItem.includes('addToLocalList')"
         class="item"
         @click="addTrack2LocalPlaylist([rightClickedTrack.id])"
@@ -288,6 +294,18 @@ export default {
       if (code === 'err') {
         this.rematchSong(song.id, false);
       }
+    },
+    accurateMatchTrack() {
+      this.updateModal({
+        modalName: 'accurateMatchModal',
+        key: 'show',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'accurateMatchModal',
+        key: 'selectedTrackID',
+        value: this.rightClickedTrack.id,
+      });
     },
     addTrackToPlaylist() {
       if (!isAccountLoggedIn()) {

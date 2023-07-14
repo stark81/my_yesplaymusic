@@ -84,7 +84,10 @@
         <svg-icon v-show="isLiked" icon-class="heart-solid"></svg-icon>
       </button>
     </div>
-    <div v-if="showTrackTime" class="time">
+    <div v-if="showTrackTime && showTrackID" class="time">
+      {{ (track.onlineTrack && track.onlineTrack.id) || track.id }}
+    </div>
+    <div v-if="showTrackTime && !showTrackID" class="time">
       {{ track.dt | formatTime }}
     </div>
 
@@ -227,6 +230,9 @@ export default {
     },
     showTrackTime() {
       return this.type !== 'tracklist';
+    },
+    showTrackID() {
+      return this.$store.state.settings.showTimeOrID === 'ID';
     },
     showCreateTime() {
       return this.player.isLocal;

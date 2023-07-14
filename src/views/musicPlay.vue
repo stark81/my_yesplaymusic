@@ -1,7 +1,8 @@
 <template>
   <transition name="slide-up">
     <div class="lyrics-page" :data-theme="theme">
-      <ConfirmDialog />
+      <ModalDeleteComment />
+      <ModalSetLyricDelay />
       <div
         v-if="
           (settings.lyricsBackground === 'blur') |
@@ -247,6 +248,8 @@ import { mapState, mapMutations, mapActions } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
 import VueSlider from 'vue-slider-component';
 import ButtonIcon from '@/components/ButtonIcon.vue';
+import ModalDeleteComment from '@/components/ModalDeleteComment.vue';
+import ModalSetLyricDelay from '@/components/ModalSetLyricDelay.vue';
 import * as Vibrant from 'node-vibrant/dist/vibrant.worker.min.js';
 import Color from 'color';
 import { isAccountLoggedIn } from '@/utils/auth';
@@ -254,7 +257,6 @@ import Lyrics from '@/views/lyrics.vue';
 import Comment from '@/views/comment.vue';
 import { hasListSource, getListSourcePath } from '@/utils/playList';
 import locale from '@/locale';
-import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import CommentFloor from '@/views/commentFloor.vue';
 import { isMac } from '@/utils/platform';
 
@@ -266,7 +268,8 @@ export default {
     Lyrics,
     Comment,
     CommentFloor,
-    ConfirmDialog,
+    ModalDeleteComment,
+    ModalSetLyricDelay,
   },
   data() {
     return {
@@ -280,7 +283,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'showLyrics']),
+    ...mapState(['player', 'settings', 'showLyrics', 'modals']),
     currentTrack: {
       get() {
         return this.player.currentTrack;
@@ -346,7 +349,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['toggleLyrics', 'updateModal']),
+    ...mapMutations(['toggleLyrics', 'updateModal', 'setDelayTime']),
     ...mapActions(['likeATrack', 'showToast']),
     initDate() {
       var _this = this;
@@ -400,15 +403,25 @@ export default {
       });
     },
     changeLyricTime() {
-      const data = {
-        operation: 'delayTime',
-        title: '请输入歌词调整时间(秒)',
-        comment: null,
-        type: null,
-        filePath: this.currentTrack.filePath,
-        lyricDelay: Number(this.currentTrack.lyricDelay || 0),
-      };
-      this.Bus.$emit('showConfirm', data);
+      this.updateModal({
+        modalName: 'setLyricDelayModal',
+        key: 'filePath',
+        value: this.currentTrack.filePath,
+      });
+      this.updateModal({
+        modalName: 'setLyricDelayModal',
+        key: 'show',
+        value: true,
+      });
+      // const data = {
+      //   operation: 'delayTime',
+      //   title: '请输入歌词调整时间(秒)',
+      //   comment: null,
+      //   type: null,
+      //   filePath: this.currentTrack.filePath,
+      //   lyricDelay: Number(this.currentTrack.lyricDelay || 0),
+      // };
+      // this.Bus.$emit('showConfirm', data);
     },
     playPrevTrack() {
       this.player.playPrevTrack();
@@ -546,7 +559,7 @@ export default {
   align-items: center;
   transition: all 0.5s;
   // background-color: red;
-  z-index: 100000;
+  z-index: 50;
 
   .date {
     max-width: 54vh;

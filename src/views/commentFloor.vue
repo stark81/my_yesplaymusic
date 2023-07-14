@@ -97,6 +97,7 @@ export default {
         width: '26px',
         margin: '0 0 6px 2px',
       },
+      deleteComment: null,
       ownerComment: [],
       currentComment: null,
       comments: [],
@@ -107,7 +108,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player']),
+    ...mapState(['player', 'modals']),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -118,10 +119,23 @@ export default {
       const height = this.clientHeight - 180;
       return { height: `${height}px` };
     },
+    isFloorComment() {
+      return this.modals.deleteCommentModal.isFloorComment;
+    },
+    finish() {
+      return this.modals.deleteCommentModal.finish;
+    },
   },
   watch: {
     currentTrack() {
       this.closeFloor();
+    },
+    finish(newVal) {
+      if (this.$parent.show === 'floor_comment' && newVal === true) {
+        this.comments = this.comments.filter(
+          c => c.commentId !== this.deleteComment.commentId
+        );
+      }
     },
   },
   mounted: function () {
@@ -131,27 +145,14 @@ export default {
   created() {
     this.commentId = this.$parent.commentId;
     this.showFloor();
-    this.$parent.Bus.$on('FloorConfirm', data => {
-      if (data.code === 'ok') {
-        handleSubmitComment(
-          0,
-          data.type,
-          this.player.currentTrack.id,
-          null,
-          data.comment.commentId
-        );
-        this.comments = this.comments.filter(
-          comment => comment.commentId !== data.comment.commentId
-        );
-      }
-    });
   },
   beforeDestroy() {
+    this.deleteComment = null;
     window.removeEventListener('resize', this.handleResize);
   },
   methods: {
     ...mapActions(['showToast']),
-    ...mapMutations(['showDialog']),
+    ...mapMutations(['updateModal']),
     loadMoreFloorComment() {
       if (!this.hasMore) return;
       const el = document.getElementById('floorContainer');
@@ -195,14 +196,6 @@ export default {
     closeFloor() {
       this.$parent.Bus.$emit('showComment', 'comment');
     },
-    handleDelectComment(comment) {
-      this.$parent.Bus.$emit('showConfirm', {
-        operation: 'floor',
-        title: '是否删除楼层评论:',
-        comment: comment,
-        type: 0,
-      });
-    },
     async writeFloorComment(comment) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
@@ -243,11 +236,27 @@ export default {
       this.reply2Name = `回复${comment.user.nickname}:`;
     },
     DeleteFloor(comment) {
-      this.$parent.Bus.$emit('showConfirm', {
-        operation: 'floor',
-        title: '是否删除楼层评论：',
-        comment: comment,
+      this.deleteComment = comment;
+      const rmComment = {
         type: 0,
+        trackID: this.player.currentTrack.id,
+        beRmComment: comment.content,
+        commentID: comment.commentId,
+      };
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'isFloorComment',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'show',
+        value: true,
+      });
+      this.updateModal({
+        modalName: 'deleteCommentModal',
+        key: 'comment',
+        value: rmComment,
       });
     },
     // 处理窗口变化

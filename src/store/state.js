@@ -51,6 +51,20 @@ export default {
       afterCreateAddTrackID: 0,
       isLocal: false,
     },
+    deleteCommentModal: {
+      show: false,
+      isFloorComment: false,
+      comment: {},
+      finish: false,
+    },
+    setLyricDelayModal: {
+      show: false,
+      filePath: null,
+    },
+    accurateMatchModal: {
+      show: false,
+      selectedTrackID: 0,
+    },
   },
   dailyTracks: [],
   lastfm: JSON.parse(localStorage.getItem('lastfm')) || {},

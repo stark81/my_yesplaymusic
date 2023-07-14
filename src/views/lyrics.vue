@@ -63,7 +63,11 @@ export default {
       return this.player.currentTrack;
     },
     lyricDelay() {
-      return this.isLocal ? Number(this.currentTrack.lyricDelay) : 0;
+      return this.isLocal
+        ? this.$store.state.localMusic.tracks.find(
+            t => t.filePath === this.currentTrack.filePath
+          ).lyricDelay
+        : 0;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -152,6 +156,11 @@ export default {
           ipcRenderer.send('sendLyrics', this.lyric);
         }
       }
+    },
+    lyricDelay(val) {
+      this.currentTrack.lyricDelay = val;
+      clearInterval(this.lyricsInterval);
+      this.setLyricsInterval();
     },
     showLyrics(show) {
       if (show) {
@@ -253,12 +262,13 @@ export default {
     },
     setLyricsInterval() {
       this.lyricsInterval = setInterval(() => {
-        const progress = this.player.seek() + this.lyricDelay ?? 0;
+        const progress = this.player.seek() ?? 0;
         let oldHighlightLyricIndex = this.highlightLyricIndex;
         this.highlightLyricIndex = this.lyric.findIndex((l, index) => {
           const nextLyric = this.lyric[index + 1];
           return (
-            progress >= l.time && (nextLyric ? progress < nextLyric.time : true)
+            progress >= l.time - this.lyricDelay &&
+            (nextLyric ? progress < nextLyric.time - this.lyricDelay : true)
           );
         });
         if (oldHighlightLyricIndex !== this.highlightLyricIndex) {
