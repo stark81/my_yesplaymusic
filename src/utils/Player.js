@@ -987,4 +987,10 @@ export default class {
   removeTrackFromQueue(index) {
     this._playNextList.splice(index, 1);
   }
+  getRate() {
+    return this._howler?.rate() || 1;
+  }
+  setRate(value) {
+    this._howler?.rate(value);
+  }
 }

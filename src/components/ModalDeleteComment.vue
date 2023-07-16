@@ -104,4 +104,8 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.delete-comment-modal {
+  background: rgba(0, 0, 0, 0.38);
+}
+</style>

@@ -169,10 +169,43 @@ export default {
       }, 3200),
     });
   },
+  clearDeletedMusic({ state }) {
+    console.log('clear deleted music');
+    const songs = state.localMusic.songs;
+    const tracks = state.localMusic.tracks;
+    const albums = state.localMusic.albums;
+    const artists = state.localMusic.artists;
+    for (let i = songs.length - 1; i >= 0; i--) {
+      const song = songs[i];
+      const track = state.localMusic.tracks.find(t => t.id === song.trackID);
+      try {
+        fs.accessSync(track.filePath, fs.constants.F_OK);
+      } catch (err) {
+        console.log('File not exists:', track.filePath);
+        songs.splice(i, 1);
+        const trackIdx = tracks.findIndex(t => t.id === track.id);
+        if (trackIdx !== -1) {
+          tracks.splice(trackIdx, 1);
+        }
+        const albumIdx = albums.findIndex(a => a.id === songs.albumID);
+        if (albumIdx !== -1) {
+          albums.splice(albumIdx, 1);
+        }
+        for (let i = artists.length - 1; i >= 0; i--) {
+          const artist = artists[i];
+          if (song.artistIDs.includes(artist.id)) {
+            artists.splice(i, 1);
+          }
+        }
+      }
+    }
+    console.log('clear deleted music finished');
+  },
   loadLocalMusic({ state, commit }) {
     const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
+    if (!fs.existsSync(folderPath)) return;
     const walk = async folder => {
       const files = fs.readdirSync(folder);
       for (const file of files) {

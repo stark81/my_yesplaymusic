@@ -175,7 +175,6 @@ export default {
         show: 'floor_comment',
         commentId: comment_id,
       });
-      // console.log('switch to floor comment:' + comment_id);
     },
     // 处理窗口变化
     handleResize() {

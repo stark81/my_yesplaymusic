@@ -251,9 +251,15 @@ export default {
     saveToLibrary: 'Müzik kütüğüne kaydet',
     removeFromLibrary: 'Müzik kütüğünden sil',
     addToPlaylist: 'Çalma listesine ekle',
+    changeLyricTime: 'Şarkı sözü ilerlemesi',
     showLyric: 'Sözleri görüntüle',
+    operationOption: 'İşlem Menüsü',
+    playBackSpeed: 'Hızlandırılmış Çalma',
     showComment: 'Yorumları görüntüle',
     searchInPlaylist: 'Çalma listesi içinde ara',
+    editPlaylistInfo: 'Çalma Listesi Bilgilerini Düzenle',
+    deletePlaylist: 'Çalma Listesini Sil',
+    convertToOnlinePlaylist: 'Müzik Kütüphanesine Kaydet',
     copyUrl: 'Bağlantıyı kopyala',
     openInBrowser: 'Tarayıcıda aç',
     allPlaylists: 'Tüm çalma listeleri',
@@ -269,5 +275,6 @@ export default {
   toast: {
     savedToMyLikedSongs: 'Beğendiğim Müziklere Kaydet',
     removedFromMyLikedSongs: 'Beğendiğim Müziklerden Kaldır',
+    convertedToLibrary: 'Müzik Kütüphanesine Kaydedildi',
   },
 };

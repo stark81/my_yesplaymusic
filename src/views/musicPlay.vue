@@ -1,8 +1,6 @@
 <template>
   <transition name="slide-up">
     <div class="lyrics-page" :data-theme="theme">
-      <ModalDeleteComment />
-      <ModalSetLyricDelay />
       <div
         v-if="
           (settings.lyricsBackground === 'blur') |
@@ -101,7 +99,6 @@
                 </div>
                 <div class="buttons">
                   <button-icon
-                    v-if="!isLocal"
                     :title="$t('player.like')"
                     @click.native="likeATrack(player.currentTrack.id)"
                   >
@@ -110,13 +107,6 @@
                         player.isCurrentTrackLiked ? 'heart-solid' : 'heart'
                       "
                     />
-                  </button-icon>
-                  <button-icon
-                    v-if="isLocal"
-                    :title="$t('contextMenu.changeLyricTime')"
-                    @click.native="changeLyricTime"
-                  >
-                    <svg-icon icon-class="lyricChange" />
                   </button-icon>
                   <button-icon
                     :title="$t('contextMenu.addToPlaylist')"
@@ -141,6 +131,12 @@
                   >
                     <svg-icon v-if="show === 'lyric'" icon-class="comment" />
                     <svg-icon v-else icon-class="lyric" />
+                  </button-icon>
+                  <button-icon
+                    :title="$t('contextMenu.operationOption')"
+                    @click.native="openMenu"
+                  >
+                    <svg-icon icon-class="options" />
                   </button-icon>
                 </div>
               </div>
@@ -245,11 +241,9 @@
 // Some of the codes are from https://github.com/sl1673495/vue-netease-music
 import Vue from 'vue';
 import { mapState, mapMutations, mapActions } from 'vuex';
-import { formatTrackTime } from '@/utils/common';
+import { formatTrackTime, changeAppearance } from '@/utils/common';
 import VueSlider from 'vue-slider-component';
 import ButtonIcon from '@/components/ButtonIcon.vue';
-import ModalDeleteComment from '@/components/ModalDeleteComment.vue';
-import ModalSetLyricDelay from '@/components/ModalSetLyricDelay.vue';
 import * as Vibrant from 'node-vibrant/dist/vibrant.worker.min.js';
 import Color from 'color';
 import { isAccountLoggedIn } from '@/utils/auth';
@@ -268,13 +262,12 @@ export default {
     Lyrics,
     Comment,
     CommentFloor,
-    ModalDeleteComment,
-    ModalSetLyricDelay,
   },
   data() {
     return {
       show: 'lyric',
       commentId: null,
+      appearance: 'auto',
       type: 0,
       lyric: [],
       tlyric: [],
@@ -344,6 +337,8 @@ export default {
     this.initDate();
   },
   beforeDestroy: function () {
+    this.settings.appearance = this.appearance;
+    changeAppearance(this.appearance);
     if (this.timer) {
       clearInterval(this.timer);
     }
@@ -361,6 +356,9 @@ export default {
     closePlayPage() {
       this.toggleLyrics();
       this.show = 'lyric';
+    },
+    openMenu(e) {
+      this.$parent.$refs.playPageMenu.openMenu(e);
     },
     formatTime(value) {
       let hour = value.getHours().toString();
@@ -405,23 +403,16 @@ export default {
     changeLyricTime() {
       this.updateModal({
         modalName: 'setLyricDelayModal',
-        key: 'filePath',
-        value: this.currentTrack.filePath,
-      });
-      this.updateModal({
-        modalName: 'setLyricDelayModal',
         key: 'show',
         value: true,
       });
-      // const data = {
-      //   operation: 'delayTime',
-      //   title: '请输入歌词调整时间(秒)',
-      //   comment: null,
-      //   type: null,
-      //   filePath: this.currentTrack.filePath,
-      //   lyricDelay: Number(this.currentTrack.lyricDelay || 0),
-      // };
-      // this.Bus.$emit('showConfirm', data);
+    },
+    setRate() {
+      this.updateModal({
+        modalName: 'setPlayBackRate',
+        key: 'show',
+        value: true,
+      });
     },
     playPrevTrack() {
       this.player.playPrevTrack();

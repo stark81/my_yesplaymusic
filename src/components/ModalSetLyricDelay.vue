@@ -21,30 +21,42 @@
 
 <script>
 import Modal from '@/components/Modal.vue';
-// import locale from '@/locale';
 import { mapMutations, mapState, mapActions } from 'vuex';
-// import { createPlaylist, addOrRemoveTrackFromPlaylist } from '@/api/playlist';
 
 export default {
   name: 'ModalSetLyricDelay',
   components: {
     Modal,
   },
+  data() {
+    return {
+      onlineDelay: 0,
+    };
+  },
   computed: {
-    ...mapState(['modals']),
+    ...mapState(['modals', 'player']),
+    currentTrack() {
+      return this.player.currentTrack;
+    },
     delay: {
       get() {
-        return this.filePath
-          ? this.$store.state.localMusic.tracks.find(
-              t => t.filePath === this.filePath
-            ).lyricDelay
-          : 0;
+        const track = this.currentTrack;
+        return track.isLocal === true
+          ? this.currentTrack.lyricDelay
+          : this.onlineDelay;
       },
       set(value) {
-        const track = this.$store.state.localMusic.tracks.find(
-          t => t.filePath === this.filePath
-        );
-        track.lyricDelay = value;
+        const track = this.currentTrack;
+        if (track.isLocal === true) {
+          this.currentTrack.lyricDelay = value;
+        } else {
+          this.onlineDelay = value;
+          this.updateModal({
+            modalName: 'setLyricDelayModal',
+            key: 'delayTime',
+            value,
+          });
+        }
       },
     },
     show: {
@@ -59,17 +71,15 @@ export default {
         });
       },
     },
-    filePath: {
-      get() {
-        return this.modals.setLyricDelayModal.filePath;
-      },
-      set(value) {
-        this.updateModal({
-          modalName: 'setLyricDelayModal',
-          key: 'filePath',
-          value,
-        });
-      },
+  },
+  watch: {
+    currentTrack() {
+      this.onlineDelay = 0;
+      this.updateModal({
+        modalName: 'setLyricDelayModal',
+        key: 'delayTime',
+        value: null,
+      });
     },
   },
   methods: {
@@ -102,6 +112,8 @@ export default {
 
 <style lang="scss" scoped>
 .set-delay-time-modal {
+  background: rgba(0, 0, 0, 0.38);
+
   .content {
     display: flex;
     justify-content: space-between;

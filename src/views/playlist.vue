@@ -254,6 +254,9 @@
           ? $t('contextMenu.removeFromLibrary')
           : $t('contextMenu.saveToLibrary')
       }}</div>
+      <div v-if="isLocal" class="item" @click="convert2library()">{{
+        $t('contextMenu.convertToOnlinePlaylist')
+      }}</div>
       <div class="item" @click="searchInPlaylist()">{{
         $t('contextMenu.searchInPlaylist')
       }}</div>
@@ -261,13 +264,13 @@
         v-if="isLocal || playlist.creator.userId === data.user.userId"
         class="item"
         @click="editPlaylist"
-        >编辑歌单信息</div
+        >{{ $t('contextMenu.editPlaylistInfo') }}</div
       >
       <div
         v-if="isLocal || playlist.creator.userId === data.user.userId"
         class="item"
         @click="deletePlaylist"
-        >删除歌单</div
+        >{{ $t('contextMenu.deletePlaylist') }}</div
       >
     </ContextMenu>
   </div>
@@ -292,6 +295,7 @@ import TrackList from '@/components/TrackList.vue';
 import Cover from '@/components/Cover.vue';
 import Modal from '@/components/Modal.vue';
 import { localTrackParser } from '@/utils/localSongParser';
+import { createPlaylist, addOrRemoveTrackFromPlaylist } from '@/api/playlist';
 
 const specialPlaylist = {
   2829816518: {
@@ -483,6 +487,27 @@ export default {
       'showToast',
       'deleteLocalPlaylist',
     ]),
+    convert2library() {
+      const params = { name: this.playlist.name };
+      const trackIDs = this.tracks
+        .filter(t => t.matched)
+        .map(t => t.onlineTrack.id);
+      createPlaylist(params).then(data => {
+        if (data.code === 200) {
+          addOrRemoveTrackFromPlaylist({
+            op: 'add',
+            pid: data.id,
+            tracks: trackIDs.join(','),
+          }).then(data => {
+            if (data.body.code === 200) {
+              this.showToast(locale.t('toast.convertedToLibrary'));
+            } else {
+              this.showToast(data.body.message);
+            }
+          });
+        }
+      });
+    },
     playPlaylistByID(trackID = 'first') {
       if (this.isLocal) {
         const playlist = this.$store.state.localMusic.playlists.find(
@@ -552,11 +577,12 @@ export default {
       const songIDs = playlist.trackIds;
       for (const songID of songIDs) {
         const song = localMusic.songs.find(s => s.id === songID);
-        if (!song.show || song.delete) continue;
+        if (!song?.show || song?.delete) continue;
         const track = localTrackParser(songID);
         tracks.push(track);
       }
       this.tracks = tracks.reverse();
+      playlist.trackCount = this.tracks.length;
       this.playlist = playlist;
       NProgress.done();
       this.show = true;

@@ -4,6 +4,11 @@
     :show="show"
     :close="close"
     :title="isLocal ? '新建离线歌单' : '新建歌单'"
+    :style="
+      isLyricPage
+        ? 'background-color: rgba(0, 0, 0, 0.38)'
+        : 'background-color: rgba(255, 255, 255, 0.58)'
+    "
     width="25vw"
   >
     <template slot="default">
@@ -75,6 +80,9 @@ export default {
           value,
         });
       },
+    },
+    isLyricPage() {
+      return this.$parent.showLyrics;
     },
   },
   methods: {

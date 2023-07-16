@@ -1,7 +1,7 @@
 <template>
   <div ref="contextMenu" class="context-menu">
     <div
-      v-if="showMenu"
+      v-show="showMenu"
       ref="menu"
       class="menu"
       tabindex="-1"

@@ -59,7 +59,10 @@ export default {
     },
     setLyricDelayModal: {
       show: false,
-      filePath: null,
+      delayTime: null,
+    },
+    setPlayBackRate: {
+      show: false,
     },
     accurateMatchModal: {
       show: false,

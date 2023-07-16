@@ -58,16 +58,17 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'showLyrics', 'isComment']),
+    ...mapState(['player', 'settings', 'showLyrics', 'isComment', 'modals']),
     currentTrack() {
       return this.player.currentTrack;
     },
+    onlineTrackDelay() {
+      return this.modals.setLyricDelayModal.delayTime || 0;
+    },
     lyricDelay() {
       return this.isLocal
-        ? this.$store.state.localMusic.tracks.find(
-            t => t.filePath === this.currentTrack.filePath
-          ).lyricDelay
-        : 0;
+        ? this.currentTrack.lyricDelay
+        : this.onlineTrackDelay;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -158,9 +159,14 @@ export default {
       }
     },
     lyricDelay(val) {
-      this.currentTrack.lyricDelay = val;
       clearInterval(this.lyricsInterval);
       this.setLyricsInterval();
+      if (this.isLocal === true) {
+        const track = this.$store.state.localMusic.tracks.find(
+          t => t.filePath === this.currentTrack.filePath
+        );
+        track.lyricDelay = val;
+      }
     },
     showLyrics(show) {
       if (show) {
@@ -262,13 +268,12 @@ export default {
     },
     setLyricsInterval() {
       this.lyricsInterval = setInterval(() => {
-        const progress = this.player.seek() ?? 0;
+        const progress = this.player.seek() + this.lyricDelay ?? 0;
         let oldHighlightLyricIndex = this.highlightLyricIndex;
         this.highlightLyricIndex = this.lyric.findIndex((l, index) => {
           const nextLyric = this.lyric[index + 1];
           return (
-            progress >= l.time - this.lyricDelay &&
-            (nextLyric ? progress < nextLyric.time - this.lyricDelay : true)
+            progress >= l.time && (nextLyric ? progress < nextLyric.time : true)
           );
         });
         if (oldHighlightLyricIndex !== this.highlightLyricIndex) {

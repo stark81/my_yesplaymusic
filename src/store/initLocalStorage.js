@@ -60,7 +60,7 @@ let localStorage = {
     tracks: [],
     albums: [],
     artists: [],
-    sortBy: null,
+    sortBy: 'default',
   },
 };
 

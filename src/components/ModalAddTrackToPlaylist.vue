@@ -6,6 +6,11 @@
     :show-footer="false"
     :title="isLocal ? '添加至离线歌单' : '添加到歌单'"
     width="25vw"
+    :style="
+      isLyricPage
+        ? 'background-color: rgba(0, 0, 0, 0.38)'
+        : 'background-color: rgba(255, 255, 255, 0.58)'
+    "
   >
     <template slot="default">
       <div class="new-playlist-button" @click="newPlaylist"
@@ -84,6 +89,9 @@ export default {
             p.id !== this.data.likedSongPlaylistID
         );
       }
+    },
+    isLyricPage() {
+      return this.$parent.showLyrics;
     },
   },
   methods: {

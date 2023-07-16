@@ -19,8 +19,19 @@
     <ModalAddTrackToPlaylist />
     <ModalNewPlaylist />
     <ModalMatchTrack />
+    <ModalDeleteComment />
+    <ModalSetLyricDelay />
+    <ModalSetRate />
+    <ContextMenu ref="playPageMenu" class="contextMenu">
+      <div ref="lyricDelay" class="item" @click="changeLyricTime">{{
+        $t('contextMenu.changeLyricTime')
+      }}</div>
+      <div ref="playBack" class="item" @click="setPlayBackRate">{{
+        $t('contextMenu.playBackSpeed')
+      }}</div>
+    </ContextMenu>
     <transition v-if="enablePlayer" name="slide-up">
-      <MusicPlay v-show="showLyrics" />
+      <MusicPlay v-show="showLyrics" ref="mainMusicPlayRef" />
     </transition>
   </div>
 </template>
@@ -29,6 +40,11 @@
 import ModalAddTrackToPlaylist from './components/ModalAddTrackToPlaylist.vue';
 import ModalNewPlaylist from './components/ModalNewPlaylist.vue';
 import ModalMatchTrack from './components/ModalMatchTrack.vue';
+import ModalDeleteComment from '@/components/ModalDeleteComment.vue';
+import ModalSetLyricDelay from '@/components/ModalSetLyricDelay.vue';
+import ModalSetRate from '@/components/ModalSetRate.vue';
+import ContextMenu from '@/components/ContextMenu.vue';
+import { changeAppearance } from '@/utils/common';
 import Scrollbar from './components/Scrollbar.vue';
 import Navbar from './components/Navbar.vue';
 import Player from './components/Player.vue';
@@ -49,6 +65,10 @@ export default {
     ModalMatchTrack,
     MusicPlay,
     Scrollbar,
+    ContextMenu,
+    ModalDeleteComment,
+    ModalSetLyricDelay,
+    ModalSetRate,
   },
   data() {
     return {
@@ -57,7 +77,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['showLyrics', 'player', 'enableScrolling']),
+    ...mapState(['showLyrics', 'player', 'enableScrolling', 'settings']),
     isAccountLoggedIn() {
       return isAccountLoggedIn();
     },
@@ -78,12 +98,30 @@ export default {
     showNavbar() {
       return this.$route.name !== 'lastfmCallback';
     },
+    showMusicPlayPage() {
+      return this.showLyrics;
+    },
+  },
+  watch: {
+    showMusicPlayPage(value) {
+      if (value) {
+        setTimeout(() => {
+          this.appearance = this.settings.appearance;
+          this.settings.appearance = 'light';
+          changeAppearance('light');
+        }, 1000);
+      } else {
+        this.settings.appearance = this.appearance;
+        changeAppearance(this.appearance);
+      }
+    },
   },
   created() {
     if (this.isElectron) ipcRenderer(this);
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    this.loadLocalMusic(false).then();
+    this.clearDeletedMusic();
+    this.loadLocalMusic().then();
     this.updateTracks().then(() => {
       this.fetchLatestSongs();
       this.updateArtists();
@@ -92,10 +130,17 @@ export default {
   methods: {
     ...mapActions([
       'loadLocalMusic',
+      'clearDeletedMusic',
       'updateArtists',
       'updateTracks',
       'fetchLatestSongs',
     ]),
+    changeLyricTime() {
+      this.$refs.mainMusicPlayRef.changeLyricTime();
+    },
+    setPlayBackRate() {
+      this.$refs.mainMusicPlayRef.setRate();
+    },
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;
@@ -159,5 +204,8 @@ main::-webkit-scrollbar {
 .slide-up-enter,
 .slide-up-leave-to {
   transform: translateY(100%);
+}
+.contextMenu {
+  width: 0;
 }
 </style>

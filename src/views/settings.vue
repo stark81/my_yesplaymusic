@@ -497,7 +497,7 @@
         </div>
       </div>
 
-      <h3>其他</h3>
+      <h3 v-if="isElectron">本地音乐</h3>
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">
@@ -521,21 +521,36 @@
           </select>
         </div>
       </div>
-
-      <div class="item">
+      <div v-if="isElectron" class="item">
         <div class="left">
-          <div class="title">
-            {{ $t('settings.showTimeOrID.text') }}
-          </div>
+          <div class="title">导出本地歌曲信息</div>
         </div>
         <div class="right">
-          <select v-model="showTrackTimeOrID">
-            <option value="time">{{ $t('settings.showTimeOrID.time') }}</option>
-            <option value="ID">{{ $t('settings.showTimeOrID.ID') }}</option>
-          </select>
+          <button @click="exportLocalMusic">导出</button>
         </div>
       </div>
-
+      <div v-if="isElectron" class="item">
+        <div class="left">
+          <div class="title">导入本地歌曲信息</div>
+        </div>
+        <div class="right">
+          <button @click="importLocalMusic">导入</button>
+        </div>
+      </div>
+      <input
+        ref="selectFileInput"
+        type="file"
+        style="display: none"
+        @change="importLocalMusicFromJson"
+      />
+      <div v-if="isElectron" class="item">
+        <div class="left">
+          <div class="title">清空本地歌曲信息</div>
+        </div>
+        <div class="right">
+          <button @click="deleteLocalMusic">确定</button>
+        </div>
+      </div>
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
@@ -547,6 +562,21 @@
             >更改</button
           >
           <button v-else @click="choseDir">选择</button>
+        </div>
+      </div>
+
+      <h3>其他</h3>
+      <div class="item">
+        <div class="left">
+          <div class="title">
+            {{ $t('settings.showTimeOrID.text') }}
+          </div>
+        </div>
+        <div class="right">
+          <select v-model="showTrackTimeOrID">
+            <option value="time">{{ $t('settings.showTimeOrID.time') }}</option>
+            <option value="ID">{{ $t('settings.showTimeOrID.ID') }}</option>
+          </select>
         </div>
       </div>
 
@@ -1385,6 +1415,60 @@ export default {
       'updateTracks',
       'updateArtists',
     ]),
+    deleteLocalMusic() {
+      this.$store.state.localMusic = {
+        trackIdCounter: 1,
+        albumsIdCounter: 1,
+        artistsIdCounter: 1,
+        playlistIdCounter: 1,
+        songs: [],
+        latestAddTracks: [], // 只有前12首
+        playlists: [],
+        tracks: [],
+        albums: [],
+        artists: [],
+        sortBy: 'default',
+      };
+      this.$store.state.settings.localMusicFolderPath = null;
+    },
+    importLocalMusic() {
+      this.$refs.selectFileInput.click();
+    },
+    importLocalMusicFromJson(e) {
+      const files = e.target.files;
+      const fs = require('fs');
+      fs.readFile(files[0].path, 'utf-8', (err, data) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        const jsonData = JSON.parse(data);
+        this.$store.state.localMusic = jsonData;
+        this.$store.dispatch('fetchLatestSongs');
+        this.showToast('导入完成');
+      });
+    },
+    exportLocalMusic() {
+      const fs = require('fs');
+      const { ipcRenderer } = require('electron');
+      const localMusic = this.$store.state.localMusic;
+      const localMusicJson = JSON.stringify(localMusic);
+
+      ipcRenderer.send('selectFolder');
+      ipcRenderer.on('selected-folder', (event, folderPath) => {
+        if (folderPath) {
+          const path = require('path');
+          const filePath = path.join(folderPath, 'localMusic.json');
+          fs.writeFile(filePath, localMusicJson, 'utf8', err => {
+            if (err) {
+              console.error('Failed to save state of localMusic:', err);
+            } else {
+              console.log('State of localMusic saved successfully');
+            }
+          });
+        }
+      });
+    },
     choseDir() {
       const { ipcRenderer } = require('electron');
       ipcRenderer.send('selectFolder');
