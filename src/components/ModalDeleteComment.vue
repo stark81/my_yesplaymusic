@@ -5,6 +5,7 @@
     :close="close"
     :title="isFloorComment ? '是否删除楼层评论：' : '是否删除歌曲评论：'"
     width="25vw"
+    :style="isLyricPage ? 'background-color: rgba(0, 0, 0, 0.38)' : null"
   >
     <template slot="default">
       <div>{{ comment.beRmComment }}</div>
@@ -27,7 +28,7 @@ export default {
     Modal,
   },
   computed: {
-    ...mapState(['modals']),
+    ...mapState(['modals', 'settings']),
     show: {
       get() {
         return this.modals.deleteCommentModal.show;
@@ -76,6 +77,11 @@ export default {
         });
       },
     },
+    isLyricPage() {
+      return (
+        this.settings.lyricsBackground !== false && this.$parent.showLyrics
+      );
+    },
   },
   methods: {
     ...mapMutations(['updateModal', 'updateData']),
@@ -104,8 +110,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.delete-comment-modal {
-  background: rgba(0, 0, 0, 0.38);
-}
-</style>
+<style lang="scss" scoped></style>

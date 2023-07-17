@@ -6,11 +6,7 @@
     :show-footer="false"
     :title="isLocal ? '添加至离线歌单' : '添加到歌单'"
     width="25vw"
-    :style="
-      isLyricPage
-        ? 'background-color: rgba(0, 0, 0, 0.38)'
-        : 'background-color: rgba(255, 255, 255, 0.58)'
-    "
+    :style="isLyricPage ? 'background-color: rgba(0, 0, 0, 0.38)' : null"
   >
     <template slot="default">
       <div class="new-playlist-button" @click="newPlaylist"
@@ -49,7 +45,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals', 'data', 'liked', 'localMusic']),
+    ...mapState(['modals', 'data', 'liked', 'localMusic', 'settings']),
     show: {
       get() {
         return this.modals.addTrackToPlaylistModal.show;
@@ -91,7 +87,9 @@ export default {
       }
     },
     isLyricPage() {
-      return this.$parent.showLyrics;
+      return (
+        this.$parent.showLyrics && this.settings.lyricsBackground !== false
+      );
     },
   },
   methods: {

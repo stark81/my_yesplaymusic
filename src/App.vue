@@ -19,20 +19,7 @@
     <ModalAddTrackToPlaylist />
     <ModalNewPlaylist />
     <ModalMatchTrack />
-    <ModalDeleteComment />
-    <ModalSetLyricDelay />
-    <ModalSetRate />
-    <ContextMenu ref="playPageMenu" class="contextMenu">
-      <div ref="lyricDelay" class="item" @click="changeLyricTime">{{
-        $t('contextMenu.changeLyricTime')
-      }}</div>
-      <div ref="playBack" class="item" @click="setPlayBackRate">{{
-        $t('contextMenu.playBackSpeed')
-      }}</div>
-    </ContextMenu>
-    <transition v-if="enablePlayer" name="slide-up">
-      <MusicPlay v-show="showLyrics" ref="mainMusicPlayRef" />
-    </transition>
+    <MusicPlay v-if="enablePlayer" ref="mainMusicPlayRef" />
   </div>
 </template>
 
@@ -40,11 +27,6 @@
 import ModalAddTrackToPlaylist from './components/ModalAddTrackToPlaylist.vue';
 import ModalNewPlaylist from './components/ModalNewPlaylist.vue';
 import ModalMatchTrack from './components/ModalMatchTrack.vue';
-import ModalDeleteComment from '@/components/ModalDeleteComment.vue';
-import ModalSetLyricDelay from '@/components/ModalSetLyricDelay.vue';
-import ModalSetRate from '@/components/ModalSetRate.vue';
-import ContextMenu from '@/components/ContextMenu.vue';
-import { changeAppearance } from '@/utils/common';
 import Scrollbar from './components/Scrollbar.vue';
 import Navbar from './components/Navbar.vue';
 import Player from './components/Player.vue';
@@ -65,10 +47,6 @@ export default {
     ModalMatchTrack,
     MusicPlay,
     Scrollbar,
-    ContextMenu,
-    ModalDeleteComment,
-    ModalSetLyricDelay,
-    ModalSetRate,
   },
   data() {
     return {
@@ -98,23 +76,6 @@ export default {
     showNavbar() {
       return this.$route.name !== 'lastfmCallback';
     },
-    showMusicPlayPage() {
-      return this.showLyrics;
-    },
-  },
-  watch: {
-    showMusicPlayPage(value) {
-      if (value) {
-        setTimeout(() => {
-          this.appearance = this.settings.appearance;
-          this.settings.appearance = 'light';
-          changeAppearance('light');
-        }, 1000);
-      } else {
-        this.settings.appearance = this.appearance;
-        changeAppearance(this.appearance);
-      }
-    },
   },
   created() {
     if (this.isElectron) ipcRenderer(this);
@@ -137,9 +98,6 @@ export default {
     ]),
     changeLyricTime() {
       this.$refs.mainMusicPlayRef.changeLyricTime();
-    },
-    setPlayBackRate() {
-      this.$refs.mainMusicPlayRef.setRate();
     },
     handleKeydown(e) {
       if (e.code === 'Space') {

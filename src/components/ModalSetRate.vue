@@ -5,6 +5,7 @@
     :close="close"
     title="调整歌词进度"
     width="25vw"
+    :style="isLyricPage ? 'background-color: rgba(0, 0, 0, 0.38)' : null"
   >
     <template slot="default">
       <div class="content">
@@ -49,7 +50,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals', 'player']),
+    ...mapState(['modals', 'player', 'settings']),
     show: {
       get() {
         return this.modals.setPlayBackRate.show;
@@ -70,6 +71,11 @@ export default {
         this.currentRate = value.toFixed(2);
         this.player?.setRate(value);
       },
+    },
+    isLyricPage() {
+      return (
+        this.settings.lyricsBackground !== false && this.$parent.showLyrics
+      );
     },
   },
   created() {

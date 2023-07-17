@@ -4,11 +4,7 @@
     :show="show"
     :close="close"
     :title="isLocal ? '新建离线歌单' : '新建歌单'"
-    :style="
-      isLyricPage
-        ? 'background-color: rgba(0, 0, 0, 0.38)'
-        : 'background-color: rgba(255, 255, 255, 0.58)'
-    "
+    :style="isLyricPage ? 'background-color: rgba(0, 0, 0, 0.38)' : null"
     width="25vw"
   >
     <template slot="default">
@@ -51,7 +47,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals']),
+    ...mapState(['modals', 'settings']),
     show: {
       get() {
         return this.modals.newPlaylistModal.show;
@@ -82,7 +78,9 @@ export default {
       },
     },
     isLyricPage() {
-      return this.$parent.showLyrics;
+      return (
+        this.settings.lyricsBackground !== false && this.$parent.showLyrics
+      );
     },
   },
   methods: {

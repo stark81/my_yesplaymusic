@@ -1,6 +1,6 @@
 <template>
-  <Transition ref="main" name="comment-page">
-    <div id="CommentContainer" :style="containerStyle">
+  <Transition ref="main" name="slide-fade">
+    <div v-show="showSelf" id="CommentContainer" :style="containerStyle">
       <div class="comment-head">
         <label style="float: left">评论({{ sourceComments.totalCount }})</label>
         <div>
@@ -141,6 +141,9 @@ export default {
     },
     finish() {
       return this.modals.deleteCommentModal.finish;
+    },
+    showSelf() {
+      return this.$parent.show === 'comment';
     },
   },
   watch: {
@@ -441,5 +444,18 @@ export default {
     height: 80px;
     max-width: 600px;
   }
+}
+.slide-fade-enter-active {
+  transition: all 0.5s ease;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.5s cubic-bezier(0.2, 0.2, 0, 1);
+}
+
+.slide-fade-enter,
+.slide-fade-leave-to {
+  transform: translateX(27vh);
+  opacity: 0;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <Transition ref="main" name="comment-page">
+  <Transition ref="main" name="slide-fade">
     <div id="CommentFloorContainer" :style="containerStyle">
       <div class="comment-head">
         <label style="float: left">回复({{ totalCount }})</label>

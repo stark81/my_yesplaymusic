@@ -5,6 +5,7 @@
     :close="close"
     title="调整歌词进度"
     width="25vw"
+    :style="isLyricPage ? 'background-color: rgba(0, 0, 0, 0.38)' : null"
   >
     <template slot="default">
       <div class="content">
@@ -34,7 +35,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals', 'player']),
+    ...mapState(['modals', 'player', 'settings']),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -70,6 +71,11 @@ export default {
           value,
         });
       },
+    },
+    isLyricPage() {
+      return (
+        this.settings.lyricsBackground !== false && this.$parent.showLyrics
+      );
     },
   },
   watch: {
@@ -112,8 +118,6 @@ export default {
 
 <style lang="scss" scoped>
 .set-delay-time-modal {
-  background: rgba(0, 0, 0, 0.38);
-
   .content {
     display: flex;
     justify-content: space-between;

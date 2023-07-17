@@ -1,7 +1,7 @@
 <template>
   <transition name="slide-fade">
     <div
-      v-show="!noLyric & !isComment"
+      v-show="!noLyric"
       ref="lyricsContainer"
       class="lyrics-container"
       :style="lyricFontSize"
@@ -58,7 +58,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'showLyrics', 'isComment', 'modals']),
+    ...mapState(['player', 'settings', 'showLyrics', 'modals']),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -139,7 +139,7 @@ export default {
     },
   },
   watch: {
-    async currentTrack() {
+    currentTrack() {
       const { ipcRenderer } = require('electron');
       if (isMac) {
         const lyric = [
@@ -151,7 +151,9 @@ export default {
         ];
         ipcRenderer.send('sendLyrics', lyric);
       }
-      await this.getLyric();
+      this.getLyric().then(data => {
+        this.$parent.hasLyric = data;
+      });
       if (isMac) {
         if (this.lyric.length > 0) {
           ipcRenderer.send('sendLyrics', this.lyric);
@@ -179,7 +181,9 @@ export default {
     },
   },
   created() {
-    this.getLyric();
+    this.getLyric().then(data => {
+      this.$parent.hasLyric = data;
+    });
     this.initDate();
   },
   beforeDestroy: function () {
@@ -378,15 +382,6 @@ export default {
   .right-side .lyrics-container {
     max-width: 600px;
   }
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.4s;
-}
-
-.slide-up-enter, .slide-up-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  transform: translateY(100%);
 }
 
 .slide-fade-enter-active {
