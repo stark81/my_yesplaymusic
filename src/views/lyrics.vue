@@ -140,25 +140,20 @@ export default {
   },
   watch: {
     currentTrack() {
-      const { ipcRenderer } = require('electron');
-      if (isMac) {
-        const lyric = [
-          {
-            content: this.currentTrack.name,
-            time: 0.0,
-            rawTime: '[00:00.000]',
-          },
-        ];
-        ipcRenderer.send('sendLyrics', lyric);
-      }
       this.getLyric().then(data => {
         this.$parent.hasLyric = data;
-      });
-      if (isMac) {
-        if (this.lyric.length > 0) {
-          ipcRenderer.send('sendLyrics', this.lyric);
+        if (isMac) {
+          const { ipcRenderer } = require('electron');
+          const lyric = [
+            {
+              content: this.currentTrack.name,
+              time: 0.0,
+              rawTime: '[00:00.000]',
+            },
+          ];
+          ipcRenderer.send('sendLyrics', data ? this.lyric : lyric);
         }
-      }
+      });
     },
     lyricDelay(val) {
       clearInterval(this.lyricsInterval);
@@ -183,6 +178,17 @@ export default {
   created() {
     this.getLyric().then(data => {
       this.$parent.hasLyric = data;
+      if (isMac) {
+        const { ipcRenderer } = require('electron');
+        const lyric = [
+          {
+            content: this.currentTrack.name,
+            time: 0.0,
+            rawTime: '[00:00.000]',
+          },
+        ];
+        ipcRenderer.send('sendLyrics', data ? this.lyric : lyric);
+      }
     });
     this.initDate();
   },
