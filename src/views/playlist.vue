@@ -468,6 +468,7 @@ export default {
     },
   },
   created() {
+    this.$parent.$refs.main.scrollTo({ top: 0 });
     if (this.isLocal) {
       this.loadLocalData(this.$route.params.id);
     } else if (this.$route.name === 'likedSongs') {
@@ -599,6 +600,7 @@ export default {
       trackIDs = trackIDs.map(t => t.id);
       getTrackDetail(trackIDs.join(',')).then(data => {
         this.tracks.push(...data.songs);
+        this.tracks = [...new Set(this.tracks)];
         this.lastLoadedTrackIndex += trackIDs.length;
         this.loadingMore = false;
         if (this.lastLoadedTrackIndex + 1 === this.playlist.trackIds.length) {

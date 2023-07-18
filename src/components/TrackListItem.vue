@@ -8,7 +8,7 @@
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
-    <input v-if="batchOp" v-model="isSelected" type="checkbox" />
+    <input v-if="batchOp" v-model="isSelected" class=".check" type="checkbox" />
     <img
       v-if="!isAlbum"
       :src="imgUrl"
@@ -68,7 +68,11 @@
     </div>
 
     <div v-if="showTrackTime" class="createTime">
-      {{ track.createTime || getPublishTime(track) }}
+      {{
+        track.createTime
+          ? getPublishTime(track.createTime)
+          : getPublishTime(track.publishTime)
+      }}
     </div>
     <div v-if="showLikeButton" class="actions">
       <button @click="likeThisSong">
@@ -250,12 +254,12 @@ export default {
     likeThisSong() {
       this.$parent.likeATrack(this.track.id);
     },
-    getPublishTime(track) {
-      const date = new Date(track.publishTime);
+    getPublishTime(date) {
+      date = new Date(date);
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
-      return track.publishTime === 0 ? null : `${year}-${month}-${day}`;
+      return date === 0 ? null : `${year}-${month}-${day}`;
     },
   },
 };
@@ -289,6 +293,12 @@ button {
   padding: 8px;
   border-radius: 12px;
   user-select: none;
+
+  input[type='checkbox'] {
+    height: 18px;
+    width: 18px;
+    margin-right: 10px;
+  }
 
   .no {
     display: flex;

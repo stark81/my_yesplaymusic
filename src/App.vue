@@ -82,10 +82,15 @@ export default {
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
     this.clearDeletedMusic();
-    this.loadLocalMusic().then();
-    this.updateTracks().then(() => {
-      this.fetchLatestSongs();
-      this.updateArtists();
+    this.loadLocalMusic().then(() => {
+      setTimeout(() => {
+        this.updateTracks().then(() => {
+          this.$store.dispatch('fetchLatestSongs');
+          setTimeout(() => {
+            this.updateArtists();
+          }, 20 * 1000);
+        });
+      }, 5000);
     });
   },
   methods: {

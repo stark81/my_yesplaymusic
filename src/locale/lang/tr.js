@@ -246,6 +246,7 @@ export default {
     finish: 'Tamamla',
     reloadLocalMusic: 'Yeniden tarama',
     batchOperation: 'Toplu işlemler',
+    selectAll: 'Hepsini Seç',
     saveToMyLikedSongs: 'Beğendiğim Müziklere Kaydet',
     removeFromMyLikedMüzikler: 'Beğendiğim Müziklerden Kaldır',
     saveToLibrary: 'Müzik kütüğüne kaydet',

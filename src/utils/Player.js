@@ -505,8 +505,14 @@ export default class {
       this._scrobble(this.currentTrack, this._howler?.seek());
     }
     const getLocalMusic = id => {
+      const matchTrack = store?.state.localMusic.tracks.find(
+        t => t.onlineTrack?.id === id
+      );
+      if (matchTrack) {
+        store.dispatch('showToast', `使用本地文件播放歌曲：${matchTrack.name}`);
+      }
       return new Promise(resolve => {
-        const track = localTrackParser(id, true);
+        const track = localTrackParser(matchTrack ? matchTrack.id : id, true);
         resolve({ songs: [track] });
       });
     };

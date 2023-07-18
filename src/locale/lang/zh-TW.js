@@ -250,6 +250,7 @@ export default {
     finish: '完成',
     reloadLocalMusic: '重新掃描',
     batchOperation: '批次操作',
+    selectAll: '全選',
     saveToMyLikedSongs: '新增至我喜歡的音樂',
     removeFromMyLikedSongs: '從喜歡的音樂中刪除',
     saveToLibrary: '新增至音樂庫',

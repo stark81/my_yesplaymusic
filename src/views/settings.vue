@@ -1392,12 +1392,17 @@ export default {
   watch: {
     localMusicPath() {
       this.$store.commit('clearLocalMusic');
-      this.loadLocalMusic();
-      setTimeout(async () => {
-        await this.updateTracks();
-        this.$store.dispatch('fetchLatestSongs');
-        this.updateArtists();
-      }, 5000);
+      this.$store.dispatch('fetchLatestSongs');
+      this.loadLocalMusic().then(() => {
+        setTimeout(() => {
+          this.updateTracks().then(() => {
+            this.$store.dispatch('fetchLatestSongs');
+            setTimeout(() => {
+              this.updateArtists();
+            }, 20 * 1000);
+          });
+        }, 1500);
+      });
     },
   },
   created() {

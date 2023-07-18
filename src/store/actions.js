@@ -106,8 +106,7 @@ async function getArtists({ state, commit }, filePath) {
 
 async function getTrack({ state, commit }, filePath) {
   const stats = fs.statSync(filePath);
-  const birthDate = stats.ctime.toLocaleDateString();
-  const formatDate = new Date(birthDate).toISOString().slice(0, 10);
+  const birthDate = new Date(stats.birthtime).getTime();
   const metadata = await mm.parseFile(filePath);
   const { common } = metadata;
 
@@ -118,6 +117,10 @@ async function getTrack({ state, commit }, filePath) {
     if (!foundSong.lyricDelay) {
       foundSong.lyricDelay = 0;
     }
+    if (!foundSong.hasUpdateTime) {
+      foundSong.createTime = birthDate;
+      foundSong.hasUpdateTime = true;
+    }
     return foundSong.id;
   } else {
     let arForSearch = common.albumartist || common.artist;
@@ -125,7 +128,8 @@ async function getTrack({ state, commit }, filePath) {
     arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
     foundSong = {
       id: state.localMusic.trackIdCounter,
-      createTime: formatDate,
+      createTime: birthDate,
+      hasUpdateTime: false,
       name: common.title,
       dt: metadata.format.duration * 1000,
       isLocal: true,
