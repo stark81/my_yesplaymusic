@@ -351,12 +351,23 @@ export default {
     },
   },
   created() {
+    console.time('运行时间');
     this.currentTab = this.$store.state.settings.localMusicShowDefault;
     this.getRandomLyric();
+    console.log('localMusic.vue create: this = ', this);
+  },
+  beforeMount() {
+    console.timeEnd('运行时间');
+    console.time('运行时间1');
+  },
+  mounted() {
+    console.timeEnd('运行时间1');
+    console.time('运行时间2');
   },
   activated() {
     this.$parent.$refs.scrollbar.restorePosition();
     this.getRandomLyric();
+    console.timeEnd('运行时间2');
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
@@ -376,7 +387,7 @@ export default {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
         this.searchKeyWords = this.inputSearchKeyWords;
-      }, 400);
+      }, 600);
     },
     updateCurrentTab(tab) {
       this.currentTab = tab;
@@ -614,6 +625,16 @@ h1 {
     .svg-icon {
       opacity: 1;
       color: var(--color-primary);
+    }
+  }
+}
+[data-theme='dark'] {
+  .search-box {
+    .active {
+      input,
+      .svg-icon {
+        color: var(--color-text);
+      }
     }
   }
 }
