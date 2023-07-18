@@ -506,7 +506,7 @@ export default class {
     }
     const getLocalMusic = id => {
       const matchTrack = store?.state.localMusic.tracks.find(
-        t => t.onlineTrack.id === id
+        t => t.onlineTrack?.id === id
       );
       if (matchTrack) {
         store.dispatch('showToast', `使用本地文件播放歌曲：${matchTrack.name}`);

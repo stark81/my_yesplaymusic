@@ -1392,6 +1392,7 @@ export default {
   watch: {
     localMusicPath() {
       this.$store.commit('clearLocalMusic');
+      this.$store.dispatch('fetchLatestSongs');
       this.loadLocalMusic();
       setTimeout(async () => {
         await this.updateTracks();

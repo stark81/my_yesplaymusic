@@ -1,5 +1,5 @@
 <template>
-  <div v-show="show" ref="localMusicRef">
+  <div ref="localMusicRef">
     <h1>
       <img
         class="avatar"
@@ -38,7 +38,7 @@
       <div class="songs">
         <TrackList
           :id="sortedTracks.id"
-          :tracks="filterLatestAdd"
+          :tracks="randomShowTracks"
           :column-number="3"
           type="tracklist"
           :extra-context-menu-item="[
@@ -125,7 +125,7 @@
         </button>
       </div>
 
-      <div v-if="currentTab === 'localSongs'">
+      <div v-show="currentTab === 'localSongs'">
         <TrackList
           ref="trackListRef"
           :tracks="filterLocalTracks"
@@ -142,7 +142,7 @@
         />
       </div>
 
-      <div v-if="currentTab === 'playlists'">
+      <div v-show="currentTab === 'playlists'">
         <div v-if="localMusic.playlists.length > 0">
           <CoverRow
             :items="filterPlaylists"
@@ -154,7 +154,7 @@
 
       <div v-if="currentTab === 'albums'">
         <CoverRow
-          :items="filterLocalAlbums"
+          :items="activeAlbums"
           type="album"
           sub-text="artist"
           :show-play-button="true"
@@ -163,7 +163,7 @@
 
       <div v-if="currentTab === 'artists'">
         <CoverRow
-          :items="filterLocalArtists"
+          :items="activeArtists"
           type="artist"
           :show-play-button="true"
         />
@@ -218,6 +218,7 @@ import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
 import { localAlbumParser, localTracksFilter } from '@/utils/localSongParser';
 import { localArtistsParser } from '@/utils/localSongParser';
+import { localTrackParser } from '@/utils/localSongParser';
 
 function extractLyricPart(rawLyric) {
   return rawLyric.split(']').pop().trim();
@@ -235,7 +236,6 @@ export default {
   },
   data() {
     return {
-      show: true,
       sortedTracks: [],
       lyric: undefined,
       lyricSong: undefined,
@@ -245,6 +245,10 @@ export default {
       searchKeyWords: '', // 搜索使用的关键字
       inputSearchKeyWords: '', // 搜索框中正在输入的关键字
       inputFocus: false,
+      activeTracks: [],
+      activeAlbums: [],
+      activeArtists: [],
+      randomShowTracks: [],
     };
   },
   computed: {
@@ -256,21 +260,11 @@ export default {
       return this.localMusic.sortBy;
     },
     filterLatestAdd() {
-      const songIDs = this.$store.state.localMusic.songs
-        .filter(s => s.show && s.delete !== true)
-        .map(s => s.id);
-      const randomTrackID = songIDs[randomNum(0, songIDs.length - 12)];
-      const latest = localTracksFilter('descend', randomTrackID, 12);
-      return latest;
+      const idx = randomNum(0, this.activeTracks.length - 12);
+      return this.activeTracks.slice(idx, idx + 12);
     },
     filterLocalTracks() {
-      let type = this.sortBy;
-      if (!type) {
-        type = 'default';
-        this.updateLocalXXX({ name: 'sortBy', data: type });
-      }
-      const tracks = localTracksFilter(type);
-      return tracks.filter(
+      return this.activeTracks.filter(
         track =>
           (track.name &&
             track.name
@@ -288,6 +282,17 @@ export default {
                 .includes(this.searchKeyWords.toLowerCase())
           )
       );
+    },
+    allTracks() {
+      const songs = this.localMusic.songs.filter(
+        s => s.show && s.delete !== true
+      );
+      const tracks = [];
+      for (const song of songs) {
+        const track = localTrackParser(song.id);
+        tracks.push(track);
+      }
+      return tracks;
     },
     filterLocalAlbums() {
       const albums = [];
@@ -350,30 +355,44 @@ export default {
       return returnLyricLine;
     },
   },
+  watch: {
+    sortBy(val) {
+      this.activeTracks = this.sortList(this.activeTracks, val);
+    },
+    allTracks(val) {
+      const idx = randomNum(0, val.length - 12);
+      this.randomShowTracks = val.slice(idx, idx + 12);
+      const tracks = this.sortList(val, this.sortBy);
+      this.activeTracks = tracks;
+    },
+  },
   created() {
-    console.time('运行时间');
+    setTimeout(() => {}, 1000);
     this.currentTab = this.$store.state.settings.localMusicShowDefault;
-    this.getRandomLyric();
-    console.log('localMusic.vue create: this = ', this);
-  },
-  beforeMount() {
-    console.timeEnd('运行时间');
-    console.time('运行时间1');
-  },
-  mounted() {
-    console.timeEnd('运行时间1');
-    console.time('运行时间2');
+    this.loadData();
   },
   activated() {
     this.$parent.$refs.scrollbar.restorePosition();
     this.getRandomLyric();
-    console.timeEnd('运行时间2');
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
     ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
     scrollToTop() {
       this.$parent.$refs.main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    loadData() {
+      this.getRandomLyric();
+      let tracks = this.allTracks;
+      const idx = randomNum(0, tracks.length - 12);
+      this.randomShowTracks = tracks.slice(idx, idx + 12);
+      tracks = this.sortList(tracks, this.sortBy);
+      this.activeTracks = tracks.slice(0, 20);
+      setTimeout(() => {
+        this.activeTracks.push(...tracks.slice(20));
+      }, 1000);
+      this.activeAlbums = this.filterLocalAlbums;
+      this.activeArtists = this.filterLocalArtists;
     },
     playingTrackPosition() {
       const trackref = this.$refs.trackListRef.$refs.trackListItemRef.find(
@@ -472,6 +491,30 @@ export default {
           this.lyricSong = track.name;
         }
       });
+    },
+    sortList(tracks, type) {
+      if (type === 'default') {
+        return tracks.sort((a, b) => a.id - b.id);
+      } else if (type === 'byname') {
+        const newTracks = tracks.sort((a, b) => {
+          return a['name'].localeCompare(b['name'], 'zh-CN', { numeric: true });
+        });
+        return newTracks;
+      } else if (type === 'descend') {
+        const trackList = tracks.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return timeB - timeA;
+        });
+        return trackList;
+      } else if (type === 'ascend') {
+        const trackList = tracks.sort((a, b) => {
+          const timeA = new Date(a.createTime).getTime();
+          const timeB = new Date(b.createTime).getTime();
+          return timeA - timeB;
+        });
+        return trackList;
+      }
     },
   },
 };
