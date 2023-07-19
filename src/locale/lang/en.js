@@ -249,6 +249,7 @@ export default {
     finish: 'Finish',
     reloadLocalMusic: 'Reload local music',
     batchOperation: 'Batch operation',
+    selectAll: 'Select all',
     saveToMyLikedSongs: 'Save to my Liked Songs',
     removeFromMyLikedSongs: 'Remove from my Liked Songs',
     saveToLibrary: 'Save to library',

@@ -82,7 +82,8 @@ export default {
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
     this.clearDeletedMusic();
-    this.loadLocalMusic().then();
+    this.loadLocalMusic();
+    setTimeout(() => {}, 5000);
     this.updateTracks().then(() => {
       this.fetchLatestSongs();
       this.updateArtists();

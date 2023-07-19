@@ -1,5 +1,5 @@
 <template>
-  <div ref="localMusicRef">
+  <div v-show="show" ref="localMusicRef">
     <h1>
       <img
         class="avatar"
@@ -29,8 +29,7 @@
           <div class="titles">
             <div class="title">{{ $t('localMusic.latedAdd') }}</div>
             <div class="sub-title">
-              {{ changeLocalTrackFilter('descend').length
-              }}{{ $t('common.songs') }}
+              {{ activeTracks.length }}{{ $t('common.songs') }}
             </div>
           </div>
         </div>
@@ -103,12 +102,12 @@
             {{ $t('contextMenu.finish') }}
           </div>
         </div>
-        <div v-show="currentTab === 'localSongs'" class="search-box">
+        <div v-if="currentTab === 'localSongs'" class="search-box">
           <div class="container" :class="{ active: inputFocus }">
             <svg-icon icon-class="search" />
             <div class="input">
               <input
-                v-model.trim="inputSearchKeyWords"
+                v-model.trim="inputKeywords"
                 :placeholder="inputFocus ? '' : $t('localMusic.search')"
                 @input="inputDebounce()"
                 @focus="inputFocus = true"
@@ -152,7 +151,7 @@
         </div>
       </div>
 
-      <div v-if="currentTab === 'albums'">
+      <div v-show="currentTab === 'albums'">
         <CoverRow
           :items="activeAlbums"
           type="album"
@@ -161,7 +160,7 @@
         />
       </div>
 
-      <div v-if="currentTab === 'artists'">
+      <div v-show="currentTab === 'artists'">
         <CoverRow
           :items="activeArtists"
           type="artist"
@@ -192,12 +191,15 @@
         >{{ $t('contextMenu.ascendSort') }}</div
       >
       <hr />
-      <div class="item" @click="batchOpSwitch">{{
+      <div v-if="isBatchOp" class="item" @click="selectAll">{{
+        $t('contextMenu.selectAll')
+      }}</div>
+      <div v-else class="item" @click="batchOpSwitch">{{
         $t('contextMenu.batchOperation')
       }}</div>
     </ContextMenu>
 
-    <div class="position">
+    <div v-if="!inputFocus" class="position">
       <div
         v-if="isLocal && currentTab === 'localSongs'"
         @click="playingTrackPosition"
@@ -216,9 +218,12 @@ import ContextMenu from '@/components/ContextMenu.vue';
 import CoverRow from '@/components/CoverRow.vue';
 import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
-import { localAlbumParser, localTracksFilter } from '@/utils/localSongParser';
-import { localArtistsParser } from '@/utils/localSongParser';
-import { localTrackParser } from '@/utils/localSongParser';
+import {
+  localAlbumParser,
+  localArtistsParser,
+  localTrackParser,
+} from '@/utils/localSongParser';
+import NProgress from 'nprogress';
 
 function extractLyricPart(rawLyric) {
   return rawLyric.split(']').pop().trim();
@@ -227,15 +232,9 @@ function extractLyricPart(rawLyric) {
 export default {
   name: 'LocalMusic',
   components: { SvgIcon, CoverRow, ContextMenu, TrackList },
-  directives: {
-    focus: {
-      inserted: function (el) {
-        el.focus();
-      },
-    },
-  },
   data() {
     return {
+      show: false,
       sortedTracks: [],
       lyric: undefined,
       lyricSong: undefined,
@@ -243,7 +242,7 @@ export default {
       selectedTrackIds: [],
       currentTab: null,
       searchKeyWords: '', // 搜索使用的关键字
-      inputSearchKeyWords: '', // 搜索框中正在输入的关键字
+      inputKeywords: '', // 搜索框中正在输入的关键字
       inputFocus: false,
       activeTracks: [],
       activeAlbums: [],
@@ -356,6 +355,13 @@ export default {
     },
   },
   watch: {
+    currentTab(val) {
+      if (val !== 'localSongs' && this.debounceTimeout) {
+        this.searchKeyWords = '';
+        this.inputKeywords = '';
+        clearTimeout(this.debounceTimeout);
+      }
+    },
     sortBy(val) {
       this.activeTracks = this.sortList(this.activeTracks, val);
     },
@@ -367,7 +373,9 @@ export default {
     },
   },
   created() {
-    setTimeout(() => {}, 1000);
+    setTimeout(() => {
+      if (!this.show) NProgress.start();
+    }, 500);
     this.currentTab = this.$store.state.settings.localMusicShowDefault;
     this.loadData();
   },
@@ -382,17 +390,29 @@ export default {
       this.$parent.$refs.main.scrollTo({ top: 0, behavior: 'smooth' });
     },
     loadData() {
+      NProgress.done();
+      this.show = true;
       this.getRandomLyric();
+
       let tracks = this.allTracks;
+      const albums = this.filterLocalAlbums;
+      const artists = this.filterLocalArtists;
+
+      // 随机显示的12首歌
       const idx = randomNum(0, tracks.length - 12);
       this.randomShowTracks = tracks.slice(idx, idx + 12);
       tracks = this.sortList(tracks, this.sortBy);
+
+      // 首页先加载20首歌，20个专辑，20个歌手，1秒后再全部加载
       this.activeTracks = tracks.slice(0, 20);
+      this.activeAlbums = albums.slice(0, 20);
+      this.activeArtists = artists.slice(0, 20);
+
       setTimeout(() => {
         this.activeTracks.push(...tracks.slice(20));
+        this.activeAlbums.push(...albums.slice(20));
+        this.activeArtists.push(...artists.slice(20));
       }, 1000);
-      this.activeAlbums = this.filterLocalAlbums;
-      this.activeArtists = this.filterLocalArtists;
     },
     playingTrackPosition() {
       const trackref = this.$refs.trackListRef.$refs.trackListItemRef.find(
@@ -405,14 +425,21 @@ export default {
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
-        this.searchKeyWords = this.inputSearchKeyWords;
+        this.searchKeyWords = this.inputKeywords;
       }, 600);
     },
     updateCurrentTab(tab) {
       this.currentTab = tab;
       this.$parent.$refs.main.scrollTo({ top: 375, behavior: 'smooth' });
     },
+    selectAll() {
+      this.$refs.trackListRef.$refs.trackListItemRef.forEach(item => {
+        item.isSelected = true;
+      });
+    },
     batchOpSwitch() {
+      this.currentTab = 'localSongs';
+      this.updateCurrentTab(this.currentTab);
       this.isBatchOp = !this.isBatchOp;
       this.$refs.trackListRef.$refs.trackListItemRef.forEach(item => {
         item.isSelected = false;
@@ -468,10 +495,6 @@ export default {
     },
     openPlaylistTabMenu(e) {
       this.$refs.playlistTabMenu.openMenu(e);
-    },
-    changeLocalTrackFilter(type) {
-      const tracks = localTracksFilter(type);
-      return tracks;
     },
     getRandomLyric() {
       const tracksID = this.localMusic.latestAddTracks;

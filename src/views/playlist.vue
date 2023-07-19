@@ -468,6 +468,7 @@ export default {
     },
   },
   created() {
+    this.$parent.$refs.main.scrollTo({ top: 0 });
     if (this.isLocal) {
       this.loadLocalData(this.$route.params.id);
     } else if (this.$route.name === 'likedSongs') {

@@ -8,7 +8,7 @@
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
-    <input v-if="batchOp" v-model="isSelected" type="checkbox" />
+    <input v-if="batchOp" v-model="isSelected" class=".check" type="checkbox" />
     <img
       v-if="!isAlbum"
       :src="imgUrl"
@@ -289,6 +289,12 @@ button {
   padding: 8px;
   border-radius: 12px;
   user-select: none;
+
+  input[type='checkbox'] {
+    height: 18px;
+    width: 18px;
+    margin-right: 10px;
+  }
 
   .no {
     display: flex;
