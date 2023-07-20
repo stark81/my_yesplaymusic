@@ -77,7 +77,9 @@ export default {
     },
     ownPlaylists() {
       if (this.isLocal) {
-        return this.localMusic.playlists;
+        const playlist = this.localMusic.playlists.slice();
+        const localList = playlist.reverse();
+        return localList;
       } else {
         return this.liked.playlists.filter(
           p =>

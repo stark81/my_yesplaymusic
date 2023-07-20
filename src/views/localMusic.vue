@@ -269,7 +269,7 @@ export default {
   computed: {
     ...mapState(['data', 'localMusic', 'settings']),
     isLocal() {
-      return this.$store.state.player.isLocal;
+      return this.$store.state.player.currentTrack?.isLocal === true;
     },
     sortBy() {
       return this.localMusic.sortBy;
