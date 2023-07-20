@@ -248,6 +248,7 @@ export default {
       activeAlbums: [],
       activeArtists: [],
       randomShowTracks: [],
+      timer: null,
     };
   },
   computed: {
@@ -305,7 +306,7 @@ export default {
           }
         }
       }
-      return [...new Set(albums)];
+      return [...new Set(albums)].reverse();
     },
     filterLocalArtists() {
       const artists = [];
@@ -320,7 +321,7 @@ export default {
           }
         }
       }
-      return [...new Set(artists)];
+      return [...new Set(artists)].reverse();
     },
     filterPlaylists() {
       return this.localMusic.playlists.slice().reverse();
@@ -366,10 +367,15 @@ export default {
       this.activeTracks = this.sortList(this.activeTracks, val);
     },
     allTracks(val) {
-      const idx = randomNum(0, val.length - 12);
-      this.randomShowTracks = val.slice(idx, idx + 12);
-      const tracks = this.sortList(val, this.sortBy);
-      this.activeTracks = tracks;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        const idx = randomNum(0, val.length - 12);
+        this.randomShowTracks = val.slice(idx, idx + 12);
+        const tracks = this.sortList(val, this.sortBy);
+        this.activeTracks = tracks;
+        this.activeAlbums = this.filterLocalAlbums;
+        this.activeArtists = this.filterLocalArtists;
+      }, 1500);
     },
   },
   created() {
@@ -399,7 +405,7 @@ export default {
       const artists = this.filterLocalArtists;
 
       // 随机显示的12首歌
-      const idx = randomNum(0, tracks.length - 12);
+      const idx = tracks.length > 12 ? randomNum(0, tracks.length - 12) : 0;
       this.randomShowTracks = tracks.slice(idx, idx + 12);
       tracks = this.sortList(tracks, this.sortBy);
 

@@ -68,7 +68,7 @@
     </div>
 
     <div v-if="showTrackTime" class="createTime">
-      {{ track.createTime || getPublishTime(track) }}
+      {{ getPublishTime(track.createTime || track.publishTime) }}
     </div>
     <div v-if="showLikeButton" class="actions">
       <button @click="likeThisSong">
@@ -250,12 +250,12 @@ export default {
     likeThisSong() {
       this.$parent.likeATrack(this.track.id);
     },
-    getPublishTime(track) {
-      const date = new Date(track.publishTime);
+    getPublishTime(date) {
+      date = new Date(date);
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
-      return track.publishTime === 0 ? null : `${year}-${month}-${day}`;
+      return date === 0 ? null : `${year}-${month}-${day}`;
     },
   },
 };
