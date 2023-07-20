@@ -600,6 +600,7 @@ export default {
       trackIDs = trackIDs.map(t => t.id);
       getTrackDetail(trackIDs.join(',')).then(data => {
         this.tracks.push(...data.songs);
+        this.tracks = [...new Set(this.tracks)];
         this.lastLoadedTrackIndex += trackIDs.length;
         this.loadingMore = false;
         if (this.lastLoadedTrackIndex + 1 === this.playlist.trackIds.length) {

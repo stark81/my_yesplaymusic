@@ -68,7 +68,11 @@
     </div>
 
     <div v-if="showTrackTime" class="createTime">
-      {{ getPublishTime(track.createTime || track.publishTime) }}
+      {{
+        track.createTime
+          ? getPublishTime(track.createTime)
+          : getPublishTime(track.publishTime)
+      }}
     </div>
     <div v-if="showLikeButton" class="actions">
       <button @click="likeThisSong">

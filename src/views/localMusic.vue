@@ -229,6 +229,21 @@ function extractLyricPart(rawLyric) {
   return rawLyric.split(']').pop().trim();
 }
 
+function getRandomNumbersFromList(list, count) {
+  const listCopy = list.slice();
+  const result = [];
+
+  for (let i = 0; i < count; i++) {
+    const randomIndex = Math.floor(Math.random() * listCopy.length);
+    const randomNumber = listCopy[randomIndex];
+
+    result.push(randomNumber);
+    listCopy.splice(randomIndex, 1);
+  }
+
+  return result;
+}
+
 export default {
   name: 'LocalMusic',
   components: { SvgIcon, CoverRow, ContextMenu, TrackList },
@@ -369,8 +384,10 @@ export default {
     allTracks(val) {
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
-        const idx = randomNum(0, val.length - 12);
-        this.randomShowTracks = val.slice(idx, idx + 12);
+        // const idx = randomNum(0, val.length - 12);
+        // this.randomShowTracks = val.slice(idx, idx + 12);
+        this.randomShowTracks =
+          val.length > 12 ? getRandomNumbersFromList(val, 12) : val;
         const tracks = this.sortList(val, this.sortBy);
         this.activeTracks = tracks;
         this.activeAlbums = this.filterLocalAlbums;
@@ -405,8 +422,10 @@ export default {
       const artists = this.filterLocalArtists;
 
       // 随机显示的12首歌
-      const idx = tracks.length > 12 ? randomNum(0, tracks.length - 12) : 0;
-      this.randomShowTracks = tracks.slice(idx, idx + 12);
+      // const idx = tracks.length > 12 ? randomNum(0, tracks.length - 12) : 0;
+      this.randomShowTracks =
+        tracks.length > 12 ? getRandomNumbersFromList(tracks, 12) : tracks;
+      // this.randomShowTracks = tracks.slice(idx, idx + 12);
       tracks = this.sortList(tracks, this.sortBy);
 
       // 首页先加载20首歌，20个专辑，20个歌手，1秒后再全部加载
