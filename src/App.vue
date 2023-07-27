@@ -18,7 +18,6 @@
     <Toast />
     <ModalAddTrackToPlaylist />
     <ModalNewPlaylist />
-    <ModalMatchTrack />
     <MusicPlay v-if="enablePlayer" ref="mainMusicPlayRef" />
   </div>
 </template>
@@ -26,7 +25,6 @@
 <script>
 import ModalAddTrackToPlaylist from './components/ModalAddTrackToPlaylist.vue';
 import ModalNewPlaylist from './components/ModalNewPlaylist.vue';
-import ModalMatchTrack from './components/ModalMatchTrack.vue';
 import Scrollbar from './components/Scrollbar.vue';
 import Navbar from './components/Navbar.vue';
 import Player from './components/Player.vue';
@@ -44,7 +42,6 @@ export default {
     Toast,
     ModalAddTrackToPlaylist,
     ModalNewPlaylist,
-    ModalMatchTrack,
     MusicPlay,
     Scrollbar,
   },
@@ -81,17 +78,7 @@ export default {
     if (this.isElectron) ipcRenderer(this);
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    this.clearDeletedMusic();
-    this.loadLocalMusic().then(() => {
-      setTimeout(() => {
-        this.updateTracks().then(() => {
-          this.$store.dispatch('fetchLatestSongs');
-          setTimeout(() => {
-            this.updateArtists();
-          }, 20 * 1000);
-        });
-      }, 5000);
-    });
+    this.fetchLocalData();
   },
   methods: {
     ...mapActions([
@@ -101,8 +88,13 @@ export default {
       'updateTracks',
       'fetchLatestSongs',
     ]),
-    changeLyricTime() {
-      this.$refs.mainMusicPlayRef.changeLyricTime();
+    async fetchLocalData() {
+      this.clearDeletedMusic();
+      await this.loadLocalMusic();
+      await this.updateTracks();
+      this.$store.dispatch('fetchLatestSongs');
+      setTimeout(() => {}, 10 * 1000);
+      await this.updateArtists();
     },
     handleKeydown(e) {
       if (e.code === 'Space') {

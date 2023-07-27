@@ -286,13 +286,13 @@ export default {
     like() {
       this.likeATrack(this.rightClickedTrack.id);
     },
-    reMatchTrack() {
+    async reMatchTrack() {
       const song = this.$store.state.localMusic.songs.find(
         s => s.id === this.rightClickedTrack.id
       );
-      const code = this.rematchSong(song.id);
+      const code = await this.rematchSong(song.id);
       if (code === 'err') {
-        this.rematchSong(song.id, false);
+        await this.rematchSong(song.id, false);
       }
     },
     accurateMatchTrack() {

@@ -22,9 +22,9 @@
 
 <script>
 import Modal from '@/components/Modal.vue';
-// import locale from '@/locale';
 import { mapMutations, mapState, mapActions } from 'vuex';
 import { getTrackDetail } from '@/api/track';
+import { getAlbum } from '@/api/album';
 
 export default {
   name: 'ModalMatchTrack',
@@ -83,15 +83,16 @@ export default {
       this.title = '';
       this.selectedTrackID = 0;
     },
-    accurateMatchTrack() {
+    async accurateMatchTrack() {
       const localMusic = this.$store.state.localMusic;
       const song = localMusic.songs.find(s => s.id === this.selectedTrackID);
       const track = localMusic.tracks.find(t => t.id === song.trackID);
       const album = localMusic.albums.find(a => a.id === song.albumID);
-      getTrackDetail(this.title).then(data => {
+      getTrackDetail(this.title).then(async data => {
         const matchTrack = data.songs[0];
+        const al = await getAlbum(matchTrack.al.id);
         track.onlineTrack = matchTrack;
-        album.onlineAlbum = matchTrack.al;
+        album.onlineAlbum = al.album;
       });
       this.close();
     },

@@ -169,6 +169,8 @@
       </div>
     </div>
 
+    <ModalMatchTrack />
+
     <ContextMenu ref="playlistTabMenu">
       <div
         class="item"
@@ -218,6 +220,7 @@ import ContextMenu from '@/components/ContextMenu.vue';
 import CoverRow from '@/components/CoverRow.vue';
 import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
+import ModalMatchTrack from '@/components/ModalMatchTrack.vue';
 import {
   localAlbumParser,
   localArtistsParser,
@@ -246,7 +249,7 @@ function getRandomNumbersFromList(list, count) {
 
 export default {
   name: 'LocalMusic',
-  components: { SvgIcon, CoverRow, ContextMenu, TrackList },
+  components: { SvgIcon, CoverRow, ContextMenu, TrackList, ModalMatchTrack },
   data() {
     return {
       show: false,
@@ -384,8 +387,6 @@ export default {
     allTracks(val) {
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
-        // const idx = randomNum(0, val.length - 12);
-        // this.randomShowTracks = val.slice(idx, idx + 12);
         this.randomShowTracks =
           val.length > 12 ? getRandomNumbersFromList(val, 12) : val;
         const tracks = this.sortList(val, this.sortBy);

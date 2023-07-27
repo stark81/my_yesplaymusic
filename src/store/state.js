@@ -16,6 +16,7 @@ updateApp();
 
 export default {
   showLyrics: false,
+  updateFlag: true,
   enableScrolling: true,
   title: 'YesPlayMusic',
   liked: {

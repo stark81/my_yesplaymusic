@@ -31,7 +31,7 @@ export function localAlbumParser(songID) {
   const localMusic = store.state.localMusic;
   const song = localMusic.songs.find(s => s.id === songID);
   if (!song) return;
-  const al = cloneDeep(localMusic.albums.find(a => a.id === song.albumID));
+  const al = localMusic.albums.find(a => a.id === song.albumID);
   const album = al.matched ? al.onlineAlbum : al;
   return album;
 }

@@ -67,6 +67,9 @@ export default {
   toggleLyrics(state) {
     state.showLyrics = !state.showLyrics;
   },
+  toggleUpdateStatus(state) {
+    state.updateFlag = !state.updateFlag;
+  },
   updateDailyTracks(state, dailyTracks) {
     state.dailyTracks = dailyTracks;
   },

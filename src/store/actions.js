@@ -4,7 +4,7 @@ import { getPlaylistDetail } from '@/api/playlist';
 import { getTrackDetail } from '@/api/track';
 import { search } from '@/api/others';
 import { getAlbum } from '@/api/album';
-import { localTracksFilter, localTrackParser } from '@/utils/localSongParser';
+import { localTrackParser } from '@/utils/localSongParser';
 import { randomNum } from '@/utils/common';
 import {
   userPlaylist,
@@ -191,11 +191,12 @@ export default {
       }
     }
   },
-  loadLocalMusic({ state, commit }) {
+  async loadLocalMusic({ state, commit }) {
     const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
     if (!fs.existsSync(folderPath)) return;
+
     const walk = async folder => {
       const files = fs.readdirSync(folder);
       for (const file of files) {
@@ -209,9 +210,11 @@ export default {
           const { common } = metadata;
           if (!common.title) return;
 
-          const trackID = await getTrack({ state, commit }, filePath);
-          const albumID = await getLocalAlbum({ state, commit }, filePath);
-          const artistIDs = await getArtists({ state, commit }, filePath);
+          const [trackID, albumID, artistIDs] = await Promise.all([
+            getTrack({ state, commit }, filePath),
+            getLocalAlbum({ state, commit }, filePath),
+            getArtists({ state, commit }, filePath),
+          ]);
           if (!foundTrack) {
             const song = {
               id: trackID,
@@ -234,8 +237,9 @@ export default {
         }
       }
     };
-    walk(folderPath);
+    await walk(folderPath);
   },
+
   async rematchSong({ state, commit }, pid, use_arts = false) {
     const song = state.localMusic.songs.find(s => s.id === pid);
     const track = state.localMusic.tracks.find(t => t.id === song.trackID);
@@ -309,6 +313,7 @@ export default {
     let rawDelay = 20 * 1000;
     let code = 200;
     for (let i = 0; i < tracks.length; i++) {
+      if (!state.updateFlag) break;
       const song = songs[i];
       const track = tracks.find(t => t.id === song.trackID);
       const album = albums.find(a => a.id === song.albumID);
@@ -427,8 +432,8 @@ export default {
     }
     return { code: 404, message: '歌单不存在' };
   },
-  fetchLatestSongs({ commit }) {
-    const trackIDs = localTracksFilter('descend')
+  fetchLatestSongs({ state, commit }) {
+    const trackIDs = state.localMusic.tracks
       .filter(t => t.matched)
       .map(t => t.onlineTrack.id);
     commit('updateLocalXXX', { name: 'latestAddTracks', data: trackIDs });
@@ -438,6 +443,7 @@ export default {
     let rawDelay = 20 * 1000;
     const artists = state.localMusic.artists;
     for (const artist of artists) {
+      if (!state.updateFlag) break;
       if (artist.matched) {
         code = 0;
       } else {

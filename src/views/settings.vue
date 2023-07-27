@@ -564,6 +564,17 @@
           <button v-else @click="choseDir">选择</button>
         </div>
       </div>
+      <div v-if="isElectron" class="item">
+        <div class="left">
+          <div class="title"
+            >本地歌曲匹配状态: {{ updateFlag ? '正常' : '已暂停' }}</div
+          >
+        </div>
+        <div class="right">
+          <button v-if="updateFlag" @click="changeUpdateStatus">暂停</button>
+          <button v-else @click="changeUpdateStatus">开始</button>
+        </div>
+      </div>
 
       <h3>其他</h3>
       <div class="item">
@@ -885,7 +896,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'data', 'lastfm']),
+    ...mapState(['player', 'settings', 'data', 'lastfm', 'updateFlag']),
     localMusicPath() {
       return this.settings.localMusicFolderPath;
     },
@@ -1390,19 +1401,15 @@ export default {
     },
   },
   watch: {
-    localMusicPath() {
+    async localMusicPath() {
+      localStorage.removeItem('player');
       this.$store.commit('clearLocalMusic');
       this.$store.dispatch('fetchLatestSongs');
-      this.loadLocalMusic().then(() => {
-        setTimeout(() => {
-          this.updateTracks().then(() => {
-            this.$store.dispatch('fetchLatestSongs');
-            setTimeout(() => {
-              this.updateArtists();
-            }, 20 * 1000);
-          });
-        }, 1500);
-      });
+      await this.loadLocalMusic();
+      await this.updateTracks();
+      this.$store.dispatch('fetchLatestSongs');
+      setTimeout(() => {}, 10 * 1000);
+      await this.updateArtists();
     },
   },
   created() {
@@ -1485,6 +1492,9 @@ export default {
           });
         }
       });
+    },
+    changeUpdateStatus() {
+      this.$store.commit('toggleUpdateStatus');
     },
     getAllOutputDevices() {
       navigator.mediaDevices.enumerateDevices().then(devices => {
