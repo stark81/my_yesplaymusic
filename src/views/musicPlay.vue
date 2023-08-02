@@ -230,6 +230,11 @@
                 >
                   <svg-icon icon-class="shuffle" />
                 </button-icon>
+                <span v-show="showTranIcon" class="transPro" @click="switchRbT">
+                  <label v-if="hasTLyric">译</label>
+                  <label v-if="hasTLyric && hasRLyric" class="m-label">|</label>
+                  <label v-if="hasRLyric">音</label>
+                </span>
               </div>
             </div>
           </div>
@@ -239,7 +244,6 @@
           <Comment v-show="show === 'comment'" ref="commentRef" />
           <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
         </div>
-        <!-- <div class="close-button" @click="toggleLyrics"> -->
         <div class="close-button" @click="closePlayPage">
           <button>
             <svg-icon icon-class="arrow-down" />
@@ -306,6 +310,9 @@ export default {
       background: '',
       date: this.formatTime(new Date()),
       hasLyric: true,
+      hasTLyric: false,
+      hasRLyric: false,
+      showIcon: [],
     };
   },
   computed: {
@@ -315,6 +322,9 @@ export default {
         return this.player.currentTrack;
       },
       set() {},
+    },
+    showTranIcon() {
+      return this.hasTLyric || this.hasRLyric;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -388,6 +398,9 @@ export default {
       this.timer = setInterval(function () {
         _this.date = _this.formatTime(new Date());
       }, 1000);
+    },
+    switchRbT() {
+      console.log('111111111111');
     },
     closePlayPage() {
       this.toggleLyrics();
@@ -606,6 +619,7 @@ export default {
     max-width: 54vh;
     margin-top: 24px;
     color: var(--color-text);
+    position: relative;
 
     .title {
       margin-top: 8px;
@@ -684,6 +698,22 @@ export default {
         font-size: 15px;
         opacity: 0.58;
         min-width: 28px;
+      }
+    }
+
+    .transPro {
+      font-size: 1.2rem;
+      color: var(--color-text);
+      position: absolute;
+      left: 430px;
+      opacity: 0.38;
+
+      :hover {
+        cursor: pointer;
+      }
+
+      .m-label {
+        padding: 0 5px;
       }
     }
 

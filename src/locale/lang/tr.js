@@ -171,7 +171,7 @@ export default {
     automaticallyCacheSongs: 'Müzikleri otomatik çerezle',
     clearSongsCache: 'Müzik çerezlerini temizle',
     cacheCount: 'Çerezlenen {song} Müzikler ({size})',
-    showLyricsTranslation: 'Müzik sözlerinin çevirilerini göster',
+    showLyricsTranslation: 'Sözleri çeviri ve fonetik telaffuz göster',
     showTray: 'Bildirim alanı simgesini göster',
     showControl: 'Kontrol düğmelerini göster',
     showStatusBarLyric: 'Durum çubuğu şarkı sözlerini göster',

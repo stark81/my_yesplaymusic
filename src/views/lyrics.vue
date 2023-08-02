@@ -51,6 +51,7 @@ export default {
       lyricsInterval: null,
       lyric: [],
       tlyric: [],
+      rlyric: [],
       highlightLyricIndex: -1,
       minimize: true,
       background: '',
@@ -105,6 +106,15 @@ export default {
             const { content: tLyricContent } = sameTimeTLyric;
             if (content) {
               lyricItem.contents.push(tLyricContent);
+            }
+          }
+          const sameTimeRLyric = this.rlyric.find(
+            ({ rawTime: rLyricRawTime }) => rLyricRawTime === rawTime
+          );
+          if (sameTimeRLyric) {
+            const { content: rLyricContent } = sameTimeRLyric;
+            if (content) {
+              lyricItem.contents.push(rLyricContent);
             }
           }
           ret.push(lyricItem);
@@ -174,6 +184,12 @@ export default {
         this.$store.commit('enableScrolling', true);
       }
     },
+    tlyric(val) {
+      this.$parent.hasTLyric = val.length > 0 ? true : false;
+    },
+    rlyric(val) {
+      this.$parent.hasRLyric = val.length > 0 ? true : false;
+    },
   },
   created() {
     this.getLyric().then(data => {
@@ -229,7 +245,7 @@ export default {
           this.tlyric = [];
           return false;
         } else {
-          let { lyric, tlyric } = lyricParser(data);
+          let { lyric, tlyric, rlyric } = lyricParser(data);
           lyric = lyric.filter(
             l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content)
           );
@@ -249,10 +265,12 @@ export default {
           if (lyric.length === 1 && includeAM) {
             this.lyric = [];
             this.tlyric = [];
+            this.rlyric = [];
             return false;
           } else {
             this.lyric = lyric;
             this.tlyric = tlyric;
+            this.rlyric = rlyric;
             return true;
           }
         }

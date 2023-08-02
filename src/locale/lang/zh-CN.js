@@ -173,7 +173,7 @@ export default {
     automaticallyCacheSongs: '自动缓存歌曲',
     clearSongsCache: '清除歌曲缓存',
     cacheCount: '已缓存 {song} 首 ({size})',
-    showLyricsTranslation: '显示歌词翻译',
+    showLyricsTranslation: '显示歌词翻译/音译',
     showTray: '显示状态栏图标',
     showControl: '显示控制按钮',
     showStatusBarLyric: '显示状态栏歌词',
