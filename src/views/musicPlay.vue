@@ -123,7 +123,7 @@
                     </button-icon>
                     <button-icon
                       :title="$t('contextMenu.addToPlaylist')"
-                      @click.native="addToPlaylist"
+                      @click.native="addToPlaylist(isLocal)"
                     >
                       <svg-icon icon-class="plus" />
                     </button-icon>
@@ -270,6 +270,13 @@
         <div ref="playBack" class="item" @click="setRate">{{
           $t('contextMenu.playBackSpeed')
         }}</div>
+        <div
+          v-if="isLocal"
+          ref="playBack"
+          class="item"
+          @click="addToPlaylist(false)"
+          >{{ $t('contextMenu.addToPlaylist') }}</div
+        >
       </ContextMenu>
     </div>
   </div>
@@ -445,8 +452,13 @@ export default {
     switchCommentAndLyric(show_option) {
       this.show = show_option;
     },
-    addToPlaylist() {
-      if (this.isLocal) {
+    addToPlaylist(isLocal = false) {
+      let id = this.currentTrack.id;
+      if (isLocal) {
+        const localMusic = this.$store.state.localMusic;
+        const track = localMusic.tracks.find(t => t.onlineTrack.id === id);
+        if (!track) return;
+        id = [track.id];
         this.updateModal({
           modalName: 'addTrackToPlaylistModal',
           key: 'isLocal',
@@ -467,7 +479,7 @@ export default {
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'selectedTrackID',
-        value: this.currentTrack?.id,
+        value: id,
       });
     },
     changeLyricTime() {
@@ -515,7 +527,7 @@ export default {
     },
     getCoverColor() {
       if (this.settings.lyricsBackground !== true) return;
-      const cover = this.currentTrack.al?.picUrl + '?param=256y256';
+      const cover = this.currentTrack?.al?.picUrl + '?param=256y256';
       Vibrant.from(cover, { colorCount: 1 })
         .getPalette()
         .then(palette => {
@@ -725,7 +737,7 @@ export default {
       font-size: 1.2rem;
       color: var(--color-text);
       position: absolute;
-      right: 4vh;
+      right: 5vh;
       user-select: none;
 
       :hover {
@@ -741,7 +753,7 @@ export default {
       }
 
       .m-label {
-        padding: 0 5px;
+        padding: 0 2px;
       }
     }
 

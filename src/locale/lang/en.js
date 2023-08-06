@@ -285,5 +285,6 @@ export default {
     copied: 'Copied',
     copyFailed: 'Copy failed: ',
     needToLogin: 'Need to log into netease account',
+    commentFailed: 'Comment failed',
   },
 };

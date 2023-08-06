@@ -283,5 +283,6 @@ export default {
     copied: '已複製',
     copyFailed: '複製失敗：',
     needToLogin: '此動作需要登入網易雲帳戶',
+    commentFailed: '評論失敗',
   },
 };

@@ -76,9 +76,9 @@
         >从歌单中删除</div
       >
       <div
-        v-show="type !== 'cloudDisk' && rightClickedTrack.isLocal !== true"
+        v-show="type !== 'cloudDisk'"
         class="item"
-        @click="addTrackToPlaylist"
+        @click="addTrackToPlaylist(rightClickedTrack.matched === true)"
         >{{ $t('contextMenu.addToPlaylist') }}</div
       >
       <div
@@ -307,7 +307,7 @@ export default {
         value: this.rightClickedTrack.id,
       });
     },
-    addTrackToPlaylist() {
+    addTrackToPlaylist(useOnline = false) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
@@ -320,7 +320,9 @@ export default {
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'selectedTrackID',
-        value: this.rightClickedTrack.id,
+        value: !useOnline
+          ? this.rightClickedTrack.id
+          : this.rightClickedTrack.onlineTrack.id,
       });
     },
     removeLocalTrack() {

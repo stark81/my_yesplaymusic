@@ -287,5 +287,6 @@ export default {
     copied: '已复制',
     copyFailed: '复制失败：',
     needToLogin: '此操作需要登录网易云帐号',
+    commentFailed: '评论失败',
   },
 };

@@ -277,5 +277,6 @@ export default {
     savedToMyLikedSongs: 'Beğendiğim Müziklere Kaydet',
     removedFromMyLikedSongs: 'Beğendiğim Müziklerden Kaldır',
     convertedToLibrary: 'Müzik Kütüphanesine Kaydedildi',
+    commentFailed: 'Yorum başarısız oldu',
   },
 };

@@ -199,7 +199,7 @@ export default {
         return;
       }
       handlCommentLiked(
-        this.player.currentTrack.id,
+        this.player.currentTrack.onlineTrack?.id || this.player.currentTrack.id,
         comment.commentId,
         !comment.liked ? 1 : 0,
         this.sourceComments.type
@@ -226,7 +226,7 @@ export default {
       }
       this.sourceComments.isLoading = true;
       const data = await getSongNewComment(
-        this.player.currentTrack.id,
+        this.player.currentTrack.onlineTrack?.id || this.player.currentTrack.id,
         this.sourceComments.type,
         this.sourceComments.pageNo,
         this.sourceComments.pageSize,
@@ -286,7 +286,9 @@ export default {
       this.deleteComment = comment;
       const rmComment = {
         type: 0,
-        trackID: this.player.currentTrack.id,
+        trackID:
+          this.player.currentTrack.onlineTrack?.id ||
+          this.player.currentTrack.id,
         beRmComment: comment.content,
         commentID: comment.commentId,
       };
@@ -311,28 +313,33 @@ export default {
       //   );
       // }, 1000);
     },
-    async addComment(comment) {
+    addComment(comment) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
-      const response = await handleSubmitComment(
+      handleSubmitComment(
         1,
         this.sourceComments.type,
-        this.player.currentTrack.id,
+        this.player.currentTrack.onlineTrack?.id || this.player.currentTrack.id,
         comment
-      );
-      if (response && response.code === 200) {
-        this.sourceComments.sortType = 3;
-        this.switchComment(this.sourceComments.sortType);
-        const data = response.comment;
-        data.likedCount = 0;
-        data.replyCount = 0;
-        data.timeStr = '刚刚';
-        this.sourceComments.comments.push(response.comment);
-      } else {
-        console.log(response.data.dialog);
-      }
+      )
+        .then(response => {
+          if (response && response.code === 200) {
+            this.sourceComments.sortType = 3;
+            this.switchComment(this.sourceComments.sortType);
+            const data = response.comment;
+            data.likedCount = 0;
+            data.replyCount = 0;
+            data.timeStr = '刚刚';
+            this.sourceComments.comments.push(response.comment);
+          } else if (response && response.code !== 200) {
+            this.showToast(response.data.dialog.subtitle);
+          } else {
+            this.showToast(locale.t('toast.commentFailed'));
+          }
+        })
+        .catch();
     },
   },
 };

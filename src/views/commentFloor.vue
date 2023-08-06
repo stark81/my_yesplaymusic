@@ -196,25 +196,30 @@ export default {
     closeFloor() {
       this.$parent.Bus.$emit('showComment', 'comment');
     },
-    async writeFloorComment(comment) {
+    writeFloorComment(comment) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
-      const response = await handleSubmitComment(
+      handleSubmitComment(
         2,
         this.$parent.type,
         this.$parent.currentTrack.id,
         comment,
         this.commentId
-      );
-      if (response.code === 200) {
-        const reply_comment = response.comment;
-        reply_comment.beReplied = [];
-        this.comments.push(response.comment);
-      } else {
-        alert(response.data.dialog.subtitle);
-      }
+      )
+        .then(response => {
+          if (response && response.code === 200) {
+            const reply_comment = response.comment;
+            reply_comment.beReplied = [];
+            this.comments.push(response.comment);
+          } else if (response && response.code !== 200) {
+            this.showToast(response.data.dialog.subtitle);
+          } else {
+            this.showToast(locale.t('toast.commentFailed'));
+          }
+        })
+        .catch();
     },
     likeFloorComment(comment, liked) {
       if (!isAccountLoggedIn()) {
