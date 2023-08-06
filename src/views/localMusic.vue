@@ -29,7 +29,7 @@
           <div class="titles">
             <div class="title">{{ $t('localMusic.latedAdd') }}</div>
             <div class="sub-title">
-              {{ activeTracks.length }}{{ $t('common.songs') }}
+              {{ allTracks.length }}{{ $t('common.songs') }}
             </div>
           </div>
         </div>

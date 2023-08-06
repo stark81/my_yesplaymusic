@@ -23,10 +23,22 @@
           <br />
           <span
             v-if="
-              line.contents[1] && $store.state.settings.showLyricsTranslation
+              line.contents[1] &&
+              tagIdx === 1 &&
+              $store.state.settings.showLyricsTranslation
             "
             class="translation"
             >{{ line.contents[1] }}</span
+          >
+          <span
+            v-if="
+              line.contents[2] &&
+              tagIdx === 2 &&
+              $store.state.settings.showLyricsTranslation
+            "
+            class="translation"
+          >
+            {{ line.contents[2] }}</span
           >
         </div>
       </div>
@@ -71,6 +83,9 @@ export default {
         ? this.currentTrack.lyricDelay
         : this.onlineTrackDelay;
     },
+    tagIdx() {
+      return this.$parent.tagIdx;
+    },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
     },
@@ -99,6 +114,7 @@ export default {
         lyricFiltered.forEach(l => {
           const { rawTime, time, content } = l;
           const lyricItem = { time, content, contents: [content] };
+          // 歌词翻译
           const sameTimeTLyric = this.tlyric.find(
             ({ rawTime: tLyricRawTime }) => tLyricRawTime === rawTime
           );
@@ -106,8 +122,11 @@ export default {
             const { content: tLyricContent } = sameTimeTLyric;
             if (content) {
               lyricItem.contents.push(tLyricContent);
+            } else {
+              lyricItem.contents.push(null);
             }
           }
+          // 歌词音译
           const sameTimeRLyric = this.rlyric.find(
             ({ rawTime: rLyricRawTime }) => rLyricRawTime === rawTime
           );
@@ -115,6 +134,8 @@ export default {
             const { content: rLyricContent } = sameTimeRLyric;
             if (content) {
               lyricItem.contents.push(rLyricContent);
+            } else {
+              lyricItem.contents.push(null);
             }
           }
           ret.push(lyricItem);
@@ -377,7 +398,7 @@ export default {
     }
 
     .highlight div.content {
-      transform: scale(1);
+      // transform: scale(1);
       span {
         opacity: 0.98;
         display: inline-block;

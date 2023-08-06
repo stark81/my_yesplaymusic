@@ -231,9 +231,17 @@
                   <svg-icon icon-class="shuffle" />
                 </button-icon>
                 <span v-show="showTranIcon" class="transPro" @click="switchRbT">
-                  <label v-if="hasTLyric">译</label>
+                  <label
+                    v-if="hasTLyric"
+                    :class="{ activeTag: tags[tagIdx] === 'tlyric' }"
+                    >译</label
+                  >
                   <label v-if="hasTLyric && hasRLyric" class="m-label">|</label>
-                  <label v-if="hasRLyric">音</label>
+                  <label
+                    v-if="hasRLyric"
+                    :class="{ activeTag: tags[tagIdx] === 'rlyric' }"
+                    >音</label
+                  >
                 </span>
               </div>
             </div>
@@ -312,7 +320,7 @@ export default {
       hasLyric: true,
       hasTLyric: false,
       hasRLyric: false,
-      showIcon: [],
+      tagIdx: 1,
     };
   },
   computed: {
@@ -324,7 +332,20 @@ export default {
       set() {},
     },
     showTranIcon() {
-      return this.hasTLyric || this.hasRLyric;
+      return (
+        this.settings.showLyricsTranslation &&
+        (this.hasTLyric || this.hasRLyric)
+      );
+    },
+    tags() {
+      const lst = [''];
+      if (this.hasTLyric) {
+        lst.splice(1, 0, 'tlyric');
+      }
+      if (this.hasRLyric) {
+        lst.push('rlyric');
+      }
+      return lst;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -400,7 +421,7 @@ export default {
       }, 1000);
     },
     switchRbT() {
-      console.log('111111111111');
+      this.tagIdx = (this.tagIdx + 1) % this.tags.length;
     },
     closePlayPage() {
       this.toggleLyrics();
@@ -598,7 +619,6 @@ export default {
   width: 50vw;
   align-items: center;
   transition: all 0.5s;
-  // background-color: red;
   z-index: 50;
 
   .date {
@@ -705,11 +725,19 @@ export default {
       font-size: 1.2rem;
       color: var(--color-text);
       position: absolute;
-      left: 430px;
-      opacity: 0.38;
+      right: 4vh;
+      user-select: none;
 
       :hover {
         cursor: pointer;
+      }
+
+      label {
+        opacity: 0.38;
+      }
+
+      .activeTag {
+        opacity: 0.88;
       }
 
       .m-label {
