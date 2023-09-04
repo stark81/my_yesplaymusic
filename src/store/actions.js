@@ -38,7 +38,7 @@ async function getLocalAlbum({ state, commit }, filePath) {
   const metadata = await mm.parseFile(filePath);
   const { common } = metadata;
 
-  let album = state.localMusic.albums.find(a => a.name === common.album);
+  let album = state.localMusic?.albums.find(a => a.name === common.album);
   if (album) {
     return album.id;
   } else {
@@ -46,7 +46,7 @@ async function getLocalAlbum({ state, commit }, filePath) {
     arForSearch = splitArtist(arForSearch);
     arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
     album = {
-      id: state.localMusic.albumsIdCounter,
+      id: state.localMusic?.albumsIdCounter,
       isLocal: true,
       arForSearch: arForSearch,
       songForSearch: common.title,
@@ -74,7 +74,7 @@ async function getArtists({ state, commit }, filePath) {
   }
 
   for (const artist of artists) {
-    const foundArtist = state.localMusic.artists.find(a => a.name === artist);
+    const foundArtist = state.localMusic?.artists.find(a => a.name === artist);
     if (foundArtist) {
       if (!foundArtist.matched) {
         foundArtist.picUrl =
@@ -86,7 +86,7 @@ async function getArtists({ state, commit }, filePath) {
       arForSearch = splitArtist(arForSearch);
       arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
       const ar = {
-        id: state.localMusic.artistsIdCounter,
+        id: state.localMusic?.artistsIdCounter,
         name: artist,
         matched: false,
         arForSearch: arForSearch,
@@ -110,7 +110,7 @@ async function getTrack({ state, commit }, filePath) {
   const metadata = await mm.parseFile(filePath);
   const { common } = metadata;
 
-  let foundSong = state.localMusic.tracks.find(
+  let foundSong = state.localMusic?.tracks.find(
     obj => obj.filePath === filePath
   );
   if (foundSong) {
@@ -127,7 +127,7 @@ async function getTrack({ state, commit }, filePath) {
     arForSearch = splitArtist(arForSearch);
     arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
     foundSong = {
-      id: state.localMusic.trackIdCounter,
+      id: state.localMusic?.trackIdCounter,
       createTime: birthDate,
       hasUpdateTime: false,
       name: common.title,
@@ -174,11 +174,12 @@ export default {
     });
   },
   clearDeletedMusic({ state }) {
-    const songs = state.localMusic.songs;
-    const tracks = state.localMusic.tracks;
+    const songs = state.localMusic?.songs;
+    const tracks = state.localMusic?.tracks;
+    if (songs.length === 0) return;
     for (let i = songs.length - 1; i >= 0; i--) {
       const song = songs[i];
-      const track = state.localMusic.tracks.find(t => t.id === song.trackID);
+      const track = state.localMusic?.tracks.find(t => t.id === song.trackID);
       try {
         fs.accessSync(track.filePath, fs.constants.F_OK);
       } catch (err) {
@@ -203,7 +204,7 @@ export default {
         const filePath = path.join(folder, file);
         const stats = fs.statSync(filePath);
         if (stats.isFile() && musicFileExtensions.test(filePath)) {
-          const foundTrack = state.localMusic.tracks.find(
+          const foundTrack = state.localMusic?.tracks.find(
             track => track.filePath === filePath
           );
           const metadata = await mm.parseFile(filePath);
@@ -226,7 +227,7 @@ export default {
             };
             commit('addLocalXXX', { name: 'songs', data: song });
           } else {
-            const song = state.localMusic.songs.find(
+            const song = state.localMusic?.songs.find(
               s => s.trackID === foundTrack.id
             );
             song.show = true;
@@ -241,9 +242,9 @@ export default {
   },
 
   async rematchSong({ state, commit }, pid, use_arts = false) {
-    const song = state.localMusic.songs.find(s => s.id === pid);
-    const track = state.localMusic.tracks.find(t => t.id === song.trackID);
-    const album = state.localMusic.albums.find(a => a.id === song.albumID);
+    const song = state.localMusic?.songs.find(s => s.id === pid);
+    const track = state.localMusic?.tracks.find(t => t.id === song.trackID);
+    const album = state.localMusic?.albums.find(a => a.id === song.albumID);
     getArtists({ state, commit }, track.filePath).then(artistIDs => {
       song.artistIDs = artistIDs;
     });
@@ -307,9 +308,9 @@ export default {
     return matchResult;
   },
   async updateTracks({ state }) {
-    const songs = state.localMusic.songs;
-    const tracks = state.localMusic.tracks;
-    const albums = state.localMusic.albums;
+    const songs = state.localMusic?.songs;
+    const tracks = state.localMusic?.tracks;
+    const albums = state.localMusic?.albums;
     let rawDelay = 20 * 1000;
     let code = 200;
     for (let i = 0; i < tracks.length; i++) {
@@ -375,7 +376,7 @@ export default {
   },
   createLocalPlayList({ state, commit }, params) {
     const playlist = {
-      id: state.localMusic.playlistIdCounter,
+      id: state.localMusic?.playlistIdCounter,
       name: params.name,
       description: params.description,
       coverImgUrl:
@@ -389,10 +390,10 @@ export default {
     return playlist;
   },
   addTrackToLocalPlaylist({ state }, params) {
-    const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
+    const playlist = state.localMusic?.playlists.find(p => p.id === params.pid);
     if (playlist) {
       for (const trackid of params.tracks) {
-        const song = state.localMusic.songs.find(s => s.id === trackid);
+        const song = state.localMusic?.songs.find(s => s.id === trackid);
         const track = localTrackParser(song.id);
         if (playlist.trackIds.includes(track.id)) continue;
         playlist.trackIds.push(track.id);
@@ -405,7 +406,7 @@ export default {
     return { code: 404, message: '歌单不存在' };
   },
   rmTrackFromLocalPlaylist({ state }, params) {
-    const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
+    const playlist = state.localMusic?.playlists.find(p => p.id === params.pid);
     if (playlist) {
       const idx = playlist.trackIds.indexOf(params.tracks);
       if (idx !== -1) {
@@ -424,7 +425,7 @@ export default {
     return { code: 404, message: '歌单不存在' };
   },
   deleteLocalPlaylist({ state }, pid) {
-    const playlists = state.localMusic.playlists;
+    const playlists = state.localMusic?.playlists;
     const idx = playlists.findIndex(p => p.id === pid);
     if (idx !== -1) {
       playlists.splice(idx, 1);
@@ -433,7 +434,7 @@ export default {
     return { code: 404, message: '歌单不存在' };
   },
   fetchLatestSongs({ state, commit }) {
-    const trackIDs = state.localMusic.tracks
+    const trackIDs = state.localMusic?.tracks
       .filter(t => t.matched)
       .map(t => t.onlineTrack.id);
     commit('updateLocalXXX', { name: 'latestAddTracks', data: trackIDs });
@@ -441,7 +442,7 @@ export default {
   async updateArtists({ state }) {
     let code = 200;
     let rawDelay = 20 * 1000;
-    const artists = state.localMusic.artists;
+    const artists = state.localMusic?.artists;
     for (const artist of artists) {
       if (!state.updateFlag) break;
       if (artist.matched) {

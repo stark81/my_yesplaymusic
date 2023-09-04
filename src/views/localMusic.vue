@@ -276,7 +276,7 @@ export default {
       return this.$store.state.player.currentTrack?.isLocal === true;
     },
     sortBy() {
-      return this.localMusic.sortBy;
+      return this.localMusic?.sortBy;
     },
     filterLatestAdd() {
       const idx = randomNum(0, this.activeTracks.length - 12);
@@ -303,7 +303,7 @@ export default {
       );
     },
     allTracks() {
-      const songs = this.localMusic.songs.filter(
+      const songs = this.localMusic?.songs?.filter(
         s => s.show && s.delete !== true
       );
       const tracks = [];
@@ -315,7 +315,7 @@ export default {
     },
     filterLocalAlbums() {
       const albums = [];
-      const songs = this.localMusic.songs;
+      const songs = this.localMusic?.songs;
       for (const song of songs) {
         if (song.show && song.delete !== true) {
           const al = localAlbumParser(song.id);
@@ -329,7 +329,7 @@ export default {
     },
     filterLocalArtists() {
       const artists = [];
-      const songs = this.localMusic.songs;
+      const songs = this.localMusic?.songs;
       for (const song of songs) {
         if (song.show && song.delete !== true) {
           const ars = localArtistsParser(song.id);
@@ -343,7 +343,7 @@ export default {
       return [...new Set(artists)].reverse();
     },
     filterPlaylists() {
-      return this.localMusic.playlists.slice().reverse();
+      return this.localMusic?.playlists?.slice().reverse();
     },
     pickedLyric() {
       /** @type {string?} */
@@ -524,7 +524,7 @@ export default {
       this.$refs.playlistTabMenu.openMenu(e);
     },
     getRandomLyric() {
-      const tracksID = this.localMusic.latestAddTracks;
+      const tracksID = this.localMusic?.latestAddTracks;
       if (tracksID.length < 1) return;
       const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
       const track = this.localMusic.tracks

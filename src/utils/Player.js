@@ -322,7 +322,7 @@ export default class {
         track: track.name,
         timestamp,
         album: track.al.name,
-        trackNumber: track.no,
+        trackNumber: track.no || 1,
         duration: trackDuration,
       });
     }
@@ -501,7 +501,11 @@ export default class {
     autoplay = true,
     ifUnplayableThen = UNPLAYABLE_CONDITION.PLAY_NEXT_TRACK
   ) {
-    if (autoplay && this._currentTrack.name && !this._isLocal) {
+    if (
+      autoplay &&
+      this._currentTrack.name &&
+      this._currentTrack.matched !== false
+    ) {
       this._scrobble(this.currentTrack, this._howler?.seek());
     }
     const getLocalMusic = id => {
@@ -664,7 +668,7 @@ export default class {
     }
   }
   _nextTrackCallback() {
-    if (!this._isLocal) {
+    if (this._currentTrack.matched !== false) {
       this._scrobble(this._currentTrack, 0, true);
     }
     if (!this.isPersonalFM && this.repeatMode === 'one') {
@@ -832,7 +836,7 @@ export default class {
           artist: this.currentTrack.ar[0].name,
           track: this.currentTrack.name,
           album: this.currentTrack.al.name,
-          trackNumber: this.currentTrack.no,
+          trackNumber: this.currentTrack.no || 1,
           duration: ~~(this.currentTrack.dt / 1000),
         });
       }

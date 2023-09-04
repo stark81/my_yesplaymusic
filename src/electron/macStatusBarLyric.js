@@ -23,7 +23,7 @@ let currrentLyric;
 const setTray = remote.getGlobal('setTray');
 
 function updateTray(show_lyric, show_control, show_tray) {
-  const x_add = player.isPersonalFM ? 14 : 0;
+  // const x_add = player.isPersonalFM ? 14 : 0;
   CombineIcon.ctx.clearRect(
     0,
     0,
@@ -33,7 +33,8 @@ function updateTray(show_lyric, show_control, show_tray) {
   let x = 0;
   if (show_lyric) {
     CombineIcon.ctx.drawImage(LyricIcon.canvas, x, 0);
-    x += LyricIcon.canvas.width + x_add;
+    // x += LyricIcon.canvas.width + x_add;
+    x += LyricIcon.canvas.width;
   }
   if (show_control) {
     CombineIcon.ctx.drawImage(ControlIcon.canvas, x, 0);
@@ -114,10 +115,10 @@ export default function initMacStatusbarLyric() {
     changeStatus({ changeControl: true });
   });
   ipcRenderer.on('trayClick', (event, { position }) => {
-    const x_add = player.isPersonalFM ? 14 : 0;
+    // const x_add = player.isPersonalFM ? 14 : 0;
     if (lyricShow && controlShow) {
-      const x =
-        position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio - x_add;
+      const x = position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio;
+      //const x = position.x - LyricIcon.canvas.width / TrayIcon.devicePixelRatio - x_add;
       if (x > 0) {
         switch (parseInt(x / ControlIcon.singleWidth)) {
           case 0:
@@ -166,7 +167,7 @@ export default function initMacStatusbarLyric() {
         }
       }
     } else if (controlShow) {
-      const x = position.x - x_add;
+      const x = position.x;
       switch (parseInt(x / ControlIcon.singleWidth)) {
         case 0:
           if (player.isPersonalFM) {
