@@ -20,6 +20,7 @@ export default {
   },
   library: {
     sLibrary: '的音乐库',
+    playCurrentTrack: '播放此歌曲',
     likedSongs: '我喜欢的音乐',
     sLikedSongs: '喜欢的音乐',
     playlists: '歌单',
@@ -182,13 +183,6 @@ export default {
     enableDiscordRichPresence: '启用 Discord Rich Presence',
     enableGlobalShortcut: '启用全局快捷键',
     showLibraryDefault: '启动后显示音乐库',
-    localMusicShowDefault: {
-      text: '本地音乐默认显示',
-      localSongs: '本地歌曲',
-      playlists: '离线歌单',
-      albums: '专辑',
-      artists: '艺人',
-    },
     showTimeOrID: {
       text: '歌曲列表歌曲信息显示选项',
       time: '歌曲时长',
@@ -236,6 +230,24 @@ export default {
         desc1: '请求如 YouTube 音源服务时要使用的代理服务器',
         desc2: '留空则不进行相关设置',
       },
+    },
+    localMusic: {
+      localMusicShowDefault: {
+        text: '本地音乐默认显示',
+        localSongs: '本地歌曲',
+        playlists: '离线歌单',
+        albums: '专辑',
+        artists: '艺人',
+      },
+      localMusicFirst: {
+        title: '优先使用本地歌曲',
+        desc: '假如本地歌曲A匹配的在线歌曲为B，当播放在线歌曲B时，使用本地歌曲A播放',
+      },
+      exportLocalMusic: '导出本地歌曲信息',
+      importLocalMusic: '导入本地歌曲信息',
+      clearLocalMusic: '清空本地歌曲信息',
+      localMusicPath: '本地歌曲扫描路径',
+      localMusicMatchedStatus: '本地歌曲匹配状态',
     },
   },
   contextMenu: {

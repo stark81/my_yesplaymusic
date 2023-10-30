@@ -501,29 +501,51 @@
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">
-            {{ $t('settings.localMusicShowDefault.text') }}
+            {{ $t('settings.localMusic.localMusicShowDefault.text') }}
           </div>
         </div>
         <div class="right">
           <select v-model="showDefault">
             <option value="localSongs">{{
-              $t('settings.localMusicShowDefault.localSongs')
+              $t('settings.localMusic.localMusicShowDefault.localSongs')
             }}</option>
             <option value="playlists">{{
-              $t('settings.localMusicShowDefault.playlists')
+              $t('settings.localMusic.localMusicShowDefault.playlists')
             }}</option>
             <option value="albums">{{
-              $t('settings.localMusicShowDefault.albums')
+              $t('settings.localMusic.localMusicShowDefault.albums')
             }}</option>
             <option value="artists">{{
-              $t('settings.localMusicShowDefault.artists')
+              $t('settings.localMusic.localMusicShowDefault.artists')
             }}</option>
           </select>
         </div>
       </div>
       <div v-if="isElectron" class="item">
         <div class="left">
-          <div class="title">导出本地歌曲信息</div>
+          <div class="title">
+            {{ $t('settings.localMusic.localMusicFirst.title') }}
+          </div>
+          <div class="description">
+            {{ $t('settings.localMusic.localMusicFirst.desc') }}
+          </div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="local-music-first"
+              v-model="localMusicFirst"
+              type="checkbox"
+            />
+            <label for="local-music-first" />
+          </div>
+        </div>
+      </div>
+      <div v-if="isElectron" class="item">
+        <div class="left">
+          <div class="title">{{
+            $t('settings.localMusic.exportLocalMusic')
+          }}</div>
         </div>
         <div class="right">
           <button @click="exportLocalMusic">导出</button>
@@ -531,7 +553,9 @@
       </div>
       <div v-if="isElectron" class="item">
         <div class="left">
-          <div class="title">导入本地歌曲信息</div>
+          <div class="title">{{
+            $t('settings.localMusic.importLocalMusic')
+          }}</div>
         </div>
         <div class="right">
           <button @click="importLocalMusic">导入</button>
@@ -545,7 +569,9 @@
       />
       <div v-if="isElectron" class="item">
         <div class="left">
-          <div class="title">清空本地歌曲信息</div>
+          <div class="title">{{
+            $t('settings.localMusic.clearLocalMusic')
+          }}</div>
         </div>
         <div class="right">
           <button @click="deleteLocalMusic">确定</button>
@@ -554,7 +580,8 @@
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
-            >本地歌曲扫描路径: {{ settings.localMusicFolderPath }}</div
+            >{{ $t('settings.localMusic.localMusicPath') }}:
+            {{ settings.localMusicFolderPath }}</div
           >
         </div>
         <div class="right">
@@ -567,7 +594,8 @@
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
-            >本地歌曲匹配状态: {{ updateFlag ? '正常' : '已暂停' }}</div
+            >{{ $t('settings.localMusic.localMusicMatchedStatus') }}:
+            {{ updateFlag ? '正常' : '已暂停' }}</div
           >
         </div>
         <div class="right">
@@ -1327,6 +1355,17 @@ export default {
         this.$store.commit('updateSettings', {
           key: 'unmSearchMode',
           value: value,
+        });
+      },
+    },
+    localMusicFirst: {
+      get() {
+        return this.settings.localMusicFirst;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'localMusicFirst',
+          value: value || false,
         });
       },
     },

@@ -23,6 +23,7 @@ export default {
   },
   library: {
     sLibrary: "'s Library",
+    playCurrentTrack: 'Play This Song',
     likedSongs: 'Liked Songs',
     sLikedSongs: "'s Liked Songs",
     playlists: 'Playlists',

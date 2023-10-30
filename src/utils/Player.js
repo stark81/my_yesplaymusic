@@ -512,11 +512,16 @@ export default class {
       const matchTrack = store?.state.localMusic.tracks.find(
         t => t.onlineTrack?.id === id
       );
-      if (matchTrack) {
+      if (store?.state.settings.localMusicFirst && matchTrack) {
         store.dispatch('showToast', `使用本地文件播放歌曲：${matchTrack.name}`);
       }
       return new Promise(resolve => {
-        const track = localTrackParser(matchTrack ? matchTrack.id : id, true);
+        const track = localTrackParser(
+          store?.state.settings.localMusicFirst && matchTrack
+            ? matchTrack.id
+            : id,
+          true
+        );
         resolve({ songs: [track] });
       });
     };
@@ -935,8 +940,10 @@ export default class {
       });
     });
   }
-  addTrackToPlayNext(trackID, playNow = false) {
-    this._playNextList.push(trackID);
+  addTrackToPlayNext(trackID, playNow = false, addTohead = false) {
+    addTohead
+      ? this._playNextList.unshift(trackID)
+      : this._playNextList.push(trackID);
     if (playNow) {
       this.playNextTrack();
     }

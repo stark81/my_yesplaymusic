@@ -202,6 +202,10 @@
     </ContextMenu>
 
     <ContextMenu ref="playModeTabMenu">
+      <div class="item" @click="playThisTrack">{{
+        $t('library.playCurrentTrack')
+      }}</div>
+      <hr />
       <div class="item" @click="playLikedSongs">{{
         $t('library.likedSongs')
       }}</div>
@@ -246,13 +250,14 @@ export default {
       show: false,
       lyricSong: undefined,
       likedSongs: [],
+      randomTrackID: 0,
       lyric: undefined,
       currentTab: 'playlists',
       playHistoryMode: 'week',
     };
   },
   computed: {
-    ...mapState(['data', 'liked']),
+    ...mapState(['data', 'liked', 'player']),
     /**
      * @returns {string[]}
      */
@@ -367,10 +372,14 @@ export default {
     goToLikedSongsList() {
       this.$router.push({ path: '/library/liked-songs' });
     },
+    playThisTrack() {
+      this.player.addTrackToPlayNext(this.randomTrackID, true, true);
+    },
     getRandomLyric() {
       if (this.liked.songs.length === 0) return;
       const id = this.liked.songs[randomNum(0, this.liked.songs.length - 1)];
       getTrackDetail(id).then(data => {
+        this.randomTrackID = id;
         this.lyricSong = data.songs[0].name;
       });
       getLyric(id).then(data => {

@@ -20,6 +20,7 @@ export default {
   },
   library: {
     sLibrary: '的音樂庫',
+    playCurrentTrack: '播放此歌曲',
     likedSongs: '我喜歡的音樂',
     sLikedSongs: '喜歡的音樂',
     playlists: '歌單',

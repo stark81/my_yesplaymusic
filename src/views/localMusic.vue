@@ -32,6 +32,9 @@
               {{ allTracks.length }}{{ $t('common.songs') }}
             </div>
           </div>
+          <button @click="playThisTrack">
+            <svg-icon icon-class="play" />
+          </button>
         </div>
       </div>
       <div class="songs">
@@ -256,6 +259,7 @@ export default {
       show: false,
       sortedTracks: [],
       lyric: undefined,
+      randomTrackID: 0,
       lyricSong: undefined,
       isBatchOp: false,
       selectedTrackIds: [],
@@ -271,7 +275,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['data', 'localMusic', 'settings']),
+    ...mapState(['data', 'localMusic', 'settings', 'player']),
     isLocal() {
       return this.$store.state.player.currentTrack?.isLocal === true;
     },
@@ -410,7 +414,11 @@ export default {
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
-    ...mapActions(['showToast', 'rmTrackFromLocalPlaylist']),
+    ...mapActions([
+      'showToast',
+      'rmTrackFromLocalPlaylist',
+      'addTrackToPlayNext',
+    ]),
     scrollToTop() {
       this.$parent.$refs.main.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -523,6 +531,9 @@ export default {
     openPlaylistTabMenu(e) {
       this.$refs.playlistTabMenu.openMenu(e);
     },
+    playThisTrack() {
+      this.player.addTrackToPlayNext(this.randomTrackID, true, true);
+    },
     getRandomLyric() {
       const tracksID = this.localMusic?.latestAddTracks;
       if (tracksID.length < 1) return;
@@ -530,6 +541,7 @@ export default {
       const track = this.localMusic.tracks
         .filter(t => t.matched)
         .find(t => t.onlineTrack.id === randomTrackID);
+      this.randomTrackID = track.id;
       getLyric(randomTrackID).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric

@@ -23,6 +23,7 @@ export default {
   },
   library: {
     sLibrary: "'in Kütüphanesi",
+    playCurrentTrack: 'şu anki şarkıyı çal',
     likedSongs: 'Beğenilen Müzikler',
     sLikedSongs: "'in Beğendiği Müzikler",
     playlists: 'Çalma Listeleri',

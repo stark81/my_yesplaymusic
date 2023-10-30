@@ -25,6 +25,7 @@ let localStorage = {
     showTray: true,
     showControl: true,
     showStatusBarLyric: true,
+    localMusicFirst: true,
     localMusicFolderPath: null,
     localMusicShowDefault: 'localSongs',
     showTimeOrID: 'time',
