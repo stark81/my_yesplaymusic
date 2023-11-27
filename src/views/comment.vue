@@ -258,7 +258,10 @@ export default {
       this.sourceComments.isLoading = false;
     },
     comment2Top() {
-      document.getElementById('Container').scrollTop = 0;
+      const el = document.getElementById('Container');
+      if (el) {
+        el.scrollTop = 0;
+      }
     },
     loadMoreComments() {
       if (this.$parent.show == 'comment') {

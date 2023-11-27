@@ -4,6 +4,7 @@ const path = require('path');
 
 export function createTouchBar(window) {
   const renderer = window.webContents;
+  let lyrics;
 
   // Icon follow touchbar design guideline.
   // See: https://developer.apple.com/design/human-interface-guidelines/macos/touch-bar/touch-bar-icons-and-images/
@@ -14,27 +15,6 @@ export function createTouchBar(window) {
       path.join(__static, 'img/touchbar/', name)
     );
   }
-
-  const previousPage = new TouchBarButton({
-    click: () => {
-      renderer.send('routerGo', 'back');
-    },
-    icon: getNativeIcon('page_prev.png'),
-  });
-
-  const nextPage = new TouchBarButton({
-    click: () => {
-      renderer.send('routerGo', 'forward');
-    },
-    icon: getNativeIcon('page_next.png'),
-  });
-
-  const searchButton = new TouchBarButton({
-    click: () => {
-      renderer.send('search');
-    },
-    icon: getNativeIcon('search.png'),
-  });
 
   const playButton = new TouchBarButton({
     click: () => {
@@ -64,11 +44,8 @@ export function createTouchBar(window) {
     icon: getNativeIcon('like.png'),
   });
 
-  const nextUpButton = new TouchBarButton({
-    click: () => {
-      renderer.send('nextUp');
-    },
-    icon: getNativeIcon('next_up.png'),
+  const showLyric = new TouchBarButton({
+    label: '听你想听的音乐',
   });
 
   ipcMain.on('player', (e, { playing, likedCurrentTrack }) => {
@@ -79,18 +56,22 @@ export function createTouchBar(window) {
       : getNativeIcon('like.png');
   });
 
+  ipcMain.on('sendLyrics', (e, arg) => {
+    lyrics = arg[0];
+  });
+
+  ipcMain.on('lyricIndex', (_, index) => {
+    showLyric.label = lyrics[index + 1].content;
+  });
+
   const touchBar = new TouchBar({
     items: [
-      previousPage,
-      nextPage,
-      searchButton,
-      new TouchBarSpacer({ size: 'flexible' }),
       previousTrackButton,
       playButton,
       nextTrackButton,
-      new TouchBarSpacer({ size: 'flexible' }),
       likeButton,
-      nextUpButton,
+      new TouchBarSpacer({ size: 'small' }),
+      showLyric,
     ],
   });
   return touchBar;

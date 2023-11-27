@@ -48,6 +48,12 @@ const updatePlayer = () => {
   localStorage.setItem('player', JSON.stringify(data));
 };
 
+const updateLocalMusic = () => {
+  let parsedData = JSON.parse(localStorage.getItem('localMusic'));
+  const data = { ...parsedData };
+  localStorage.setItem('localMusic', JSON.stringify(data));
+};
+
 const removeOldStuff = () => {
   // remove old indexedDB databases created by localforage
   indexedDB.deleteDatabase('tracks');
@@ -57,6 +63,7 @@ export default function () {
   updateSetting();
   updateData();
   updatePlayer();
+  updateLocalMusic();
   removeOldStuff();
   localStorage.setItem('appVersion', JSON.stringify(pkg.version));
 }

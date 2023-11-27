@@ -8,6 +8,9 @@ export default {
       state.player.sendSelfToIpcMain();
     }
   },
+  updateOsdLyric(state) {
+    state.osdlyrics.show = !state.osdlyrics.show;
+  },
   addLocalXXX(state, { name, data }) {
     state.localMusic[name].push(data);
   },

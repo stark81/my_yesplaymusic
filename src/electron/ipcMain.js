@@ -1,4 +1,4 @@
-import { app, dialog, globalShortcut, ipcMain, nativeTheme } from 'electron';
+import { app, dialog, globalShortcut, ipcMain } from 'electron';
 import UNM from '@unblockneteasemusic/rust-napi';
 import { registerGlobalShortcut } from '@/electron/globalShortcut';
 import cloneDeep from 'lodash/cloneDeep';
@@ -6,6 +6,7 @@ import shortcuts from '@/utils/shortcuts';
 import { createMenu } from './menu';
 import { isCreateTray, isMac } from '@/utils/platform';
 
+let lyrics;
 const clc = require('cli-color');
 const log = text => {
   console.log(`${clc.blueBright('[ipcMain.js]')} ${text}`);
@@ -133,14 +134,7 @@ function parseSourceStringToList(executor, sourceString) {
     });
 }
 
-function watchNativeTheme(win) {
-  nativeTheme.on('updated', () => {
-    const isDarkMode = nativeTheme.shouldUseDarkColors;
-    win.send('changeTheme', isDarkMode);
-  });
-}
-
-export function initIpcMain(win, store, trayEventEmitter) {
+export function initIpcMain(win, store, trayEventEmitter, lrc) {
   // WIP: Do not enable logging as it has some issues in non-blocking I/O environment.
   // UNM.enableLogging(UNM.LoggingType.ConsoleEnv);
   const unmExecutor = new UNM.Executor();
@@ -280,10 +274,29 @@ export function initIpcMain(win, store, trayEventEmitter) {
     );
   });
 
-  ipcMain.on('removeProxy', (event, arg) => {
+  ipcMain.on('removeProxy', () => {
     log('removeProxy');
     win.webContents.session.setProxy({});
     store.set('proxy', '');
+  });
+
+  ipcMain.on('resizeOSDLyrics', (event, arg) => {
+    lrc.resizeOSDLyrics(arg);
+  });
+
+  ipcMain.on('toggleOSDLyrics', () => {
+    lrc.toggleOSDLyrics();
+  });
+  ipcMain.on('sendLyrics', (_, arg) => {
+    lyrics = arg;
+    lrc.receiveLyric(arg);
+    if (isCreateTray) trayEventEmitter.emit('lyricsReceived', arg[0]);
+  });
+  ipcMain.handle('onloadLyric', () => {
+    return lyrics;
+  });
+  ipcMain.on('lyricIndex', (_, index) => {
+    lrc.sendLyricIndex(index);
   });
 
   ipcMain.on('switchGlobalShortcutStatusTemporary', (e, status) => {
@@ -315,8 +328,8 @@ export function initIpcMain(win, store, trayEventEmitter) {
     globalShortcut.unregisterAll();
     registerGlobalShortcut(win, store);
   });
+
   if (isCreateTray) {
-    watchNativeTheme(win);
     ipcMain.on('updateTrayTooltip', (_, title) => {
       trayEventEmitter.emit('updateTooltip', title);
     });
@@ -326,15 +339,8 @@ export function initIpcMain(win, store, trayEventEmitter) {
     ipcMain.on('updateTrayLikeState', (_, isLiked) => {
       trayEventEmitter.emit('updateLikeState', isLiked);
     });
-    ipcMain.on('sendLyrics', (_, lyrics) => {
-      trayEventEmitter.emit('lyricsReceived', lyrics);
-    });
     ipcMain.on('windowShow', () => {
       win.show();
-    });
-    ipcMain.handle('getNativeTheme', () => {
-      const isDarkMode = nativeTheme.shouldUseDarkColors;
-      return isDarkMode;
     });
     ipcMain.on('switchShowTray', (_, ops) => {
       trayEventEmitter.emit('ifShowTray', ops);

@@ -43,6 +43,7 @@ let localStorage = {
       port: null,
     },
     shortcuts: shortcuts,
+    showOsdLyric: false,
   },
   data: {
     user: {},

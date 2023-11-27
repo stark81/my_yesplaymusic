@@ -128,6 +128,7 @@ export default {
     pause: '暂停',
     mute: '静音',
     nextUp: '播放列表',
+    osdLyrics: '桌面歌词',
   },
   modal: {
     close: '关闭',

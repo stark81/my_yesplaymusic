@@ -84,6 +84,7 @@ const closeOnLinux = (e, win, store) => {
 class Background {
   constructor() {
     this.window = null;
+    this.osdlyrics = null;
     this.ypmTrayImpl = null;
     this.store = new Store({
       windowWidth: {
@@ -159,12 +160,13 @@ class Background {
       this.window.webContents
         .executeJavaScript('window.yesplaymusic.player')
         .then(result => {
-          res.send({
+          const player = {
             currentTrack: result._isPersonalFM
               ? result._personalFMTrack
               : result._currentTrack,
             progress: result._progress,
-          });
+          };
+          res.send(player);
         });
     });
     this.expressApp = expressApp.listen(27232, '127.0.0.1');
@@ -264,6 +266,88 @@ class Background {
     }
   }
 
+  createOSDWindow() {
+    this.osdlyrics = new BrowserWindow({
+      x: this.store.get('osdlyrics.x_pos') || 0,
+      y: this.store.get('osdlyrics.y_pos') || 0,
+      width: this.store.get('osdlyrics.width') || 840,
+      height: this.store.get('osdlyrics.height') || 110,
+      transparent: true,
+      backgroundColor: '#00000000',
+      frame: false,
+      show: false,
+      skipTaskbar: true,
+      alwaysOnTop: true,
+      hiddenInMissionControl: true,
+      hasShadow: false,
+      title: 'YesPlayMusic-桌面歌词',
+      webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false,
+      },
+    });
+
+    if (process.env.WEBPACK_DEV_SERVER_URL) {
+      // Load the url of the dev server if in development mode
+      this.osdlyrics.loadURL(
+        `${process.env.WEBPACK_DEV_SERVER_URL}/osdlyric.html`
+      );
+    } else {
+      createProtocol('app');
+      this.osdlyrics.loadURL('http://localhost:27232/osdlyric.html');
+    }
+  }
+
+  initOSDLyrics() {
+    const osdState = this.store.get('osdlyrics.show') || false;
+    if (osdState) {
+      this.showOSDLyrics();
+    }
+  }
+
+  toggleOSDLyrics() {
+    const osdState = this.store.get('osdlyrics.show') || false;
+    if (osdState) {
+      this.hideOSDLyrics();
+    } else {
+      this.showOSDLyrics();
+    }
+  }
+
+  receiveLyric(arg) {
+    if (this.osdlyrics) {
+      this.osdlyrics.webContents.send('lyric', arg);
+    }
+  }
+
+  sendLyricIndex(idx) {
+    if (this.osdlyrics) {
+      this.osdlyrics.webContents.send('index', idx);
+    }
+  }
+
+  showOSDLyrics() {
+    this.store.set('osdlyrics.show', true);
+    if (!this.osdlyrics) {
+      this.createOSDWindow();
+      this.handleOSDEvents();
+    }
+  }
+
+  hideOSDLyrics() {
+    this.store.set('osdlyrics.show', false);
+    if (this.osdlyrics) {
+      this.osdlyrics.close();
+    }
+  }
+
+  resizeOSDLyrics(height) {
+    const width = this.store.get('osdlyrics.width') || 840;
+    this.osdlyrics.setSize(width, height);
+  }
+
   checkForUpdates() {
     if (isDevelopment) return;
     log('checkForUpdates');
@@ -282,7 +366,7 @@ class Background {
         .then(result => {
           if (result.response === 0) {
             shell.openExternal(
-              'https://github.com/stark81/YesPlayMusic/releases/'
+              'https://github.com/stark81/my_yesplaymusic/releases/'
             );
           }
         });
@@ -290,6 +374,32 @@ class Background {
 
     autoUpdater.on('update-available', info => {
       showNewVersionMessage(info);
+    });
+  }
+
+  handleOSDEvents() {
+    this.osdlyrics.once('ready-to-show', () => {
+      const osdState = this.store.get('osdlyrics.show') || false;
+      if (osdState) {
+        this.osdlyrics.showInactive();
+      }
+    });
+
+    this.osdlyrics.on('closed', () => {
+      log('OSD close event');
+      this.osdlyrics = null;
+    });
+
+    this.osdlyrics.on('resized', () => {
+      let { height, width } = this.osdlyrics.getBounds();
+      this.store.set('osdlyrics.width', width);
+      this.store.set('osdlyrics.height', height);
+    });
+
+    this.osdlyrics.on('moved', () => {
+      var pos = this.osdlyrics.getPosition();
+      this.store.set('osdlyrics.x_pos', pos[0]);
+      this.store.set('osdlyrics.y_pos', pos[1]);
     });
   }
 
@@ -385,6 +495,8 @@ class Background {
       });
       this.handleWindowEvents();
 
+      this.initOSDLyrics();
+
       // create tray
       if (isCreateTray) {
         this.trayEventEmitter = new EventEmitter();
@@ -392,7 +504,12 @@ class Background {
       }
 
       // init ipcMain
-      initIpcMain(this.window, this.store, this.trayEventEmitter);
+      initIpcMain(this.window, this.store, this.trayEventEmitter, {
+        resizeOSDLyrics: height => this.resizeOSDLyrics(height),
+        toggleOSDLyrics: () => this.toggleOSDLyrics(),
+        receiveLyric: lyric => this.receiveLyric(lyric),
+        sendLyricIndex: index => this.sendLyricIndex(index),
+      });
 
       // set proxy
       const proxyRules = this.store.get('proxy');
@@ -414,6 +531,7 @@ class Background {
 
       // create touch bar
       const createdTouchBar = createTouchBar(this.window);
+      log('createdTouchBar = ', createdTouchBar);
       if (createdTouchBar) this.window.setTouchBar(createdTouchBar);
 
       // register global shortcuts

@@ -181,8 +181,8 @@ export default {
               time: 0.0,
               rawTime: '[00:00.000]',
             },
-          ];
-          ipcRenderer.send('sendLyrics', data ? this.lyric : lyric);
+          ].concat(this.lyric);
+          ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
         }
       });
     },
@@ -201,7 +201,7 @@ export default {
         this.setLyricsInterval();
         this.$store.commit('enableScrolling', false);
       } else {
-        clearInterval(this.lyricsInterval);
+        // clearInterval(this.lyricsInterval);
         this.$store.commit('enableScrolling', true);
       }
     },
@@ -213,21 +213,10 @@ export default {
     },
   },
   created() {
-    this.getLyric().then(data => {
-      this.$parent.hasLyric = data;
-      if (isMac) {
-        const { ipcRenderer } = require('electron');
-        const lyric = [
-          {
-            content: this.currentTrack.name,
-            time: 0.0,
-            rawTime: '[00:00.000]',
-          },
-        ];
-        ipcRenderer.send('sendLyrics', data ? this.lyric : lyric);
-      }
-    });
     this.initDate();
+  },
+  mounted() {
+    this.setLyricsInterval();
   },
   beforeDestroy: function () {
     if (this.timer) {
@@ -326,6 +315,8 @@ export default {
           );
         });
         if (oldHighlightLyricIndex !== this.highlightLyricIndex) {
+          const { ipcRenderer } = require('electron');
+          ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
           const el = document.getElementById(`line${this.highlightLyricIndex}`);
           if (el)
             el.scrollIntoView({
