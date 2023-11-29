@@ -531,7 +531,6 @@ class Background {
 
       // create touch bar
       const createdTouchBar = createTouchBar(this.window);
-      log('createdTouchBar = ', createdTouchBar);
       if (createdTouchBar) this.window.setTouchBar(createdTouchBar);
 
       // register global shortcuts

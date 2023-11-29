@@ -4,7 +4,6 @@ const path = require('path');
 
 export function createTouchBar(window) {
   const renderer = window.webContents;
-  let lyrics;
 
   // Icon follow touchbar design guideline.
   // See: https://developer.apple.com/design/human-interface-guidelines/macos/touch-bar/touch-bar-icons-and-images/
@@ -44,9 +43,21 @@ export function createTouchBar(window) {
     icon: getNativeIcon('like.png'),
   });
 
-  const showLyric = new TouchBarButton({
-    label: '听你想听的音乐',
-  });
+  // const showLyric = new TouchBarButton({
+  //   label: '听你想听的音乐',
+  // });
+
+  const barLyric = () => {
+    const showLyric = new TouchBarButton({ icon: nativeImage.createEmpty() });
+    global.setBarLyric = function (img, width, height) {
+      const Image = nativeImage
+        .createFromDataURL(img)
+        .resize({ width, height });
+      Image.setTemplateImage(true);
+      showLyric.icon = Image;
+    };
+    return showLyric;
+  };
 
   ipcMain.on('player', (e, { playing, likedCurrentTrack }) => {
     playButton.icon =
@@ -56,22 +67,15 @@ export function createTouchBar(window) {
       : getNativeIcon('like.png');
   });
 
-  ipcMain.on('sendLyrics', (e, arg) => {
-    lyrics = arg[0];
-  });
-
-  ipcMain.on('lyricIndex', (_, index) => {
-    showLyric.label = lyrics[index + 1].content;
-  });
-
   const touchBar = new TouchBar({
     items: [
       previousTrackButton,
       playButton,
       nextTrackButton,
       likeButton,
-      new TouchBarSpacer({ size: 'small' }),
-      showLyric,
+      new TouchBarSpacer({ size: 'flexible' }),
+      barLyric(),
+      // new TouchBarSpacer({ size: 'flexible' }),
     ],
   });
   return touchBar;

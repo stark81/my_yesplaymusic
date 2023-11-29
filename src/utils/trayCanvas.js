@@ -27,9 +27,6 @@ export class Control extends Canvas {
     for (let index in this.imageList) {
       const item = this.imageList[index];
       await this.drawImage(index, item);
-      // if (parseInt(index) + 1 === this.imageList.length) {
-      //   eventBus.$emit('control-draw');
-      // }
     }
     eventBus.$emit('control-draw');
   }
@@ -55,9 +52,9 @@ export class Control extends Canvas {
 }
 
 export class Lyric extends Canvas {
-  constructor() {
-    super({ devicePixelRatio: 2 });
-    this.fontSize = 14;
+  constructor({ width = 175, height = 22, fontSize = 14 } = {}) {
+    super({ width, height, devicePixelRatio: 2 });
+    this.fontSize = fontSize;
     this.allLyric = null;
     this.lyric = {
       text: player.currentTrack.name || '听你想听的音乐',

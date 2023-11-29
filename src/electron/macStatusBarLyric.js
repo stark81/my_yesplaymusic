@@ -18,9 +18,26 @@ let trayShow = store.state.settings.showTray;
 let controlShow = trayShow && store.state.settings.showControl;
 let lyricShow = trayShow && store.state.settings.showStatusBarLyric;
 
-let LyricIcon, ControlIcon, TrayIcon, CombineIcon;
+let LyricIcon, ControlIcon, TrayIcon, CombineIcon, TouchBarLyric, TouchLyric;
 let currrentLyric;
 const setTray = remote.getGlobal('setTray');
+const setBarLyric = remote.getGlobal('setBarLyric');
+
+function updateBarLyric() {
+  TouchLyric.ctx.clearRect(
+    0,
+    0,
+    TouchLyric.canvas.width,
+    TouchLyric.canvas.height
+  );
+  TouchLyric.ctx.drawImage(TouchBarLyric.canvas, 0, 0);
+  // console.log('updateBarLyric: ', LyricIcon.canvas);
+  setBarLyric(
+    TouchBarLyric.canvas.toDataURL(),
+    TouchBarLyric.canvas.width,
+    TouchBarLyric.canvas.height
+  );
+}
 
 function updateTray(show_lyric, show_control, show_tray) {
   // const x_add = player.isPersonalFM ? 14 : 0;
@@ -62,6 +79,19 @@ function getSeperateTray() {
   return [lyric, control, tray];
 }
 
+function getTouchLyric() {
+  let touchbarLyric = new Lyric({
+    width: 252,
+    fontSize: 12,
+  });
+  const touchLyric = new Canvas({
+    width: touchbarLyric.canvas.width,
+    height: touchbarLyric.canvas.height,
+    devicePixelRatio: touchbarLyric.devicePixelRatio,
+  });
+  return [touchbarLyric, touchLyric];
+}
+
 function getCombineTray(lyric_icon, control_icon, tray_icon) {
   const lyricWidth = lyricShow ? lyric_icon.canvas.width : 0;
   const contorlWidth = controlShow ? control_icon.canvas.width : 0;
@@ -92,17 +122,23 @@ function changeStatus({
   }
   if (changeLyric) {
     LyricIcon.draw();
+    TouchBarLyric.draw();
   }
 }
 
 export default function initMacStatusbarLyric() {
   [LyricIcon, ControlIcon, TrayIcon] = getSeperateTray();
   CombineIcon = getCombineTray(LyricIcon, ControlIcon, TrayIcon);
+  [TouchBarLyric, TouchLyric] = getTouchLyric();
   updateTray(lyricShow, controlShow, trayShow);
+  updateBarLyric();
   changeStatus({ changeLyric: true, changeControl: true, changeTray: true });
+  TouchBarLyric.draw();
 
   ipcRenderer.on('showTrayLyric', (event, arg) => {
     currrentLyric = arg;
+    TouchBarLyric.allLyric = currrentLyric;
+    TouchBarLyric.findCurrentLyric();
     if (lyricShow) {
       LyricIcon.allLyric = currrentLyric;
       LyricIcon.findCurrentLyric();
@@ -256,6 +292,7 @@ export default function initMacStatusbarLyric() {
     });
   });
   eventBus.$on('lyric-draw', () => {
+    updateBarLyric();
     updateTray(lyricShow, controlShow, trayShow);
   });
   eventBus.$on('control-draw', () => {

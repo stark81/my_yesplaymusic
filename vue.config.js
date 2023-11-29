@@ -41,13 +41,6 @@ module.exports = {
       title: 'YesPlayMusic',
       chunks: ['main', 'chunk-vendors', 'chunk-common', 'index'],
     },
-    osdlyric: {
-      entry: 'src/osdlyric.js',
-      template: 'public/osdLyric_index.html',
-      filename: 'osdlyric.html',
-      title: 'YesPlayMusic-桌面歌词',
-      chunks: ['main', 'chunk-vendors', 'chunk-common', 'osdlyric'],
-    },
   },
   chainWebpack(config) {
     config.module.rules.delete('svg');
