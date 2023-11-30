@@ -54,7 +54,6 @@ import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
 import { getLyric } from '@/api/track';
 import { lyricParser } from '@/utils/lyrics';
-import { isMac } from '@/utils/platform';
 
 export default {
   name: 'Lyrics',
@@ -173,17 +172,15 @@ export default {
     currentTrack() {
       this.getLyric().then(data => {
         this.$parent.hasLyric = data;
-        if (isMac) {
-          const { ipcRenderer } = require('electron');
-          const lyric = [
-            {
-              content: this.currentTrack.name,
-              time: 0.0,
-              rawTime: '[00:00.000]',
-            },
-          ].concat(this.lyric);
-          ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
-        }
+        const { ipcRenderer } = require('electron');
+        const lyric = [
+          {
+            content: this.currentTrack.name,
+            time: 0.0,
+            rawTime: '[00:00.000]',
+          },
+        ].concat(this.lyric);
+        ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
       });
     },
     lyricDelay(val) {
