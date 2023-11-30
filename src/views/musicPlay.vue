@@ -249,7 +249,7 @@
         </div>
         <div class="right-side">
           <Lyrics v-show="show === 'lyric'" ref="lyricRef" />
-          <Comment v-show="show === 'comment'" ref="commentRef" />
+          <Comment v-if="show === 'comment'" ref="commentRef" />
           <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
         </div>
         <div class="close-button" @click="closePlayPage">
@@ -736,8 +736,7 @@ export default {
     .transPro {
       font-size: 1.2rem;
       color: var(--color-text);
-      position: absolute;
-      right: 5vh;
+      margin-left: 20px;
       user-select: none;
 
       :hover {

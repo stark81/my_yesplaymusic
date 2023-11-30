@@ -3,7 +3,7 @@ import store from '@/store';
 const player = store.state.player;
 
 export class Canvas {
-  constructor({ width = 175, height = 22, devicePixelRatio = 1 }) {
+  constructor({ width = 195, height = 22, devicePixelRatio = 1 }) {
     this.w = width;
     this.h = height;
     this.devicePixelRatio = devicePixelRatio;
@@ -52,7 +52,7 @@ export class Control extends Canvas {
 }
 
 export class Lyric extends Canvas {
-  constructor({ width = 175, height = 22, fontSize = 14 } = {}) {
+  constructor({ width = 195, height = 22, fontSize = 14 } = {}) {
     super({ width, height, devicePixelRatio: 2 });
     this.fontSize = fontSize;
     this.allLyric = null;
