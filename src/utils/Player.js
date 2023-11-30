@@ -217,7 +217,14 @@ export default class {
     if (this._enabled) {
       // 恢复当前播放歌曲
       this._replaceCurrentTrack(this.currentTrackID, false).then(() => {
-        this._howler?.seek(localStorage.getItem('playerCurrentTrackTime') ?? 0);
+        const _progress = localStorage.getItem('playerCurrentTrackTime') ?? 0;
+        this._howler?.volume(0);
+        this.playPrevTrack(false);
+        this.playNextTrack(false);
+        this._howler?.volume(this.volume);
+        setTimeout(() => {
+          this._howler?.seek(_progress);
+        }, 1050);
       }); // update audio source and init howler
       this._initMediaSession();
     }
@@ -735,7 +742,7 @@ export default class {
   appendTrack(trackID) {
     this.list.append(trackID);
   }
-  playNextTrack() {
+  playNextTrack(autoplay = true) {
     // TODO: 切换歌曲时增加加载中的状态
     const [trackID, index] = this._getNextTrack();
     if (trackID === undefined) {
@@ -744,7 +751,7 @@ export default class {
       return false;
     }
     this.current = index;
-    this._replaceCurrentTrack(trackID);
+    this._replaceCurrentTrack(trackID, autoplay);
     return true;
   }
   async playNextFMTrack() {
@@ -792,13 +799,13 @@ export default class {
     this._loadPersonalFMNextTrack();
     return true;
   }
-  playPrevTrack() {
+  playPrevTrack(autoplay = true) {
     const [trackID, index] = this._getPrevTrack();
     if (trackID === undefined) return false;
     this.current = index;
     this._replaceCurrentTrack(
       trackID,
-      true,
+      autoplay,
       UNPLAYABLE_CONDITION.PLAY_PREV_TRACK
     );
     return true;
