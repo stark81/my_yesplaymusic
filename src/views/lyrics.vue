@@ -22,20 +22,12 @@
           <span v-if="line.contents[0]">{{ line.contents[0] }}</span>
           <br />
           <span
-            v-if="
-              line.contents[1] &&
-              tagIdx === 1 &&
-              $store.state.settings.showLyricsTranslation
-            "
+            v-if="showTranslation === 'tlyric' && line.contents[1]"
             class="translation"
             >{{ line.contents[1] }}</span
           >
           <span
-            v-if="
-              line.contents[2] &&
-              tagIdx === 2 &&
-              $store.state.settings.showLyricsTranslation
-            "
+            v-if="showTranslation === 'rlyric' && line.contents[2]"
             class="translation"
           >
             {{ line.contents[2] }}</span
@@ -74,6 +66,9 @@ export default {
     currentTrack() {
       return this.player.currentTrack;
     },
+    showTranslation() {
+      return this.settings.showLyricsTranslation;
+    },
     onlineTrackDelay() {
       return this.modals.setLyricDelayModal.delayTime || 0;
     },
@@ -81,9 +76,6 @@ export default {
       return this.isLocal
         ? this.currentTrack.lyricDelay
         : this.onlineTrackDelay;
-    },
-    tagIdx() {
-      return this.$parent.tagIdx;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -124,6 +116,8 @@ export default {
             } else {
               lyricItem.contents.push(null);
             }
+          } else {
+            lyricItem.contents.push(null);
           }
           // 歌词音译
           const sameTimeRLyric = this.rlyric.find(

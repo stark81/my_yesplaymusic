@@ -73,6 +73,7 @@ export default class {
     // 播放信息
     this._list = []; // 播放列表
     this._isLocal = false;
+    this._localID = null;
     this._current = 0; // 当前播放歌曲在播放列表里的index
     this._shuffledList = []; // 被随机打乱的播放列表，随机播放模式下会使用此播放列表
     this._shuffledCurrent = 0; // 当前播放歌曲在随机列表里面的index
@@ -217,14 +218,7 @@ export default class {
     if (this._enabled) {
       // 恢复当前播放歌曲
       this._replaceCurrentTrack(this.currentTrackID, false).then(() => {
-        const _progress = localStorage.getItem('playerCurrentTrackTime') ?? 0;
-        this._howler?.volume(0);
-        this.playPrevTrack(false);
-        this.playNextTrack(false);
-        this._howler?.volume(this.volume);
-        setTimeout(() => {
-          this._howler?.seek(_progress);
-        }, 1050);
+        this._howler?.seek(localStorage.getItem('playerCurrentTrackTime') ?? 0);
       }); // update audio source and init howler
       this._initMediaSession();
     }
@@ -516,24 +510,36 @@ export default class {
       this._scrobble(this.currentTrack, this._howler?.seek());
     }
     const getLocalMusic = id => {
-      const matchTrack = store?.state.localMusic.tracks.find(
-        t => t.onlineTrack?.id === id
-      );
-      if (store?.state.settings.localMusicFirst && matchTrack) {
-        store.dispatch('showToast', `使用本地文件播放歌曲：${matchTrack.name}`);
-      }
-      return new Promise(resolve => {
-        const track = localTrackParser(
-          store?.state.settings.localMusicFirst && matchTrack
-            ? matchTrack.id
-            : id,
-          true
+      if (store) {
+        const matchTrack = store?.state.localMusic.tracks.find(
+          t => t.onlineTrack?.id === id
         );
-        resolve({ songs: [track] });
-      });
+        if (store?.state.settings.localMusicFirst && matchTrack) {
+          store.dispatch(
+            'showToast',
+            `使用本地文件播放歌曲：${matchTrack.name}`
+          );
+        }
+        return new Promise(resolve => {
+          const track = localTrackParser(
+            store?.state.settings.localMusicFirst && matchTrack
+              ? matchTrack.id
+              : id,
+            true
+          );
+          resolve({ songs: [track] });
+        });
+      } else {
+        const _id = this._localID || id;
+        return new Promise(resolve => {
+          const track = localTrackParser(_id, true);
+          resolve({ songs: [track] });
+        });
+      }
     };
     return getLocalMusic(id)
       .then(data => {
+        this._localID = id;
         return data.songs[0] ? data : getTrackDetail(id);
       })
       .then(data => {
@@ -742,7 +748,7 @@ export default class {
   appendTrack(trackID) {
     this.list.append(trackID);
   }
-  playNextTrack(autoplay = true) {
+  playNextTrack() {
     // TODO: 切换歌曲时增加加载中的状态
     const [trackID, index] = this._getNextTrack();
     if (trackID === undefined) {
@@ -751,7 +757,7 @@ export default class {
       return false;
     }
     this.current = index;
-    this._replaceCurrentTrack(trackID, autoplay);
+    this._replaceCurrentTrack(trackID);
     return true;
   }
   async playNextFMTrack() {
@@ -799,13 +805,13 @@ export default class {
     this._loadPersonalFMNextTrack();
     return true;
   }
-  playPrevTrack(autoplay = true) {
+  playPrevTrack() {
     const [trackID, index] = this._getPrevTrack();
     if (trackID === undefined) return false;
     this.current = index;
     this._replaceCurrentTrack(
       trackID,
-      autoplay,
+      true,
       UNPLAYABLE_CONDITION.PLAY_PREV_TRACK
     );
     return true;

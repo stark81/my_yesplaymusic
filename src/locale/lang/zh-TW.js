@@ -175,7 +175,12 @@ export default {
     automaticallyCacheSongs: '自動快取歌曲',
     clearSongsCache: '清除歌曲快取',
     cacheCount: '已快取 {song} 首 ({size})',
-    showLyricsTranslation: '顯示歌詞翻譯/音譯',
+    showLyricsTranslation: {
+      text: '顯示歌詞翻譯/音譯',
+      never: '從不',
+      tlyric: '翻譯',
+      rlyric: '音譯',
+    },
     showTray: '顯示狀態欄圖示',
     showControl: '顯示控制按鈕',
     showStatusBarLyric: '顯示狀態欄歌詞',

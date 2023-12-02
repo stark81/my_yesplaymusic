@@ -174,7 +174,12 @@ export default {
     automaticallyCacheSongs: 'Automatically cache songs',
     clearSongsCache: 'Clear Songs Cache',
     cacheCount: 'Cached {song} songs ({size})',
-    showLyricsTranslation: 'Show lyrics translation & phonetic pronunciation',
+    showLyricsTranslation: {
+      text: 'Show lyrics translation & phonetic pronunciation',
+      never: 'Never',
+      tlyric: 'Translation',
+      rlyric: 'phonetic pronunciation',
+    },
     showTray: 'Show tray icon',
     showControl: 'Show control on tray',
     showStatusBarLyric: 'Show lyrics on tray',

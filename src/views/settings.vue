@@ -221,18 +221,22 @@
       <h3>歌词</h3>
       <div class="item">
         <div class="left">
-          <div class="title">{{ $t('settings.showLyricsTranslation') }}</div>
+          <div class="title">{{
+            $t('settings.showLyricsTranslation.text')
+          }}</div>
         </div>
         <div class="right">
-          <div class="toggle">
-            <input
-              id="show-lyrics-translation"
-              v-model="showLyricsTranslation"
-              type="checkbox"
-              name="show-lyrics-translation"
-            />
-            <label for="show-lyrics-translation"></label>
-          </div>
+          <select v-model="selectTranslation">
+            <option value="off">
+              {{ $t('settings.showLyricsTranslation.never') }}
+            </option>
+            <option value="tlyric">
+              {{ $t('settings.showLyricsTranslation.tlyric') }}
+            </option>
+            <option value="rlyric">
+              {{ $t('settings.showLyricsTranslation.rlyric') }}
+            </option>
+          </select>
         </div>
       </div>
       <div class="item">
@@ -1136,7 +1140,7 @@ export default {
         }
       },
     },
-    showLyricsTranslation: {
+    selectTranslation: {
       get() {
         return this.settings.showLyricsTranslation;
       },

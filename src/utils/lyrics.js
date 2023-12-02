@@ -64,7 +64,7 @@ function parseLyric(lrc) {
 
     for (const timestamp of lyricTimestamps.matchAll(extractTimestampRegex)) {
       const { min, sec, ms } = timestamp.groups;
-      const formattedMs = ms.padEnd(3, '0'); // 格式化为三位数
+      const formattedMs = ms ? ms.padEnd(3, '0') : '000'; // 格式化为三位数
       const rawTime = `[${min}:${sec}.${formattedMs}]`;
       const time = Number(min) * 60 + Number(sec) + Number(ms ?? 0) * 0.001;
 
@@ -73,7 +73,6 @@ function parseLyric(lrc) {
       parsedLyrics.splice(binarySearch(parsedLyric), 0, parsedLyric);
     }
   }
-
   return parsedLyrics;
 }
 

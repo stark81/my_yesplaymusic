@@ -233,13 +233,17 @@
                 <span v-show="showTranIcon" class="transPro" @click="switchRbT">
                   <label
                     v-if="hasTLyric"
-                    :class="{ activeTag: tags[tagIdx] === 'tlyric' }"
+                    :class="{
+                      activeTag: settings.showLyricsTranslation === 'tlyric',
+                    }"
                     >译</label
                   >
                   <label v-if="hasTLyric && hasRLyric" class="m-label">|</label>
                   <label
                     v-if="hasRLyric"
-                    :class="{ activeTag: tags[tagIdx] === 'rlyric' }"
+                    :class="{
+                      activeTag: settings.showLyricsTranslation === 'rlyric',
+                    }"
                     >音</label
                   >
                 </span>
@@ -327,7 +331,7 @@ export default {
       hasLyric: true,
       hasTLyric: false,
       hasRLyric: false,
-      tagIdx: 1,
+      idx: 0,
     };
   },
   computed: {
@@ -339,13 +343,10 @@ export default {
       set() {},
     },
     showTranIcon() {
-      return (
-        this.settings.showLyricsTranslation &&
-        (this.hasTLyric || this.hasRLyric)
-      );
+      return this.hasTLyric || this.hasRLyric;
     },
     tags() {
-      const lst = [''];
+      const lst = ['off'];
       if (this.hasTLyric) {
         lst.splice(1, 0, 'tlyric');
       }
@@ -353,6 +354,11 @@ export default {
         lst.push('rlyric');
       }
       return lst;
+    },
+    tagIdx() {
+      let idx = this.tags.indexOf(this.settings.showLyricsTranslation);
+      idx === -1 ? (idx = 0) : idx;
+      return idx;
     },
     isLocal() {
       return this.player.currentTrack.isLocal === true;
@@ -395,6 +401,9 @@ export default {
     currentTrack() {
       this.getCoverColor();
     },
+    tagIdx(val) {
+      this.idx = val;
+    },
   },
   created() {
     this.Bus = new Vue();
@@ -428,7 +437,12 @@ export default {
       }, 1000);
     },
     switchRbT() {
-      this.tagIdx = (this.tagIdx + 1) % this.tags.length;
+      this.idx = (this.idx + 1) % this.tags.length;
+      const value = this.tags[this.idx];
+      this.$store.commit('updateSettings', {
+        key: 'showLyricsTranslation',
+        value,
+      });
     },
     closePlayPage() {
       this.toggleLyrics();

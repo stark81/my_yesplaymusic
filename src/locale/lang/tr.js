@@ -173,7 +173,12 @@ export default {
     automaticallyCacheSongs: 'Müzikleri otomatik çerezle',
     clearSongsCache: 'Müzik çerezlerini temizle',
     cacheCount: 'Çerezlenen {song} Müzikler ({size})',
-    showLyricsTranslation: 'Sözleri çeviri ve fonetik telaffuz göster',
+    showLyricsTranslation: {
+      text: 'Sözleri çeviri ve fonetik telaffuz göster',
+      never: 'Hiçbir zaman',
+      tlyric: 'çeviri',
+      rlyric: 'Fonetik çeviri',
+    },
     showTray: 'Bildirim alanı simgesini göster',
     showControl: 'Kontrol düğmelerini göster',
     showStatusBarLyric: 'Durum çubuğu şarkı sözlerini göster',
