@@ -237,6 +237,7 @@ nav.has-custom-titlebar {
 }
 
 .navigation-links {
+  margin-right: 12vh;
   flex: 1;
   display: flex;
   justify-content: center;
@@ -248,13 +249,13 @@ nav.has-custom-titlebar {
     font-weight: 700;
     text-decoration: none;
     border-radius: 6px;
-    padding: 6px 10px;
+    padding: 6px;
     color: var(--color-text);
     transition: 0.2s;
     -webkit-user-drag: none;
     margin: {
-      right: 12px;
-      left: 12px;
+      right: 6px;
+      left: 6px;
     }
     &:hover {
       background: var(--color-secondary-bg-for-transparent);

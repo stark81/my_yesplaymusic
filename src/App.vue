@@ -90,7 +90,7 @@ export default {
     ]),
     async fetchLocalData() {
       this.clearDeletedMusic();
-      await this.loadLocalMusic();
+      this.loadLocalMusic();
       await this.updateTracks();
       this.$store.dispatch('fetchLatestSongs');
       setTimeout(() => {}, 10 * 1000);

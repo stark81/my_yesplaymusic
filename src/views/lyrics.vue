@@ -80,20 +80,6 @@ export default {
     isLocal() {
       return this.player.currentTrack.isLocal === true;
     },
-    volume: {
-      get() {
-        return this.player.volume;
-      },
-      set(value) {
-        this.player.volume = value;
-      },
-    },
-    imageUrl() {
-      return this.player.currentTrack?.al?.picUrl + '?param=1024y1024';
-    },
-    bgImageUrl() {
-      return this.player.currentTrack?.al?.picUrl + '?param=512y512';
-    },
     lyricWithTranslation() {
       let ret = [];
       // 空内容的去除
@@ -150,31 +136,34 @@ export default {
     noLyric() {
       return this.lyric.length == 0;
     },
-    artist() {
-      return this.currentTrack?.ar
-        ? this.currentTrack.ar[0]
-        : { id: 0, name: 'unknown' };
+    osdLyric() {
+      return this.settings.showOsdLyric;
     },
-    album() {
-      return this.currentTrack?.al || { id: 0, name: 'unknown' };
+    needToSendLyric() {
+      return (
+        this.settings.showOsdLyric ||
+        (this.settings.showTray && this.settings.showStatusBarLyric)
+      );
     },
-    theme() {
-      return this.settings.lyricsBackground === true ? 'dark' : 'auto';
+    isLyricPage() {
+      return this.showLyrics && this.$parent.show === 'lyric';
     },
   },
   watch: {
     currentTrack() {
       this.getLyric().then(data => {
         this.$parent.hasLyric = data;
-        const { ipcRenderer } = require('electron');
-        const lyric = [
-          {
-            content: this.currentTrack.name,
-            time: 0.0,
-            rawTime: '[00:00.000]',
-          },
-        ].concat(this.lyric);
-        ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
+        if (this.needToSendLyric) {
+          const { ipcRenderer } = require('electron');
+          const lyric = [
+            {
+              content: this.currentTrack.name,
+              time: 0.0,
+              rawTime: '[00:00.000]',
+            },
+          ].concat(this.lyric);
+          ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
+        }
       });
     },
     lyricDelay(val) {
@@ -201,6 +190,38 @@ export default {
     },
     rlyric(val) {
       this.$parent.hasRLyric = val.length > 0 ? true : false;
+    },
+    osdLyric(val) {
+      if (val) {
+        const { ipcRenderer } = require('electron');
+        setTimeout(() => {
+          ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
+        }, 100);
+      }
+    },
+    needToSendLyric(val) {
+      if (val) {
+        const { ipcRenderer } = require('electron');
+        const lyric = [
+          {
+            content: this.currentTrack.name,
+            time: 0.0,
+            rawTime: '[00:00.000]',
+          },
+        ].concat(this.lyric);
+        ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
+      }
+    },
+    isLyricPage(val) {
+      if (val) {
+        const el = document.getElementById(`line${this.highlightLyricIndex}`);
+        if (el) {
+          el.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+      }
     },
   },
   created() {
@@ -306,8 +327,10 @@ export default {
           );
         });
         if (oldHighlightLyricIndex !== this.highlightLyricIndex) {
-          const { ipcRenderer } = require('electron');
-          ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
+          if (this.osdLyric) {
+            const { ipcRenderer } = require('electron');
+            ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
+          }
           const el = document.getElementById(`line${this.highlightLyricIndex}`);
           if (el)
             el.scrollIntoView({

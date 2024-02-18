@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@unblockneteasemusic/rust-napi": "^0.4.0",
-    "NeteaseCloudMusicApi": "^4.8.7",
+    "NeteaseCloudMusicApi": "4.8.10",
     "axios": "^0.26.1",
     "change-case": "^4.1.2",
     "cli-color": "^2.0.0",
@@ -42,7 +42,7 @@
     "dayjs": "^1.8.36",
     "dexie": "^3.0.3",
     "discord-rich-presence": "^0.0.8",
-    "electron": "^25.2.0",
+    "electron": "^13.6.7",
     "electron-builder": "^23.0.0",
     "electron-context-menu": "^3.1.2",
     "electron-debug": "^3.1.0",

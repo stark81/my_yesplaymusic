@@ -9,12 +9,12 @@
   >
     <template slot="default">
       <div class="content">
-        <span>0.50</span>
+        <span>0.5</span>
         <div class="slider">
           <vue-slider
             v-model="playRate"
-            :min="0.5"
-            :max="1.5"
+            :min="5.1 / 10"
+            :max="15 / 10"
             :interval="0.01"
             :drag-on-click="true"
             :duration="0"
@@ -24,7 +24,7 @@
             :silent="true"
           ></vue-slider>
         </div>
-        <span>1.50</span>
+        <span>1.5</span>
       </div>
     </template>
     <template slot="footer">

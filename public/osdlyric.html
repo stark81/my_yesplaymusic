@@ -142,10 +142,11 @@
 
     function handleIpcRenderer() {
       ipcRenderer.invoke('onloadLyric').then(arg => {
-        arg[0].shift();
-        lyric = arg[0];
-        tlyric = arg[1];
+        arg[0][0].shift();
+        lyric = arg[0][0];
+        tlyric = arg[0][1];
         handleEleCreate(lyric, tlyric);
+        handleHighlight(arg[1]);
       });
       ipcRenderer.on('index', (_, idx) => {
         handleHighlight(idx);

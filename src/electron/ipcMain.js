@@ -7,6 +7,7 @@ import { createMenu } from './menu';
 import { isCreateTray, isMac } from '@/utils/platform';
 
 let lyrics;
+let lyricIdx;
 const clc = require('cli-color');
 const log = text => {
   console.log(`${clc.blueBright('[ipcMain.js]')} ${text}`);
@@ -293,9 +294,10 @@ export function initIpcMain(win, store, trayEventEmitter, lrc) {
     if (isCreateTray) trayEventEmitter.emit('lyricsReceived', arg[0]);
   });
   ipcMain.handle('onloadLyric', () => {
-    return lyrics;
+    return [lyrics, lyricIdx];
   });
   ipcMain.on('lyricIndex', (_, index) => {
+    lyricIdx = index;
     lrc.sendLyricIndex(index);
   });
 
