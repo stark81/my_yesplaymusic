@@ -493,7 +493,7 @@ export default {
         }
         dispatch('fetchLikedSongsWithDetails');
         const { ipcRenderer } = require('electron');
-        ipcRenderer.send('updateTrayLikeState');
+        ipcRenderer.send('updateTrayLikeState', like);
       })
       .catch(() => {
         dispatch('showToast', '操作失败，专辑下架或版权锁定');
