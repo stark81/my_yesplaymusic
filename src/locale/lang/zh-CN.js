@@ -263,6 +263,7 @@ export default {
     accurateMatch: '精准匹配',
     addToLocalPlaylist: '添加到本地歌单',
     removeFromQueue: '从队列删除',
+    showInFolder: '在文件管理器中显示',
     removeLocalTrack: '移除歌曲',
     recoveryTrack: '恢复移除歌曲',
     finish: '完成',

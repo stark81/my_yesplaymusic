@@ -44,6 +44,7 @@
           :column-number="3"
           type="tracklist"
           :extra-context-menu-item="[
+            'showInFolder',
             'removeLocalTrack',
             'addToLocalList',
             'reMatch',
@@ -137,6 +138,7 @@
           :is-batch-op="isBatchOp"
           :selected-track-ids="selectedTrackIds"
           :extra-context-menu-item="[
+            'showInFolder',
             'removeLocalTrack',
             'addToLocalList',
             'reMatch',

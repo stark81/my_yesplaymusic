@@ -41,6 +41,12 @@
         >{{ $t('contextMenu.removeFromQueue') }}</div
       >
       <div
+        v-if="extraContextMenuItem.includes('showInFolder')"
+        class="item"
+        @click="showInFolder"
+        >{{ $t('contextMenu.showInFolder') }}</div
+      >
+      <div
         v-if="extraContextMenuItem.includes('removeLocalTrack')"
         class="item"
         @click="removeLocalTrack"
@@ -324,6 +330,15 @@ export default {
           ? this.rightClickedTrack.id
           : this.rightClickedTrack.onlineTrack.id,
       });
+    },
+    showInFolder() {
+      const songID = this.rightClickedTrack.id;
+      const { songs, tracks } = this.$store.state.localMusic;
+      const song = songs.find(s => s.id === songID);
+      const track = tracks.find(t => t.id === song.trackID);
+      const filePath = track.filePath;
+      const { shell } = require('electron');
+      shell.showItemInFolder(filePath);
     },
     removeLocalTrack() {
       const song = this.$store.state.localMusic.songs.find(

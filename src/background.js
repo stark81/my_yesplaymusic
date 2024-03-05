@@ -179,6 +179,8 @@ class Background {
     const showLibraryDefault = this.store.get('settings.showLibraryDefault');
 
     const options = {
+      x: this.store.get('window.x'),
+      y: this.store.get('window.y'),
       width: this.store.get('window.width') || 1440,
       height: this.store.get('window.height') || 840,
       minWidth: 1080,
@@ -440,7 +442,9 @@ class Background {
     });
 
     this.window.on('moved', () => {
-      this.store.set('window', this.window.getBounds());
+      var pos = this.window.getPosition();
+      this.store.set('window.x', pos[0]);
+      this.store.set('window.y', pos[1]);
     });
 
     this.window.on('maximize', () => {
