@@ -551,8 +551,8 @@ export default {
             .filter(l => l.includes('纯音乐，请欣赏'));
           if (isInstrumental.length === 0) {
             this.lyric = data.lrc.lyric;
+            this.lyricSong = track.name;
           }
-          this.lyricSong = track.name;
         }
       });
     },

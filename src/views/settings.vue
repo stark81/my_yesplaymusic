@@ -1477,6 +1477,15 @@ export default {
     },
     enableMenu(value) {
       ipcRenderer.send('enableTrayMenu', value);
+      if (value) {
+        ipcRenderer.send('updateTrayPlayState', this.player.playing);
+        const liked = this.$store.state.liked.songs.includes(
+          this.player.currentTrack.id
+        );
+        ipcRenderer.send('updateTrayLikeState', liked);
+        ipcRenderer.send('switchRepeatMode', this.player.repeatMode);
+        ipcRenderer.send('switchShuffle', this.player.shuffle);
+      }
     },
   },
   created() {

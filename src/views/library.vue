@@ -375,12 +375,12 @@ export default {
     playThisTrack() {
       this.player.addTrackToPlayNext(this.randomTrackID, true, true);
     },
-    getRandomLyric() {
+    async getRandomLyric() {
       if (this.liked.songs.length === 0) return;
       const id = this.liked.songs[randomNum(0, this.liked.songs.length - 1)];
-      getTrackDetail(id).then(data => {
+      const track_name = await getTrackDetail(id).then(data => {
         this.randomTrackID = id;
-        this.lyricSong = data.songs[0].name;
+        return data.songs[0].name;
       });
       getLyric(id).then(data => {
         if (data.lrc !== undefined) {
@@ -389,6 +389,7 @@ export default {
             .filter(l => l.includes('纯音乐，请欣赏'));
           if (isInstrumental.length === 0) {
             this.lyric = data.lrc.lyric;
+            this.lyricSong = track_name;
           }
         }
       });
