@@ -199,7 +199,6 @@ import ButtonIcon from '@/components/ButtonIcon.vue';
 import VueSlider from 'vue-slider-component';
 import { goToListSource, hasListSource } from '@/utils/playList';
 import { formatTrackTime } from '@/utils/common';
-import { isMac } from '@/utils/platform';
 
 export default {
   name: 'Player',
@@ -249,10 +248,6 @@ export default {
     },
     playOrPause() {
       this.player.playOrPause();
-      if (isMac && this.settings.showTray && this.settings.showStatusBarLyric) {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('updateTrayPlayState', this.playing);
-      }
     },
     playNextTrack() {
       if (this.player.isPersonalFM) {

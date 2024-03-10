@@ -22,6 +22,13 @@ export function createTouchBar(window) {
     icon: getNativeIcon('play.png'),
   });
 
+  const fmTrashButton = new TouchBarButton({
+    click: () => {
+      renderer.send('fm-trash');
+    },
+    icon: getNativeIcon('thumbs_down.png'),
+  });
+
   const previousTrackButton = new TouchBarButton({
     click: () => {
       renderer.send('previous');
@@ -59,15 +66,18 @@ export function createTouchBar(window) {
     return showLyric;
   };
 
-  ipcMain.on('player', (e, { playing, likedCurrentTrack }) => {
+  ipcMain.on('player', (e, { playing, likedCurrentTrack, isPersionalFM }) => {
     playButton.icon =
       playing === true ? getNativeIcon('pause.png') : getNativeIcon('play.png');
     likeButton.icon = likedCurrentTrack
       ? getNativeIcon('like_fill.png')
       : getNativeIcon('like.png');
+    options.items[0] = isPersionalFM ? fmTrashButton : previousTrackButton;
+    const touch = new TouchBar(options);
+    window.setTouchBar(touch);
   });
 
-  const touchBar = new TouchBar({
+  const options = {
     items: [
       previousTrackButton,
       playButton,
@@ -77,6 +87,8 @@ export function createTouchBar(window) {
       barLyric(),
       // new TouchBarSpacer({ size: 'flexible' }),
     ],
-  });
-  return touchBar;
+  };
+
+  var touchBar = new TouchBar(options);
+  window.setTouchBar(touchBar);
 }

@@ -184,6 +184,11 @@ export default {
     showTray: '显示状态栏图标',
     showControl: '显示控制按钮',
     showStatusBarLyric: '显示状态栏歌词',
+    showStatusMenu: {
+      title: '启用图标菜单',
+      desc1: '开启此项后，当状态栏控制按钮和状态栏歌词',
+      desc2: '同时关闭时，将为托盘图标添加菜单栏',
+    },
     minimizeToTray: '最小化到托盘',
     showPlaylistsByAppleMusic: '首页显示来自 Apple Music 的歌单',
     enableDiscordRichPresence: '启用 Discord Rich Presence',

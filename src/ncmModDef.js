@@ -634,4 +634,9 @@ module.exports = [
     route: '/comment',
     module: require('NeteaseCloudMusicApi/module/comment'),
   },
+  {
+    identifier: 'search_match',
+    route: '/search/match',
+    module: require('NeteaseCloudMusicApi/module/search_match'),
+  },
 ];

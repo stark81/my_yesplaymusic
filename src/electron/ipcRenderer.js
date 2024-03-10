@@ -66,8 +66,17 @@ export function ipcRenderer(vueInstance) {
     store.dispatch('likeATrack', player.currentTrack.id);
   });
 
-  ipcRenderer.on('repeat', () => {
-    player.switchRepeatMode();
+  ipcRenderer.on('repeat', (event, mode) => {
+    // player.switchRepeatMode();
+    player.repeatMode = mode;
+  });
+
+  ipcRenderer.on('repeat-shuffle', (event, isShuffle) => {
+    player.shuffle = isShuffle;
+  });
+
+  ipcRenderer.on('fm-trash', () => {
+    player.moveToFMTrash();
   });
 
   ipcRenderer.on('shuffle', () => {

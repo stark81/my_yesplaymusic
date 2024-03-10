@@ -46,6 +46,7 @@ import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
 import { getLyric } from '@/api/track';
 import { lyricParser } from '@/utils/lyrics';
+import { isMac } from '@/utils/platform';
 
 export default {
   name: 'Lyrics',
@@ -140,10 +141,7 @@ export default {
       return this.settings.showOsdLyric;
     },
     needToSendLyric() {
-      return (
-        this.settings.showOsdLyric ||
-        (this.settings.showTray && this.settings.showStatusBarLyric)
-      );
+      return this.settings.showOsdLyric || isMac;
     },
     isLyricPage() {
       return this.showLyrics && this.$parent.show === 'lyric';

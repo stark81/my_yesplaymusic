@@ -167,7 +167,7 @@
       </div>
 
       <h3 v-show="isMac && isElectron">状态栏</h3>
-      <div v-show="isMac && isElectron" class="item">
+      <!-- <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showTray') }}</div>
         </div>
@@ -182,7 +182,7 @@
             <label for="show-lyrics-tray"></label>
           </div>
         </div>
-      </div>
+      </div> -->
       <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showControl') }}</div>
@@ -192,7 +192,6 @@
             <input
               id="show-lyrics-control"
               v-model="showControl"
-              :disabled="!showTray"
               type="checkbox"
               name="show-lyrics-control"
             />
@@ -209,11 +208,30 @@
             <input
               id="show-lyrics-statusbar"
               v-model="showStatusBarLyric"
-              :disabled="!showTray"
               type="checkbox"
               name="show-lyrics-statusbar"
             />
             <label for="show-lyrics-statusbar"></label>
+          </div>
+        </div>
+      </div>
+      <div v-show="isMac && isElectron" class="item">
+        <div class="left">
+          <div class="title">{{ $t('settings.showStatusMenu.title') }}</div>
+          <div class="description">
+            {{ $t('settings.showStatusMenu.desc1') }}<br />
+            {{ $t('settings.showStatusMenu.desc2') }}</div
+          >
+        </div>
+        <div>
+          <div class="toggle">
+            <input
+              id="show-lyrics-menu"
+              v-model="showLyricsMenu"
+              type="checkbox"
+              name="show-lyrics-menu"
+            />
+            <label for="show-lyrics-menu"></label>
           </div>
         </div>
       </div>
@@ -892,7 +910,6 @@ import { auth as lastfmAuth } from '@/api/lastfm';
 import { changeAppearance, bytesToSize } from '@/utils/common';
 import { countDBSize, clearDB } from '@/utils/db';
 import pkg from '../../package.json';
-// import { debounce } from 'lodash';
 
 const electron =
   process.env.IS_ELECTRON === true ? window.require('electron') : null;
@@ -1154,18 +1171,6 @@ export default {
     localMusicFolderPath() {
       return this.settings.localMusicFolderPath;
     },
-    showTray: {
-      get() {
-        return this.settings.showTray;
-      },
-      set(value) {
-        ipcRenderer.send('switchShowTray', 'switchShowTray');
-        this.$store.commit('updateSettings', {
-          key: 'showTray',
-          value,
-        });
-      },
-    },
     showStatusBarLyric: {
       get() {
         return this.settings.showStatusBarLyric;
@@ -1174,6 +1179,17 @@ export default {
         ipcRenderer.send('switchShowTray', 'switchLyric');
         this.$store.commit('updateSettings', {
           key: 'showStatusBarLyric',
+          value,
+        });
+      },
+    },
+    showLyricsMenu: {
+      get() {
+        return this.settings.showLyricsMenu;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'showLyricsMenu',
           value,
         });
       },
@@ -1189,6 +1205,11 @@ export default {
           value,
         });
       },
+    },
+    enableMenu() {
+      return (
+        this.showLyricsMenu && !this.showControl && !this.showStatusBarLyric
+      );
     },
     lyricsBackground: {
       get() {
@@ -1453,6 +1474,9 @@ export default {
       this.$store.dispatch('fetchLatestSongs');
       setTimeout(() => {}, 10 * 1000);
       await this.updateArtists();
+    },
+    enableMenu(value) {
+      ipcRenderer.send('enableTrayMenu', value);
     },
   },
   created() {

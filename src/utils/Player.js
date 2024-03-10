@@ -7,7 +7,7 @@ import { getMP3, getTrackDetail, scrobble } from '@/api/track';
 import store from '@/store';
 import { isAccountLoggedIn } from '@/utils/auth';
 import { cacheTrackSource, getTrackSource } from '@/utils/db';
-import { isCreateMpris, isCreateTray } from '@/utils/platform';
+import { isCreateMpris, isCreateTray, isMac } from '@/utils/platform';
 import { Howl, Howler } from 'howler';
 import shuffle from 'lodash/shuffle';
 import { decode as base642Buffer } from '@/utils/base64';
@@ -44,7 +44,7 @@ function setTitle(track) {
   document.title = track
     ? `${track.name} · ${track.ar[0].name} - YesPlayMusic`
     : 'YesPlayMusic';
-  if (isCreateTray) {
+  if (!isMac) {
     ipcRenderer?.send('updateTrayTooltip', document.title);
   }
   store.commit('updateTitle', document.title);
@@ -985,6 +985,7 @@ export default class {
     ipcRenderer?.send('player', {
       playing: this.playing,
       likedCurrentTrack: liked,
+      isPersionalFM: this._isPersonalFM,
     });
     setTrayLikeState(liked);
   }
@@ -997,15 +998,11 @@ export default class {
     } else {
       this.repeatMode = 'on';
     }
-    if (isCreateMpris) {
-      ipcRenderer?.send('switchRepeatMode', this.repeatMode);
-    }
+    ipcRenderer?.send('switchRepeatMode', this.repeatMode);
   }
   switchShuffle() {
     this.shuffle = !this.shuffle;
-    if (isCreateMpris) {
-      ipcRenderer?.send('switchShuffle', this.shuffle);
-    }
+    ipcRenderer?.send('switchShuffle', this.shuffle);
   }
   switchReversed() {
     this.reversed = !this.reversed;

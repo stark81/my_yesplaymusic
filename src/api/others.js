@@ -48,3 +48,14 @@ export function fmTrash(id) {
     },
   });
 }
+
+export function localMatch(params) {
+  return request({
+    url: '/search/match',
+    method: 'get',
+    params,
+  }).then(data => {
+    console.log('localMatch result data = ', data);
+    return data;
+  });
+}

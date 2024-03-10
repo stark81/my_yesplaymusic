@@ -27,7 +27,7 @@ import { createDockMenu } from './electron/dockMenu';
 import { registerGlobalShortcut } from './electron/globalShortcut';
 import { autoUpdater } from 'electron-updater';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import { EventEmitter } from 'events';
+// import { EventEmitter } from 'events';
 import express from 'express';
 import expressProxy from 'express-http-proxy';
 import Store from 'electron-store';
@@ -503,12 +503,11 @@ class Background {
 
       // create tray
       if (isCreateTray) {
-        this.trayEventEmitter = new EventEmitter();
-        this.ypmTrayImpl = createTray(this.window, this.trayEventEmitter);
+        this.ypmTrayImpl = createTray(this.window);
       }
 
       // init ipcMain
-      initIpcMain(this.window, this.store, this.trayEventEmitter, {
+      initIpcMain(this.window, this.store, this.ypmTrayImpl, {
         resizeOSDLyrics: height => this.resizeOSDLyrics(height),
         toggleOSDLyrics: () => this.toggleOSDLyrics(),
         receiveLyric: lyric => this.receiveLyric(lyric),
@@ -530,12 +529,11 @@ class Background {
       createMenu(this.window, this.store);
 
       // create dock menu for macOS
-      const createdDockMenu = createDockMenu(this.window);
-      if (createDockMenu && app.dock) app.dock.setMenu(createdDockMenu);
+      createDockMenu(this.window);
 
       // create touch bar
-      const createdTouchBar = createTouchBar(this.window);
-      if (createdTouchBar) this.window.setTouchBar(createdTouchBar);
+      createTouchBar(this.window);
+      // if (createdTouchBar) this.window.setTouchBar(createdTouchBar);
 
       // register global shortcuts
       if (this.store.get('settings.enableGlobalShortcut') !== false) {

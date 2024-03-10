@@ -1,4 +1,6 @@
 import clc from 'cli-color';
+// eslint-disable-next-line no-unused-vars
+import checkAuthToken from '../utils/checkAuthToken';
 import server from 'NeteaseCloudMusicApi/server';
 
 export async function startNeteaseMusicApi() {

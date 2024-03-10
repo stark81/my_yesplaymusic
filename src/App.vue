@@ -33,6 +33,7 @@ import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import MusicPlay from './views/musicPlay.vue';
 import { mapState, mapActions } from 'vuex';
+import { isMac } from './utils/platform';
 
 export default {
   name: 'App',
@@ -75,7 +76,23 @@ export default {
     },
   },
   created() {
-    if (this.isElectron) ipcRenderer(this);
+    if (this.isElectron) {
+      ipcRenderer(this);
+      const show_menu = isMac
+        ? this.settings.showLyricsMenu &&
+          !this.settings.showStatusBarLyric &&
+          !this.settings.showControl
+        : true;
+      if (show_menu) {
+        const render = require('electron').ipcRenderer;
+        render.send('switchRepeatMode', this.player.repeatMode);
+        render.send('switchShuffle', this.player.shuffle);
+      }
+    }
+    if (isMac && this.isElectron) {
+      const { initMacStatusbarLyric } = require('./utils/macStatusBarLyric');
+      initMacStatusbarLyric();
+    }
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
     this.fetchLocalData();

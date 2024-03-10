@@ -135,7 +135,7 @@ function parseSourceStringToList(executor, sourceString) {
     });
 }
 
-export function initIpcMain(win, store, trayEventEmitter, lrc) {
+export function initIpcMain(win, store, tray, lrc) {
   // WIP: Do not enable logging as it has some issues in non-blocking I/O environment.
   // UNM.enableLogging(UNM.LoggingType.ConsoleEnv);
   const unmExecutor = new UNM.Executor();
@@ -291,7 +291,7 @@ export function initIpcMain(win, store, trayEventEmitter, lrc) {
   ipcMain.on('sendLyrics', (_, arg) => {
     lyrics = arg;
     lrc.receiveLyric(arg);
-    if (isCreateTray) trayEventEmitter.emit('lyricsReceived', arg[0]);
+    if (isCreateTray) win.webContents.send('lyricsReceived', arg[0]);
   });
   ipcMain.handle('onloadLyric', () => {
     return [lyrics, lyricIdx];
@@ -332,20 +332,55 @@ export function initIpcMain(win, store, trayEventEmitter, lrc) {
   });
 
   if (isCreateTray) {
+    const show_menu = isMac
+      ? store.get('settings.showLyricsMenu') &&
+        !store.get('settings.showStatusBarLyric') &&
+        !store.get('settings.showControl')
+      : true;
+    if (show_menu) {
+      tray.setContextMenu();
+      tray.themeUpdate();
+    }
+    ipcMain.on('enableTrayMenu', (_, isEnable) => {
+      if (isEnable) {
+        tray.setContextMenu();
+        tray.themeUpdate();
+      } else {
+        tray._tray.setContextMenu(null);
+      }
+    });
     ipcMain.on('updateTrayTooltip', (_, title) => {
-      trayEventEmitter.emit('updateTooltip', title);
+      tray.setTooltip(title);
     });
     ipcMain.on('updateTrayPlayState', (_, isPlaying) => {
-      trayEventEmitter.emit('updatePlayState', isPlaying);
+      const show_menu = isMac
+        ? store.get('settings.showLyricsMenu') &&
+          !store.get('settings.showStatusBarLyric') &&
+          !store.get('settings.showControl')
+        : true;
+      if (show_menu) tray.setPlayState(isPlaying);
+      if (isMac) win.webContents.send('changeTrayPlayingStatus');
     });
     ipcMain.on('updateTrayLikeState', (_, isLiked) => {
-      trayEventEmitter.emit('updateLikeState', isLiked);
+      const show_menu = isMac
+        ? store.get('settings.showLyricsMenu') &&
+          !store.get('settings.showStatusBarLyric') &&
+          !store.get('settings.showControl')
+        : true;
+      if (show_menu) tray.setLikeState(isLiked);
+      if (isMac) win.webContents.send('changeTrayLikeStatus');
+    });
+    ipcMain.on('switchRepeatMode', (_, repeatMode) => {
+      tray.setRepeatMode(repeatMode);
+    });
+    ipcMain.on('switchShuffle', (_, shuffleMode) => {
+      tray.setShuffleMode(shuffleMode);
     });
     ipcMain.on('windowShow', () => {
       win.show();
     });
     ipcMain.on('switchShowTray', (_, ops) => {
-      trayEventEmitter.emit('ifShowTray', ops);
+      win.webContents.send('switchShowTray', ops);
     });
     ipcMain.on('selectFolder', event => {
       dialog
