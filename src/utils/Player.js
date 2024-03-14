@@ -666,6 +666,7 @@ export default class {
       ],
       length: this.currentTrackDuration,
       trackId: this.current,
+      url: '/trackid/' + track.id,
     };
 
     navigator.mediaSession.metadata = new window.MediaMetadata(metadata);
