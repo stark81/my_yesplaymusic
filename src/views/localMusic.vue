@@ -29,7 +29,7 @@
           <div class="titles">
             <div class="title">{{ $t('localMusic.latedAdd') }}</div>
             <div class="sub-title">
-              {{ allTracks.length }}{{ $t('common.songs') }}
+              {{ localTrackLenght }}{{ $t('common.songs') }}
             </div>
           </div>
           <button @click="playThisTrack">
@@ -180,22 +180,22 @@
     <ContextMenu ref="playlistTabMenu">
       <div
         class="item"
-        @click="updateLocalXXX({ name: 'sortBy', data: 'default' })"
+        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'default' })"
         >{{ $t('contextMenu.defaultSort') }}</div
       >
       <div
         class="item"
-        @click="updateLocalXXX({ name: 'sortBy', data: 'byname' })"
+        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'byname' })"
         >{{ $t('contextMenu.sortByName') }}</div
       >
       <div
         class="item"
-        @click="updateLocalXXX({ name: 'sortBy', data: 'descend' })"
+        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'descend' })"
         >{{ $t('contextMenu.descendSort') }}</div
       >
       <div
         class="item"
-        @click="updateLocalXXX({ name: 'sortBy', data: 'ascend' })"
+        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'ascend' })"
         >{{ $t('contextMenu.ascendSort') }}</div
       >
       <hr />
@@ -227,11 +227,6 @@ import CoverRow from '@/components/CoverRow.vue';
 import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
 import ModalMatchTrack from '@/components/ModalMatchTrack.vue';
-import {
-  localAlbumParser,
-  localArtistsParser,
-  localTrackParser,
-} from '@/utils/localSongParser';
 import NProgress from 'nprogress';
 
 function extractLyricPart(rawLyric) {
@@ -277,12 +272,12 @@ export default {
     };
   },
   computed: {
-    ...mapState(['data', 'localMusic', 'settings', 'player']),
+    ...mapState(['data', 'locals', 'localMusic', 'settings', 'player']),
     isLocal() {
       return this.$store.state.player.currentTrack?.isLocal === true;
     },
     sortBy() {
-      return this.localMusic?.sortBy;
+      return this.localMusic.sortBy;
     },
     filterLatestAdd() {
       const idx = randomNum(0, this.activeTracks.length - 12);
@@ -309,44 +304,23 @@ export default {
       );
     },
     allTracks() {
-      const songs = this.localMusic?.songs?.filter(
-        s => s.show && s.delete !== true
-      );
-      const tracks = [];
-      for (const song of songs) {
-        const track = localTrackParser(song.id);
-        tracks.push(track);
-      }
+      const tracks = this.localMusic.tracks.filter(t => t.show && !t.delete);
       return tracks;
     },
+    localTrackLenght() {
+      return this.allTracks.length;
+    },
     filterLocalAlbums() {
-      const albums = [];
-      const songs = this.localMusic?.songs;
-      for (const song of songs) {
-        if (song.show && song.delete !== true) {
-          const al = localAlbumParser(song.id);
-          const alExist = albums.find(a => a.id === al.id);
-          if (!alExist) {
-            albums.push(al);
-          }
-        }
-      }
-      return [...new Set(albums)].reverse();
+      const albumArray = this.allTracks.map(tr => tr.al);
+      return [...new Map(albumArray.map(al => [al.name, al])).values()]
+        .slice()
+        .reverse();
     },
     filterLocalArtists() {
-      const artists = [];
-      const songs = this.localMusic?.songs;
-      for (const song of songs) {
-        if (song.show && song.delete !== true) {
-          const ars = localArtistsParser(song.id);
-          for (const ar of ars) {
-            if (!artists.some(a => a.id === ar.id)) {
-              artists.push(ar);
-            }
-          }
-        }
-      }
-      return [...new Set(artists)].reverse();
+      const artistsArray = this.allTracks?.map(tr => tr.ar).flat(Infinity);
+      return [...new Map(artistsArray.map(ar => [ar.name, ar])).values()]
+        .slice()
+        .reverse();
     },
     filterPlaylists() {
       return this.localMusic?.playlists?.slice().reverse();
@@ -391,12 +365,14 @@ export default {
     sortBy(val) {
       this.activeTracks = this.sortList(this.activeTracks, val);
     },
-    allTracks(val) {
+    localTrackLenght() {
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         this.randomShowTracks =
-          val.length > 12 ? getRandomNumbersFromList(val, 12) : val;
-        const tracks = this.sortList(val, this.sortBy);
+          this.allTracks.length > 12
+            ? getRandomNumbersFromList(this.allTracks, 12)
+            : this.allTracks;
+        const tracks = this.sortList(this.allTracks, this.sortBy);
         this.activeTracks = tracks;
         this.activeAlbums = this.filterLocalAlbums;
         this.activeArtists = this.filterLocalArtists;
@@ -406,7 +382,7 @@ export default {
   created() {
     setTimeout(() => {
       if (!this.show) NProgress.start();
-    }, 500);
+    });
     this.currentTab = this.$store.state.settings.localMusicShowDefault;
     this.loadData();
   },
@@ -415,7 +391,7 @@ export default {
     this.getRandomLyric();
   },
   methods: {
-    ...mapMutations(['updateData', 'updateLocalXXX', 'updateModal']),
+    ...mapMutations(['updateData', 'updateLocalMusicXXX', 'updateModal']),
     ...mapActions([
       'showToast',
       'rmTrackFromLocalPlaylist',
@@ -429,18 +405,17 @@ export default {
       this.show = true;
       this.getRandomLyric();
 
-      let tracks = this.allTracks;
-      const albums = this.filterLocalAlbums;
-      const artists = this.filterLocalArtists;
+      let tracks = this.allTracks.slice();
+      const albums = this.filterLocalAlbums.slice();
+      const artists = this.filterLocalArtists.slice();
 
       // 随机显示的12首歌
       // const idx = tracks.length > 12 ? randomNum(0, tracks.length - 12) : 0;
       this.randomShowTracks =
         tracks.length > 12 ? getRandomNumbersFromList(tracks, 12) : tracks;
-      // this.randomShowTracks = tracks.slice(idx, idx + 12);
       tracks = this.sortList(tracks, this.sortBy);
 
-      // 首页先加载20首歌，20个专辑，20个歌手，1秒后再全部加载
+      // 首页先加载20首歌，20个专辑，20个歌手，然后再异步加载剩余的
       this.activeTracks = tracks.slice(0, 20);
       this.activeAlbums = albums.slice(0, 20);
       this.activeArtists = artists.slice(0, 20);
@@ -449,7 +424,7 @@ export default {
         this.activeTracks.push(...tracks.slice(20));
         this.activeAlbums.push(...albums.slice(20));
         this.activeArtists.push(...artists.slice(20));
-      }, 1000);
+      });
     },
     playingTrackPosition() {
       const trackref = this.$refs.trackListRef.$refs.trackListItemRef.find(
@@ -463,7 +438,7 @@ export default {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
       this.debounceTimeout = setTimeout(() => {
         this.searchKeyWords = this.inputKeywords;
-      }, 600);
+      }, 200);
     },
     updateCurrentTab(tab) {
       this.currentTab = tab;
@@ -513,7 +488,6 @@ export default {
               tracks: id,
             });
           });
-          this.$store.dispatch('fetchLatestSongs');
         });
       }
       this.batchOpSwitch();
@@ -537,13 +511,13 @@ export default {
       this.player.addTrackToPlayNext(this.randomTrackID, true, true);
     },
     getRandomLyric() {
-      const tracksID = this.localMusic?.latestAddTracks;
+      const tracksID = this.allTracks.filter(tr => tr.matched).map(tr => tr.id);
       if (tracksID.length < 1) return;
       const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
       const track = this.localMusic.tracks
-        .filter(t => t.matched)
-        .find(t => t.onlineTrack.id === randomTrackID);
-      this.randomTrackID = track.id;
+        ?.filter(t => t.matched)
+        .find(t => t.id === randomTrackID);
+      this.randomTrackID = randomTrackID;
       getLyric(randomTrackID).then(data => {
         if (data.lrc !== undefined) {
           const isInstrumental = data.lrc.lyric

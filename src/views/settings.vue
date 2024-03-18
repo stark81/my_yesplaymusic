@@ -909,6 +909,7 @@ import { isLooseLoggedIn, doLogout } from '@/utils/auth';
 import { auth as lastfmAuth } from '@/api/lastfm';
 import { changeAppearance, bytesToSize } from '@/utils/common';
 import { countDBSize, clearDB } from '@/utils/db';
+import { importFromJson } from '@/utils/migrations';
 import pkg from '../../package.json';
 
 const electron =
@@ -946,12 +947,6 @@ export default {
   },
   computed: {
     ...mapState(['player', 'settings', 'data', 'lastfm', 'updateFlag']),
-    localMusicPath() {
-      return this.settings.localMusicFolderPath;
-    },
-    // localSongsLength() {
-    //   return this.$store.state.localMusic.songs.length;
-    // },
     isElectron() {
       return process.env.IS_ELECTRON;
     },
@@ -1465,16 +1460,6 @@ export default {
     },
   },
   watch: {
-    async localMusicPath() {
-      localStorage.removeItem('player');
-      this.$store.commit('clearLocalMusic');
-      this.$store.dispatch('fetchLatestSongs');
-      await this.loadLocalMusic();
-      await this.updateTracks();
-      this.$store.dispatch('fetchLatestSongs');
-      setTimeout(() => {}, 10 * 1000);
-      await this.updateArtists();
-    },
     enableMenu(value) {
       ipcRenderer.send('enableTrayMenu', value);
       if (value) {
@@ -1497,27 +1482,23 @@ export default {
     if (process.env.IS_ELECTRON) this.getAllOutputDevices();
   },
   methods: {
-    ...mapActions([
-      'showToast',
-      'loadLocalMusic',
-      'updateTracks',
-      'updateArtists',
-    ]),
+    ...mapActions(['showToast']),
     deleteLocalMusic() {
-      this.$store.state.localMusic = {
+      this.$store.commit('updateSettings', {
+        key: 'localMusicFolderPath',
+        value: null,
+      });
+      this.$store.commit('updateLocalMusic', {
+        version: 'v1',
         trackIdCounter: 1,
         albumsIdCounter: 1,
         artistsIdCounter: 1,
         playlistIdCounter: 1,
-        songs: [],
-        latestAddTracks: [], // 只有前12首
         playlists: [],
         tracks: [],
-        albums: [],
-        artists: [],
         sortBy: 'default',
-      };
-      this.$store.state.settings.localMusicFolderPath = null;
+      });
+      this.showToast('已清除本地音乐信息');
     },
     importLocalMusic() {
       this.$refs.selectFileInput.click();
@@ -1531,9 +1512,31 @@ export default {
           return;
         }
         const jsonData = JSON.parse(data);
-        this.$store.state.localMusic = jsonData;
-        this.$store.dispatch('fetchLatestSongs');
-        this.showToast('导入完成');
+        if (jsonData.version === 'v1') {
+          this.$store.commit('updateLocalMusic', jsonData);
+        } else {
+          importFromJson(jsonData).then(({ playlists, tracks }) => {
+            const albumArray = tracks.map(tr => tr.al);
+            const albums = [
+              ...new Map(albumArray.map(a => [a.id, a])).values(),
+            ];
+            const artistArray = tracks.map(tr => tr.ar).flat(Infinity);
+            const artists = [
+              ...new Map(artistArray.map(a => [a.id, a])).values(),
+            ];
+            const data = {
+              version: 'v1',
+              trackIdCounter: tracks.length + 1,
+              albumsIdCounter: albums.length + 1,
+              artistsIdCounter: artists.length + 1,
+              playlistIdCounter: playlists.length + 1,
+              playlists: playlists,
+              tracks: tracks,
+              sortBy: jsonData.sortBy,
+            };
+            this.$store.commit('updateLocalMusic', data);
+          });
+        }
       });
     },
     exportLocalMusic() {
@@ -1542,16 +1545,25 @@ export default {
       const localMusic = this.$store.state.localMusic;
       const localMusicJson = JSON.stringify(localMusic);
 
-      ipcRenderer.send('selectFolder');
-      ipcRenderer.on('selected-folder', (event, folderPath) => {
+      ipcRenderer.invoke('selected-folder').then(folderPath => {
         if (folderPath) {
           const path = require('path');
-          const filePath = path.join(folderPath, 'localMusic.json');
+          const getDate = () => {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return date === 0 ? null : `${year}${month}${day}`;
+          };
+          const filePath = path.join(
+            folderPath,
+            `localMusic-${localMusic.version}-${getDate()}.json`
+          );
           fs.writeFile(filePath, localMusicJson, 'utf8', err => {
             if (err) {
-              console.error('Failed to save state of localMusic:', err);
+              this.showToast(`导出失败: ${err}`);
             } else {
-              console.log('State of localMusic saved successfully');
+              this.showToast('导出成功');
             }
           });
         }
@@ -1559,8 +1571,7 @@ export default {
     },
     choseDir() {
       const { ipcRenderer } = require('electron');
-      ipcRenderer.send('selectFolder');
-      ipcRenderer.on('selected-folder', (event, folderPath) => {
+      ipcRenderer.invoke('selected-folder').then(folderPath => {
         if (folderPath) {
           this.$store.commit('updateSettings', {
             key: 'localMusicFolderPath',

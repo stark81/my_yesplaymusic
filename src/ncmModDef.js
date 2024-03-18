@@ -639,4 +639,14 @@ module.exports = [
     route: '/search/match',
     module: require('NeteaseCloudMusicApi/module/search_match'),
   },
+  {
+    identifier: 'song_red_count',
+    route: '/song/red/count',
+    module: require('NeteaseCloudMusicApi/module/song_red_count'),
+  },
+  {
+    identifier: 'song_music_detail',
+    route: '/song/music/detail',
+    module: require('NeteaseCloudMusicApi/module/song_music_detail'),
+  },
 ];

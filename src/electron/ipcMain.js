@@ -371,10 +371,20 @@ export function initIpcMain(win, store, tray, lrc) {
       if (isMac) win.webContents.send('changeTrayLikeStatus');
     });
     ipcMain.on('switchRepeatMode', (_, repeatMode) => {
-      tray.setRepeatMode(repeatMode);
+      const show_menu = isMac
+        ? store.get('settings.showLyricsMenu') &&
+          !store.get('settings.showStatusBarLyric') &&
+          !store.get('settings.showControl')
+        : true;
+      if (show_menu) tray.setRepeatMode(repeatMode);
     });
     ipcMain.on('switchShuffle', (_, shuffleMode) => {
-      tray.setShuffleMode(shuffleMode);
+      const show_menu = isMac
+        ? store.get('settings.showLyricsMenu') &&
+          !store.get('settings.showStatusBarLyric') &&
+          !store.get('settings.showControl')
+        : true;
+      if (show_menu) tray.setShuffleMode(shuffleMode);
     });
     ipcMain.on('windowShow', () => {
       win.show();
@@ -382,15 +392,15 @@ export function initIpcMain(win, store, tray, lrc) {
     ipcMain.on('switchShowTray', (_, ops) => {
       win.webContents.send('switchShowTray', ops);
     });
-    ipcMain.on('selectFolder', event => {
-      dialog
-        .showOpenDialog({
-          properties: ['openDirectory'],
-        })
-        .then(result => {
-          const folderPath = result.filePaths[0];
-          event.sender.send('selected-folder', folderPath);
-        });
+    ipcMain.handle('selected-folder', async () => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory'],
+      });
+      if (!result.canceled) {
+        return result.filePaths[0];
+      } else {
+        return null;
+      }
     });
   }
 }

@@ -21,11 +21,15 @@ export function search(params) {
     url: '/search',
     method: 'get',
     params,
-  }).then(data => {
-    if (data.result?.song !== undefined)
-      data.result.song.songs = mapTrackPlayableStatus(data.result.song.songs);
-    return data;
-  });
+  })
+    .then(data => {
+      if (data.result?.song !== undefined)
+        data.result.song.songs = mapTrackPlayableStatus(data.result.song.songs);
+      return data;
+    })
+    .catch(err => {
+      return err;
+    });
 }
 
 export function personalFM() {
@@ -49,13 +53,19 @@ export function fmTrash(id) {
   });
 }
 
+/**
+ * 本地匹配
+ * @param {Object} params
+ * @param {string} params.title
+ * @param {string} params.album
+ * @param {string} params.artist
+ * @param {string} params.duration
+ * @param {string} params.md5
+ */
 export function localMatch(params) {
   return request({
     url: '/search/match',
     method: 'get',
     params,
-  }).then(data => {
-    console.log('localMatch result data = ', data);
-    return data;
   });
 }

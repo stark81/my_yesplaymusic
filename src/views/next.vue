@@ -33,8 +33,6 @@
 import { mapState, mapActions } from 'vuex';
 import { getTrackDetail } from '@/api/track';
 import TrackList from '@/components/TrackList.vue';
-import state from '@/store/state';
-import { localTrackParser } from '@/utils/localSongParser';
 
 export default {
   name: 'Next',
@@ -101,33 +99,11 @@ export default {
       let loadedTrackIDs = this.tracks.map(t => t.id);
 
       if (trackIDs.length > 0) {
-        const songs = state.localMusic.songs.filter(obj =>
-          trackIDs.includes(obj.id)
-        );
-        for (const song of songs) {
-          const track = localTrackParser(song.id);
-          if (track && !this.tracks.some(a => a.id === track.id)) {
-            this.tracks.push(track);
-          }
-        }
-        // this.tracks = [...new Set(this.tracks)];
-
-        const filterIDs = trackIDs.filter(
-          a => !songs.some(b => b.trackID === a)
-        );
-        if (filterIDs.length !== 0) {
-          getTrackDetail(filterIDs.join(',')).then(data => {
-            let newTracks = data.songs.filter(
-              t => !loadedTrackIDs.includes(t.id)
-            );
-            this.tracks.push(...newTracks);
-            this.tracks = [...new Set(this.tracks)];
-          });
-        }
-        this.tracks.sort((a, b) => {
-          const indexA = trackIDs.indexOf(a.id);
-          const indexB = trackIDs.indexOf(b.id);
-          return indexA - indexB;
+        getTrackDetail(trackIDs.join(',')).then(data => {
+          let newTracks = data.songs.filter(
+            t => !loadedTrackIDs.includes(t.id)
+          );
+          this.tracks.push(...newTracks);
         });
       }
     },

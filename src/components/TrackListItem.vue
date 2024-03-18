@@ -89,7 +89,7 @@
       </button>
     </div>
     <div v-if="showTrackTime && showTrackID" class="time">
-      {{ (track.onlineTrack && track.onlineTrack.id) || track.id }}
+      {{ track.id }}
     </div>
     <div v-if="showTrackTime && !showTrackID" class="time">
       {{ track.dt | formatTime }}
@@ -189,16 +189,10 @@ export default {
       return this.type === 'playlist';
     },
     isLiked() {
-      return (
-        this.$parent.liked.songs.includes(this.track?.id) ||
-        this.$parent.liked.songs.includes(this.track?.onlineTrack?.id)
-      );
+      return this.$parent.liked.songs.includes(this.track?.id);
     },
     isPlaying() {
-      return (
-        this.$store.state.player.currentTrack.id === this.track?.id ||
-        this.$store.state.player.currentTrack.id === this.track?.onlineTrack?.id
-      );
+      return this.$store.state.player.currentTrack.id === this.track.id;
     },
     trackClass() {
       let trackClass = [this.type];
@@ -256,9 +250,13 @@ export default {
     },
     getPublishTime(date) {
       date = new Date(date);
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
+      const year = isNaN(date.getFullYear()) ? '1970' : date.getFullYear();
+      const month = isNaN(date.getMonth())
+        ? '01'
+        : (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = isNaN(date.getDate())
+        ? '01'
+        : date.getDate().toString().padStart(2, '0');
       return date === 0 ? null : `${year}-${month}-${day}`;
     },
   },

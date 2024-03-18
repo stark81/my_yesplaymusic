@@ -2,10 +2,11 @@ import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import { likeATrack } from '@/api/track';
 import { getPlaylistDetail } from '@/api/playlist';
 import { getTrackDetail } from '@/api/track';
+import { getArtist } from '@/api/artist';
 import { search } from '@/api/others';
 import { getAlbum } from '@/api/album';
-import { localTrackParser } from '@/utils/localSongParser';
 import { randomNum } from '@/utils/common';
+import { importFromJson, createMD5 } from '@/utils/migrations';
 import {
   userPlaylist,
   userPlayHistory,
@@ -16,6 +17,7 @@ import {
   cloudDisk,
   userAccount,
 } from '@/api/user';
+import cloneDeep from 'lodash/cloneDeep';
 
 const fs = require('fs');
 const path = require('path');
@@ -32,119 +34,6 @@ function splitArtist(artist) {
     artist = artist.split('/');
   }
   return artist;
-}
-
-async function getLocalAlbum({ state, commit }, filePath) {
-  const metadata = await mm.parseFile(filePath);
-  const { common } = metadata;
-
-  let album = state.localMusic?.albums.find(a => a.name === common.album);
-  if (album) {
-    return album.id;
-  } else {
-    let arForSearch = common.albumartist || common.artist;
-    arForSearch = splitArtist(arForSearch);
-    arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
-    album = {
-      id: state.localMusic?.albumsIdCounter,
-      isLocal: true,
-      arForSearch: arForSearch,
-      songForSearch: common.title,
-      matched: false,
-      name: common.album,
-      onlineAlbum: null,
-      picUrl:
-        'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
-    };
-    state.localMusic.albumsIdCounter++;
-    commit('addLocalXXX', { name: 'albums', data: album });
-    return album.id;
-  }
-}
-
-async function getArtists({ state, commit }, filePath) {
-  const artistIDs = [];
-
-  const metadata = await mm.parseFile(filePath);
-  const { common } = metadata;
-  let artists = common.artists[0];
-  artists = splitArtist(artists);
-  if (typeof artists === 'string') {
-    artists = [artists];
-  }
-
-  for (const artist of artists) {
-    const foundArtist = state.localMusic?.artists.find(a => a.name === artist);
-    if (foundArtist) {
-      if (!foundArtist.matched) {
-        foundArtist.picUrl =
-          'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg';
-      }
-      artistIDs.push(foundArtist.id);
-    } else {
-      let arForSearch = common.albumartist || common.artist;
-      arForSearch = splitArtist(arForSearch);
-      arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
-      const ar = {
-        id: state.localMusic?.artistsIdCounter,
-        name: artist,
-        matched: false,
-        arForSearch: arForSearch,
-        songForSearch: common.title,
-        isLocal: true,
-        onlineArtist: null,
-        picUrl:
-          'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
-      };
-      commit('addLocalXXX', { name: 'artists', data: ar });
-      artistIDs.push(ar.id);
-      state.localMusic.artistsIdCounter++;
-    }
-  }
-  return artistIDs;
-}
-
-async function getTrack({ state, commit }, filePath) {
-  const stats = fs.statSync(filePath);
-  const birthDate = new Date(stats.birthtime).getTime();
-  const metadata = await mm.parseFile(filePath);
-  const { common } = metadata;
-
-  let foundSong = state.localMusic?.tracks.find(
-    obj => obj.filePath === filePath
-  );
-  if (foundSong) {
-    if (!foundSong.lyricDelay) {
-      foundSong.lyricDelay = 0;
-    }
-    if (!foundSong.hasUpdateTime) {
-      foundSong.createTime = birthDate;
-      foundSong.hasUpdateTime = true;
-    }
-    return foundSong.id;
-  } else {
-    let arForSearch = common.albumartist || common.artist;
-    arForSearch = splitArtist(arForSearch);
-    arForSearch = Array.isArray(arForSearch) ? arForSearch[0] : arForSearch;
-    foundSong = {
-      id: state.localMusic?.trackIdCounter,
-      createTime: birthDate,
-      hasUpdateTime: false,
-      name: common.title,
-      dt: metadata.format.duration * 1000,
-      isLocal: true,
-      lyricDelay: 0,
-      arForSearch: arForSearch,
-      matched: false,
-      filePath: filePath,
-      onlineTrack: null,
-      picUrl:
-        'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
-    };
-    commit('addLocalXXX', { name: 'tracks', data: foundSong });
-    state.localMusic.trackIdCounter++;
-    return foundSong.id;
-  }
 }
 
 function delay(time) {
@@ -173,65 +62,135 @@ export default {
       }, 3200),
     });
   },
-  clearDeletedMusic({ state }) {
-    const songs = state.localMusic?.songs;
+
+  localMusicMigration({ state, commit, dispatch }) {
+    const localMusic = state.localMusic;
+    if (localMusic.version === 'v1') return;
+    dispatch('showToast', '正在进行本地音乐迁移...');
+    importFromJson(cloneDeep(localMusic)).then(({ playlists, tracks }) => {
+      const albumArray = tracks.map(tr => tr.al);
+      const albums = [...new Map(albumArray.map(a => [a.id, a])).values()];
+      const artistArray = tracks.map(tr => tr.ar).flat(Infinity);
+      const artists = [...new Map(artistArray.map(a => [a.id, a])).values()];
+      const data = {
+        version: 'v1',
+        trackIdCounter: tracks.length + 1,
+        albumsIdCounter: albums.length + 1,
+        artistsIdCounter: artists.length + 1,
+        playlistIdCounter: playlists.length + 1,
+        playlists: playlists,
+        tracks: tracks,
+        sortBy: localMusic.sortBy,
+      };
+      commit('updateLocalMusic', data);
+      dispatch('showToast', '本地音乐迁移完成');
+    });
+  },
+
+  clearDeletedMusic({ state, dispatch }) {
     const tracks = state.localMusic?.tracks;
-    if (songs.length === 0) return;
-    for (let i = songs.length - 1; i >= 0; i--) {
-      const song = songs[i];
-      const track = state.localMusic?.tracks.find(t => t.id === song.trackID);
+    if (tracks.length === 0) return;
+    for (let i = tracks.length - 1; i >= 0; i--) {
+      const track = tracks[i];
       try {
         fs.accessSync(track.filePath, fs.constants.F_OK);
       } catch (err) {
         console.log('File not exists:', track.filePath);
-        songs.splice(i, 1);
-        const trackIdx = tracks.findIndex(t => t.id === track.id);
-        if (trackIdx !== -1) {
-          tracks.splice(trackIdx, 1);
-        }
+        dispatch('removeLocalTrack', { id: track.id });
+        tracks.splice(i, 1);
       }
     }
   },
+
   async loadLocalMusic({ state, commit }) {
     const musicFileExtensions = /\.(mp3|flac|alac|m4a|aac|wav)$/i;
     const folderPath = state.settings.localMusicFolderPath;
     if (!folderPath) return;
     if (!fs.existsSync(folderPath)) return;
 
+    const trackArray = [];
+    const albumArray = [];
+    const artistsArray = [];
+
+    const getArtists = common => {
+      let artists = splitArtist(common.albumartist || common.artist);
+      artists = typeof artists === 'string' ? [artists] : artists;
+
+      const result = [];
+      for (const artist of artists) {
+        const foundAr = artistsArray.find(ar => ar.name === artist);
+        let artistObj;
+        if (foundAr) {
+          artistObj = foundAr;
+        } else {
+          artistObj = {
+            id: state.localMusic.artistsIdCounter++,
+            name: artist,
+            picUrl:
+              'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
+          };
+          artistsArray.push(artistObj);
+        }
+        result.push(artistObj);
+      }
+      return result;
+    };
+
+    const getAlbums = common => {
+      const name = common.album;
+      const foundAlbum = albumArray.find(al => al.name === name);
+      let albumObj;
+      if (!foundAlbum) {
+        albumObj = {
+          id: state.localMusic.albumsIdCounter++,
+          name: name,
+          picUrl:
+            'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+        };
+        albumArray.push(albumObj);
+      } else {
+        albumObj = foundAlbum;
+      }
+      return albumObj;
+    };
+
     const walk = async folder => {
       const files = fs.readdirSync(folder);
       for (const file of files) {
         const filePath = path.join(folder, file);
         const stats = fs.statSync(filePath);
+
         if (stats.isFile() && musicFileExtensions.test(filePath)) {
-          const foundTrack = state.localMusic?.tracks.find(
+          const foundTrack = state.localMusic.tracks?.find(
             track => track.filePath === filePath
           );
-          const metadata = await mm.parseFile(filePath);
-          const { common } = metadata;
-          if (!common.title) return;
-
-          const [trackID, albumID, artistIDs] = await Promise.all([
-            getTrack({ state, commit }, filePath),
-            getLocalAlbum({ state, commit }, filePath),
-            getArtists({ state, commit }, filePath),
-          ]);
           if (!foundTrack) {
-            const song = {
-              id: trackID,
+            const metadata = await mm.parseFile(filePath);
+            const { common, format } = metadata;
+            const birthDate = new Date(stats.birthtime).getTime();
+            const track = {
+              id: state.localMusic.trackIdCounter++,
               show: true,
               delete: false,
-              trackID: trackID,
-              albumID: albumID,
-              artistIDs: artistIDs,
+              isLocal: true,
+              matched: false,
+              lyricDelay: 0,
+              md5: createMD5(filePath),
+              createTime: birthDate,
+              name: common.title,
+              dt: format.duration * 1000,
+              filePath: filePath,
+              alia: [],
+              al: getAlbums(common),
+              ar: getArtists(common),
+              picUrl:
+                'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
             };
-            commit('addLocalXXX', { name: 'songs', data: song });
+            trackArray.push(track);
           } else {
-            const song = state.localMusic?.songs.find(
-              s => s.trackID === foundTrack.id
-            );
-            song.show = true;
-            song.delete = song.delete === undefined ? false : song.delete;
+            foundTrack.show = true;
+            foundTrack.delete =
+              foundTrack.delete === undefined ? false : foundTrack.delete;
           }
         } else if (stats.isDirectory()) {
           await walk(filePath);
@@ -239,130 +198,66 @@ export default {
       }
     };
     await walk(folderPath);
+    commit('addLocalMusicXXX', {
+      name: 'tracks',
+      data: trackArray,
+    });
   },
 
-  async rematchSong({ state, commit }, pid, use_arts = false) {
-    const song = state.localMusic?.songs.find(s => s.id === pid);
-    const track = state.localMusic?.tracks.find(t => t.id === song.trackID);
-    const album = state.localMusic?.albums.find(a => a.id === song.albumID);
-    getArtists({ state, commit }, track.filePath).then(artistIDs => {
-      song.artistIDs = artistIDs;
-    });
-
-    mm.parseFile(track.filePath).then(metadata => {
-      const { common } = metadata;
-      let arForSearch = common.albumartist || common.artist;
-      arForSearch = splitArtist(arForSearch);
-      track.arForSearch = Array.isArray(arForSearch)
-        ? arForSearch[0]
-        : arForSearch;
-    });
-
-    const searchName = use_arts
-      ? `${track.name} ${track.arForSearch}`
-      : track.name;
-    const keyword = {
-      keywords: searchName,
-      type: 1,
-      limit: 50,
-    };
-
-    const matchResult = await search(keyword).then(async result => {
-      if (result.code === 200) {
-        if (result.result.songs?.length > 0) {
-          const matchTrack = result.result.songs.filter(item => {
-            return (
-              item.name === track.name &&
-              item.artists.some(i => i.name === track.arForSearch) &&
-              Math.abs(item.duration - track.dt) <= 5 * 1000
-            );
-          });
-          if (matchTrack.length > 0) {
-            const trackIndex = randomNum(0, matchTrack.length - 1);
-            track.onlineTrack = matchTrack[trackIndex];
-            track.matched = true;
-            const onlineTrackAlbum = await getAlbum(track.onlineTrack.album.id);
-            album.onlineAlbum = onlineTrackAlbum.album;
-            album.matched = true;
-          } else {
-            const matchTrack = result.result.songs.filter(item => {
-              return (
-                item.name === track.name &&
-                Math.abs(item.duration - track.dt) <= 5 * 1000
-              );
-            });
-            track.onlineTrack =
-              matchTrack.length !== 0
-                ? matchTrack[randomNum(0, matchTrack.length - 1)]
-                : result.result.songs[0];
-            track.matched = true;
-            const onlineTrackAlbum = await getAlbum(track.onlineTrack.album.id);
-            album.onlineAlbum = onlineTrackAlbum.album;
-            album.matched = true;
-          }
-          return 'ok';
-        }
-      }
-      return 'err';
-    });
-    return matchResult;
-  },
   async updateTracks({ state }) {
-    const songs = state.localMusic?.songs;
     const tracks = state.localMusic?.tracks;
-    const albums = state.localMusic?.albums;
     let rawDelay = 20 * 1000;
     let code = 200;
-    for (let i = 0; i < tracks.length; i++) {
+    for (const track of tracks) {
       if (!state.updateFlag) break;
-      const song = songs[i];
-      const track = tracks.find(t => t.id === song.trackID);
-      const album = albums.find(a => a.id === song.albumID);
-      if (track.matched && album.matched) {
+      if (track.matched) {
         code = 0;
       } else {
+        const search_key = track.ar.map(ar => ar.name).join(' ');
         const keyword = {
-          keywords: `${track.name} ${track.arForSearch}`,
+          keywords: `${track.name} ${search_key}`,
           type: 1,
           limit: 50,
         };
         code = await search(keyword).then(async result => {
           if (result.code === 200) {
             if (result.result.songs?.length > 0) {
-              const matchTrack = result.result.songs.filter(item => {
+              let matchTracks = result.result.songs.filter(item => {
                 return (
                   item.name === track.name &&
-                  item.artists.some(i => i.name === track.arForSearch) &&
-                  Math.abs(item.duration - track.dt) <= 5 * 1000
+                  Math.abs(item.duration - track.dt) <= 5 * 1000 &&
+                  track.ar.every(artist =>
+                    item.artists.some(sa => sa.name === artist.name)
+                  )
                 );
               });
-              if (matchTrack.length > 0) {
-                const trackIndex = randomNum(0, matchTrack.length - 1);
-                track.onlineTrack = matchTrack[trackIndex];
-                track.matched = true;
-                const onlineTrackAlbum = await getAlbum(
-                  track.onlineTrack.album.id
-                );
-                album.onlineAlbum = onlineTrackAlbum.album;
-                album.matched = true;
-              } else {
-                const matchTrack = result.result.songs.filter(item => {
+              if (matchTracks.length === 0) {
+                matchTracks = result.result.songs.filter(item => {
                   return (
                     item.name === track.name &&
                     Math.abs(item.duration - track.dt) <= 5 * 1000
                   );
                 });
-                track.onlineTrack =
-                  matchTrack.length !== 0
-                    ? matchTrack[randomNum(0, matchTrack.length - 1)]
-                    : result.result.songs[0];
-                track.matched = true;
-                const onlineTrackAlbum = await getAlbum(
-                  track.onlineTrack.album.id
-                );
-                album.onlineAlbum = onlineTrackAlbum.album;
-                album.matched = true;
               }
+              if (matchTracks.length === 0) return result.code;
+              const trackIndex = randomNum(0, matchTracks.length - 1);
+              const matchtrack = matchTracks[trackIndex];
+              track.id = matchtrack.id;
+              track.alia = matchtrack.alias;
+              track.al.id = matchtrack.album.id;
+              const onlineAlbum = await getAlbum(matchtrack.album.id);
+              track.al.picUrl = onlineAlbum.album.picUrl;
+              track.picUrl = onlineAlbum.album.picUrl;
+              for (const artist of matchtrack.artists) {
+                getArtist(artist.id).then(result => {
+                  const ar = track.ar.find(ar => ar.name === artist.name);
+                  if (ar) {
+                    ar.id = result.artist.id;
+                    ar.picUrl = result.artist.picUrl;
+                  }
+                });
+              }
+              track.matched = true;
               return result.code;
             }
             return result.code;
@@ -374,6 +269,33 @@ export default {
       await delay(delayTime);
     }
   },
+
+  removeLocalTrack({ state, dispatch }, params) {
+    const track = state.localMusic.tracks.find(t => t.id === params.id);
+    track.delete = true;
+
+    const playlists = state.localMusic.playlists.filter(p =>
+      p.trackIds.includes(track.id)
+    );
+    for (const playlist of playlists) {
+      dispatch('rmTrackFromLocalPlaylist', {
+        pid: playlist.id,
+        tracks: track.id,
+      });
+    }
+  },
+
+  async accurateMatchTrack({ state }, params) {
+    const track = state.localMusic.tracks.find(t => t.id === params.id);
+    getTrackDetail(params.title).then(async data => {
+      track.id = params.title;
+      track.alia = data.songs[0].alia;
+      track.al = data.songs[0].al;
+      track.picUrl = data.songs[0].al.picUrl;
+      track.matched = true;
+    });
+  },
+
   createLocalPlayList({ state, commit }, params) {
     const playlist = {
       id: state.localMusic?.playlistIdCounter,
@@ -385,16 +307,15 @@ export default {
       trackCount: 0,
       trackIds: [],
     };
-    commit('addLocalXXX', { name: 'playlists', data: playlist });
+    commit('addLocalMusicXXX', { name: 'playlists', data: [playlist] });
     state.localMusic.playlistIdCounter++;
     return playlist;
   },
-  addTrackToLocalPlaylist({ state }, params) {
+  async addTrackToLocalPlaylist({ state }, params) {
     const playlist = state.localMusic?.playlists.find(p => p.id === params.pid);
     if (playlist) {
       for (const trackid of params.tracks) {
-        const song = state.localMusic?.songs.find(s => s.id === trackid);
-        const track = localTrackParser(song.id);
+        const track = state.localMusic?.tracks.find(t => t.id === trackid);
         if (playlist.trackIds.includes(track.id)) continue;
         playlist.trackIds.push(track.id);
         playlist.coverImgUrl = track.picUrl;
@@ -405,15 +326,15 @@ export default {
     }
     return { code: 404, message: '歌单不存在' };
   },
-  rmTrackFromLocalPlaylist({ state }, params) {
-    const playlist = state.localMusic?.playlists.find(p => p.id === params.pid);
+  async rmTrackFromLocalPlaylist({ state }, params) {
+    const playlist = state.localMusic.playlists.find(p => p.id === params.pid);
     if (playlist) {
       const idx = playlist.trackIds.indexOf(params.tracks);
       if (idx !== -1) {
         playlist.trackIds.splice(idx, 1);
         playlist.trackCount = playlist.trackIds.length;
-        const showSongId = playlist.trackIds[playlist.trackIds.length - 1];
-        const showTrack = localTrackParser(showSongId);
+        const showId = playlist.trackIds[playlist.trackIds.length - 1];
+        const showTrack = state.localMusic.tracks.find(t => t.id === showId);
         playlist.coverImgUrl =
           showTrack?.picUrl ||
           'https://p1.music.126.net/jWE3OEZUlwdz0ARvyQ9wWw==/109951165474121408.jpg';
@@ -432,42 +353,6 @@ export default {
       return { code: 200 };
     }
     return { code: 404, message: '歌单不存在' };
-  },
-  fetchLatestSongs({ state, commit }) {
-    const trackIDs = state.localMusic?.tracks
-      .filter(t => t.matched)
-      .map(t => t.onlineTrack.id);
-    commit('updateLocalXXX', { name: 'latestAddTracks', data: trackIDs });
-  },
-  async updateArtists({ state }) {
-    let code = 200;
-    let rawDelay = 20 * 1000;
-    const artists = state.localMusic?.artists;
-    for (const artist of artists) {
-      if (!state.updateFlag) break;
-      if (artist.matched) {
-        code = 0;
-      } else {
-        const keyword = {
-          keywords: artist.name,
-          type: 100,
-          limit: 5,
-        };
-        code = await search(keyword).then(result => {
-          if (result.code === 200) {
-            if (result.result.artists && result.result.artists.length > 0) {
-              artist.onlineArtist =
-                result.result.artists.find(a => a.name === artist.name) ||
-                result.result.artists[0];
-              artist.matched = true;
-            }
-          }
-          return result.code;
-        });
-      }
-      const delayTime = code === 0 ? 0 : rawDelay;
-      await delay(delayTime);
-    }
   },
   likeATrack({ state, commit, dispatch }, id) {
     if (!isAccountLoggedIn()) {

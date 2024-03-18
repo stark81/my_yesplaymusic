@@ -53,16 +53,13 @@ let localStorage = {
     loginMode: null,
   },
   localMusic: {
+    version: 'v1',
     trackIdCounter: 1,
     albumsIdCounter: 1,
     artistsIdCounter: 1,
     playlistIdCounter: 1,
-    songs: [],
-    latestAddTracks: [], // 只有前12首
     playlists: [],
     tracks: [],
-    albums: [],
-    artists: [],
     sortBy: 'default',
   },
 };

@@ -253,7 +253,7 @@
         </div>
         <div class="right-side">
           <Lyrics v-show="show === 'lyric'" ref="lyricRef" />
-          <Comment v-if="show === 'comment'" ref="commentRef" />
+          <Comment v-show="show === 'comment'" ref="commentRef" />
           <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
         </div>
         <div class="close-button" @click="closePlayPage">

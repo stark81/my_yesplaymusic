@@ -64,6 +64,16 @@ module.exports = {
       .end();
 
     config.module
+      .rule('worker')
+      .test(/\.worker\.js$/)
+      .use('worker-loader')
+      .loader('worker-loader')
+      .options({
+        inline: 'no-fallback',
+      })
+      .end();
+
+    config.module
       .rule('webpack4_es_fallback')
       .test(/\.js$/)
       .include.add(/node_modules/)

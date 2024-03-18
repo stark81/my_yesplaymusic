@@ -32,7 +32,7 @@ import Toast from './components/Toast.vue';
 import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import MusicPlay from './views/musicPlay.vue';
-import { mapState, mapActions } from 'vuex';
+import { mapState } from 'vuex';
 import { isMac } from './utils/platform';
 
 export default {
@@ -53,7 +53,16 @@ export default {
     };
   },
   computed: {
-    ...mapState(['showLyrics', 'player', 'enableScrolling', 'settings']),
+    ...mapState([
+      'showLyrics',
+      'player',
+      'enableScrolling',
+      'settings',
+      'localMusic',
+    ]),
+    localMusicPath() {
+      return this.settings.localMusicFolderPath;
+    },
     isAccountLoggedIn() {
       return isAccountLoggedIn();
     },
@@ -73,6 +82,14 @@ export default {
     },
     showNavbar() {
       return this.$route.name !== 'lastfmCallback';
+    },
+  },
+  watch: {
+    localMusicPath() {
+      this.$store.dispatch('showToast', '正在扫描本地音乐...');
+      this.fetchLocalData().then(() => {
+        this.$store.dispatch('showToast', `扫描完成`);
+      });
     },
   },
   created() {
@@ -98,20 +115,11 @@ export default {
     this.fetchLocalData();
   },
   methods: {
-    ...mapActions([
-      'loadLocalMusic',
-      'clearDeletedMusic',
-      'updateArtists',
-      'updateTracks',
-      'fetchLatestSongs',
-    ]),
     async fetchLocalData() {
-      this.clearDeletedMusic();
-      this.loadLocalMusic();
-      await this.updateTracks();
-      this.$store.dispatch('fetchLatestSongs');
-      setTimeout(() => {}, 10 * 1000);
-      await this.updateArtists();
+      await this.$store.dispatch('localMusicMigration');
+      this.$store.dispatch('clearDeletedMusic');
+      await this.$store.dispatch('loadLocalMusic');
+      this.$store.dispatch('updateTracks');
     },
     handleKeydown(e) {
       if (e.code === 'Space') {

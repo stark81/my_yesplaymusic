@@ -17,12 +17,6 @@
         $t('contextMenu.addToQueue')
       }}</div>
       <div
-        v-if="extraContextMenuItem.includes('reMatch')"
-        class="item"
-        @click="reMatchTrack"
-        >{{ $t('contextMenu.reMatchTrack') }}</div
-      >
-      <div
         v-if="extraContextMenuItem.includes('accurateMatch')"
         class="item"
         @click="accurateMatchTrack"
@@ -232,9 +226,7 @@ export default {
       'nextTrack',
       'showToast',
       'likeATrack',
-      'fetchLatestSongs',
       'rmTrackFromLocalPlaylist',
-      'rematchSong',
     ]),
     openMenu(e, track, index = -1) {
       this.rightClickedTrack = track;
@@ -292,15 +284,6 @@ export default {
     like() {
       this.likeATrack(this.rightClickedTrack.id);
     },
-    async reMatchTrack() {
-      const song = this.$store.state.localMusic.songs.find(
-        s => s.id === this.rightClickedTrack.id
-      );
-      const code = await this.rematchSong(song.id);
-      if (code === 'err') {
-        await this.rematchSong(song.id, false);
-      }
-    },
     accurateMatchTrack() {
       this.updateModal({
         modalName: 'accurateMatchModal',
@@ -341,20 +324,9 @@ export default {
       shell.showItemInFolder(filePath);
     },
     removeLocalTrack() {
-      const song = this.$store.state.localMusic.songs.find(
-        s => s.id === this.rightClickedTrack.id
-      );
-      song.delete = true;
-      const playlists = this.$store.state.localMusic.playlists.filter(p =>
-        p.trackIds.includes(song.id)
-      );
-      playlists.forEach(playlist => {
-        this.rmTrackFromLocalPlaylist({
-          pid: playlist.id,
-          tracks: song.id,
-        });
+      this.$store.dispatch('removeLocalTrack', {
+        id: this.rightClickedTrack.id,
       });
-      this.fetchLatestSongs();
     },
     addTrack2LocalPlaylist(trackIDs) {
       this.updateModal({

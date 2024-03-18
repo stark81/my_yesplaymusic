@@ -167,6 +167,11 @@ class TrayLiric {
 class TouchBarLyric {
   constructor() {
     this._lyric = new Lyric({ width: 252, fontSize: 12 });
+    this._lyric.allLyric = {
+      text: player.currentTrack.name || '听你想听的音乐',
+      width: 0,
+      time: 0, // 单句歌词的播放时间
+    };
     this._touchBar = new Canvas({
       width: this._lyric.canvas.width,
       height: this._lyric.canvas.height,

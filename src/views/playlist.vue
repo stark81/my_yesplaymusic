@@ -294,7 +294,6 @@ import ContextMenu from '@/components/ContextMenu.vue';
 import TrackList from '@/components/TrackList.vue';
 import Cover from '@/components/Cover.vue';
 import Modal from '@/components/Modal.vue';
-import { localTrackParser } from '@/utils/localSongParser';
 import { createPlaylist, addOrRemoveTrackFromPlaylist } from '@/api/playlist';
 
 const specialPlaylist = {
@@ -449,21 +448,24 @@ export default {
     filteredTracks() {
       return this.tracks.filter(
         track =>
-          (track.name &&
+          (track &&
+            track.name &&
             track.name
               .toLowerCase()
               .includes(this.searchKeyWords.toLowerCase())) ||
-          (track.al.name &&
+          (track &&
+            track.al.name &&
             track.al.name
               .toLowerCase()
               .includes(this.searchKeyWords.toLowerCase())) ||
-          track.ar.find(
-            artist =>
-              artist.name &&
-              artist.name
-                .toLowerCase()
-                .includes(this.searchKeyWords.toLowerCase())
-          )
+          (track &&
+            track.ar.find(
+              artist =>
+                artist.name &&
+                artist.name
+                  .toLowerCase()
+                  .includes(this.searchKeyWords.toLowerCase())
+            ))
       );
     },
   },
@@ -571,18 +573,14 @@ export default {
           }
         });
     },
-    loadLocalData(id) {
-      const tracks = [];
+    async loadLocalData(id) {
       const localMusic = this.$store.state.localMusic;
       const playlist = localMusic.playlists.find(p => p.id === parseInt(id));
-      const songIDs = playlist.trackIds;
-      for (const songID of songIDs) {
-        const song = localMusic.songs.find(s => s.id === songID);
-        if (!song?.show || song?.delete) continue;
-        const track = localTrackParser(songID);
-        tracks.push(track);
-      }
-      this.tracks = tracks.reverse();
+      const trackIDs = playlist.trackIds;
+      const tracks = trackIDs.map(trackID => {
+        return localMusic.tracks.find(track => track.id === trackID);
+      });
+      this.tracks = tracks.slice().reverse();
       playlist.trackCount = this.tracks.length;
       this.playlist = playlist;
       NProgress.done();
