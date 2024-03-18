@@ -63,9 +63,12 @@ export default {
     });
   },
 
+  // 本地音乐从最初版本迁移到v1版本
   localMusicMigration({ state, commit, dispatch }) {
     const localMusic = state.localMusic;
     if (localMusic.version === 'v1') return;
+    const tracks = localMusic.tracks;
+    if (!tracks.length) return;
     dispatch('showToast', '正在进行本地音乐迁移...');
     importFromJson(cloneDeep(localMusic)).then(({ playlists, tracks }) => {
       const albumArray = tracks.map(tr => tr.al);
@@ -144,6 +147,7 @@ export default {
         albumObj = {
           id: state.localMusic.albumsIdCounter++,
           name: name,
+          artist: getArtists(common)[0] ?? {},
           picUrl:
             'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
         };
@@ -247,6 +251,7 @@ export default {
               track.al.id = matchtrack.album.id;
               const onlineAlbum = await getAlbum(matchtrack.album.id);
               track.al.picUrl = onlineAlbum.album.picUrl;
+              track.al.artist = onlineAlbum.album.artist ?? {};
               track.picUrl = onlineAlbum.album.picUrl;
               for (const artist of matchtrack.artists) {
                 getArtist(artist.id).then(result => {

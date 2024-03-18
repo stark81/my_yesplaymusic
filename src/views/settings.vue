@@ -1488,7 +1488,7 @@ export default {
         key: 'localMusicFolderPath',
         value: null,
       });
-      this.$store.commit('updateLocalMusic', {
+      const musicObj = {
         version: 'v1',
         trackIdCounter: 1,
         albumsIdCounter: 1,
@@ -1497,7 +1497,9 @@ export default {
         playlists: [],
         tracks: [],
         sortBy: 'default',
-      });
+      };
+      this.$store.commit('updateLocalMusic', musicObj);
+      localStorage.setItem('localMusic', musicObj);
       this.showToast('已清除本地音乐信息');
     },
     importLocalMusic() {
@@ -1535,6 +1537,7 @@ export default {
               sortBy: jsonData.sortBy,
             };
             this.$store.commit('updateLocalMusic', data);
+            this.showToast('导入成功');
           });
         }
       });

@@ -312,15 +312,11 @@ export default {
     },
     filterLocalAlbums() {
       const albumArray = this.allTracks.map(tr => tr.al);
-      return [...new Map(albumArray.map(al => [al.name, al])).values()]
-        .slice()
-        .reverse();
+      return [...new Map(albumArray.map(al => [al.name, al])).values()];
     },
     filterLocalArtists() {
       const artistsArray = this.allTracks?.map(tr => tr.ar).flat(Infinity);
-      return [...new Map(artistsArray.map(ar => [ar.name, ar])).values()]
-        .slice()
-        .reverse();
+      return [...new Map(artistsArray.map(ar => [ar.name, ar])).values()];
     },
     filterPlaylists() {
       return this.localMusic?.playlists?.slice().reverse();
@@ -406,8 +402,8 @@ export default {
       this.getRandomLyric();
 
       let tracks = this.allTracks.slice();
-      const albums = this.filterLocalAlbums.slice();
-      const artists = this.filterLocalArtists.slice();
+      const albums = this.filterLocalAlbums.slice().reverse();
+      const artists = this.filterLocalArtists.slice().reverse();
 
       // 随机显示的12首歌
       // const idx = tracks.length > 12 ? randomNum(0, tracks.length - 12) : 0;

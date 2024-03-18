@@ -42,6 +42,7 @@ const updatePlayer = () => {
   let parsedData = JSON.parse(localStorage.getItem('player'));
   let appVersion = localStorage.getItem('appVersion');
   if (appVersion === `"0.2.5"`) parsedData = {}; // 0.2.6版本重构了player
+  if (appVersion === `"0.4.15"`) parsedData = {}; // 0.4.16版本重构了本地音乐
   const data = {
     ...parsedData,
   };
