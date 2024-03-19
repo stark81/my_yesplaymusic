@@ -26,7 +26,7 @@ export function createDockMenu(win) {
       },
     ];
     let dockMenu = Menu.buildFromTemplate(template);
-    app.dock.setMenu(dockMenu);
+    if (dockMenu && app.dock) app.dock.setMenu(dockMenu);
   };
   updateDockMenu();
 

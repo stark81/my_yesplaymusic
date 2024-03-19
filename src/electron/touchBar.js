@@ -90,5 +90,5 @@ export function createTouchBar(window) {
   };
 
   var touchBar = new TouchBar(options);
-  window.setTouchBar(touchBar);
+  if (touchBar) window.setTouchBar(touchBar);
 }

@@ -253,7 +253,13 @@
         </div>
         <div class="right-side">
           <Lyrics v-show="show === 'lyric'" ref="lyricRef" />
-          <Comment v-show="show === 'comment'" ref="commentRef" />
+          <component
+            :is="
+              show === 'comment' || show === 'floor_comment' ? 'comment' : null
+            "
+            ref="commentRef"
+          />
+          <!-- <Comment v-show="show === 'comment'" ref="commentRef" /> -->
           <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
         </div>
         <div class="close-button" @click="closePlayPage">
