@@ -32,6 +32,7 @@ import express from 'express';
 import expressProxy from 'express-http-proxy';
 import Store from 'electron-store';
 import { createMpris } from '@/electron/mpris';
+import { release } from 'os'
 
 const clc = require('cli-color');
 const log = text => {
@@ -103,6 +104,8 @@ class Background {
     log('initializing');
 
     // Make sure the app is singleton.
+    if (release().startsWith('6.1')) app.disableHardwareAcceleration()
+    if (process.platform === 'win32') app.setAppUserModelId(app.getName())
     if (!app.requestSingleInstanceLock()) return app.quit();
 
     // start netease music api
@@ -275,9 +278,9 @@ class Background {
       width: this.store.get('osdlyrics.width') || 840,
       height: this.store.get('osdlyrics.height') || 110,
       transparent: true,
-      backgroundColor: '#00000000',
+      // backgroundColor: '#00000000',
       frame: false,
-      show: false,
+      // show: false,
       skipTaskbar: true,
       alwaysOnTop: true,
       hiddenInMissionControl: true,
@@ -291,6 +294,7 @@ class Background {
       },
     });
 
+    this.osdlyrics.setVisibleOnAllWorkspaces(true);
     if (process.env.WEBPACK_DEV_SERVER_URL) {
       // Load the url of the dev server if in development mode
       this.osdlyrics.loadURL(
@@ -392,13 +396,13 @@ class Background {
       this.osdlyrics = null;
     });
 
-    this.osdlyrics.on('resized', () => {
+    this.osdlyrics.on('resize', () => {
       let { height, width } = this.osdlyrics.getBounds();
       this.store.set('osdlyrics.width', width);
       this.store.set('osdlyrics.height', height);
     });
 
-    this.osdlyrics.on('moved', () => {
+    this.osdlyrics.on('move', () => {
       var pos = this.osdlyrics.getPosition();
       this.store.set('osdlyrics.x_pos', pos[0]);
       this.store.set('osdlyrics.y_pos', pos[1]);
@@ -437,11 +441,11 @@ class Background {
       }
     });
 
-    this.window.on('resized', () => {
+    this.window.on('resize', () => {
       this.store.set('window', this.window.getBounds());
     });
 
-    this.window.on('moved', () => {
+    this.window.on('move', () => {
       var pos = this.window.getPosition();
       this.store.set('window.x', pos[0]);
       this.store.set('window.y', pos[1]);
