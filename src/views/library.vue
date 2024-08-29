@@ -33,9 +33,11 @@
       </div>
       <div class="songs">
         <TrackList
+          v-if="liked.songsWithDetails.length > 0"
           :id="liked.playlists.length > 0 ? liked.playlists[0].id : 0"
           :tracks="liked.songsWithDetails"
           :column-number="3"
+          :show-position="false"
           type="tracklist"
           dbclick-track-func="playPlaylistByID"
         />
@@ -145,6 +147,7 @@
 
       <div v-show="currentTab === 'cloudDisk'">
         <TrackList
+          v-if="liked.cloudDisk.length > 0"
           :id="-8"
           :tracks="liked.cloudDisk"
           :column-number="3"
@@ -174,6 +177,7 @@
           {{ $t('library.playHistory.all') }}
         </button>
         <TrackList
+          v-if="playHistoryList.length > 0"
           :tracks="playHistoryList"
           :column-number="1"
           type="tracklist"
@@ -346,6 +350,9 @@ export default {
       this.$store.dispatch('fetchLikedMVs');
       this.$store.dispatch('fetchCloudDisk');
       this.$store.dispatch('fetchPlayHistory');
+    },
+    scrollTo(top) {
+      this.$parent.$refs.main.scrollTo({ top, behavior: 'smooth' });
     },
     playLikedSongs() {
       this.$store.state.player.playPlaylistByID(

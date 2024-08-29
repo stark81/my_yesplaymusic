@@ -63,6 +63,11 @@ export function ipcRenderer(vueInstance) {
   });
 
   ipcRenderer.on('like', () => {
+    if (
+      player.currentTrack.isLocal !== false &&
+      player.currentTrack.matched !== true
+    )
+      return;
     store.dispatch('likeATrack', player.currentTrack.id);
   });
 

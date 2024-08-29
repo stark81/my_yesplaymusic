@@ -27,6 +27,7 @@ let localStorage = {
     showStatusBarLyric: true,
     showLyricsMenu: true,
     localMusicFirst: true,
+    localMusicMatchStatus: false,
     localMusicFolderPath: null,
     localMusicShowDefault: 'localSongs',
     showTimeOrID: 'time',

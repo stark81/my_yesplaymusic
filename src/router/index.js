@@ -69,10 +69,6 @@ const routes = [
     path: '/next',
     name: 'next',
     component: () => import('@/views/next.vue'),
-    meta: {
-      keepAlive: true,
-      savePosition: true,
-    },
   },
   {
     path: '/search/:keywords?',
@@ -123,10 +119,6 @@ const routes = [
     path: '/local-music',
     name: 'localMusic',
     component: () => import('@/views/localMusic.vue'),
-    meta: {
-      keepAlive: true,
-      savePosition: true,
-    },
   },
   {
     path: '/settings',

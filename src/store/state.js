@@ -18,6 +18,7 @@ export default {
   showLyrics: false,
   updateFlag: true,
   enableScrolling: true,
+  enabledVirtualScroll: false,
   title: 'YesPlayMusic',
   liked: {
     songs: [],

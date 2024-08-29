@@ -114,6 +114,11 @@ class TrayLiric {
           }
           break;
         case 3:
+          if (
+            player.currentTrack.isLocal !== false &&
+            player.currentTrack.matched !== true
+          )
+            return;
           store.dispatch('likeATrack', player.currentTrack.id);
           break;
         case 4:

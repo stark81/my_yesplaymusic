@@ -104,8 +104,11 @@
     <div id="popularTracks" class="popular-tracks">
       <div class="section-title">{{ $t('artist.popularSongs') }}</div>
       <TrackList
+        v-if="popularTracks.length > 0"
         :tracks="popularTracks.slice(0, showMorePopTracks ? 24 : 12)"
         :type="'tracklist'"
+        :column-number="4"
+        :show-position="false"
       />
 
       <div id="seeMore" class="show-more">

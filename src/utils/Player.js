@@ -72,6 +72,7 @@ export default class {
     // 播放信息
     this._list = []; // 播放列表
     this._isLocal = false;
+    this._localPic = null;
     this._localID = null;
     this._current = 0; // 当前播放歌曲在播放列表里的index
     this._shuffledList = []; // 被随机打乱的播放列表，随机播放模式下会使用此播放列表
@@ -635,23 +636,34 @@ export default class {
       });
     }
   }
-  _updateMediaSessionMetaData(track) {
+  async _updateMediaSessionMetaData(track) {
     if ('mediaSession' in navigator === false) {
       return;
     }
+    if (this._localPic) {
+      URL.revokeObjectURL(this._localPic);
+      this._localPic = null;
+    }
     let artists = track.ar.map(a => a.name);
+    const useLocal = track.isLocal !== false && track.matched !== true;
+    if (useLocal) {
+      const blob = await fetch(`atom://get-pic/${track.filePath}`).then(res =>
+        res.blob()
+      );
+      this._localPic = URL.createObjectURL(blob);
+    }
     const metadata = {
       title: track.name,
       artist: artists.join(','),
-      album: track.al.name,
+      album: track.al.name ?? track.album.name,
       artwork: [
         {
-          src: track.al.picUrl + '?param=224y224',
+          src: useLocal ? this._localPic : track.al.picUrl + '?param=224y224',
           type: 'image/jpg',
           sizes: '224x224',
         },
         {
-          src: track.al.picUrl + '?param=512y512',
+          src: useLocal ? this._localPic : track.al.picUrl + '?param=512y512',
           type: 'image/jpg',
           sizes: '512x512',
         },
@@ -891,8 +903,7 @@ export default class {
   ) {
     this._isPersonalFM = false;
     if (!this._enabled) this._enabled = true;
-    this._isLocal = playlistSourceType === 'localMusic' ? true : false;
-    playlistSourceType = this._isLocal ? 'artist' : playlistSourceType;
+    this._isLocal = playlistSourceType.includes('local');
     this.list = trackIDs;
     this.current = 0;
     this._playlistSource = {

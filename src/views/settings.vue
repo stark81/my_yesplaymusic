@@ -565,6 +565,26 @@
       </div>
       <div v-if="isElectron" class="item">
         <div class="left">
+          <div class="title">
+            {{ $t('settings.localMusic.matchStatus.title') }}
+          </div>
+          <div class="description">
+            {{ $t('settings.localMusic.matchStatus.desc') }}
+          </div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="local-music-match-status"
+              v-model="localMusicMatchStatus"
+              type="checkbox"
+            />
+            <label for="local-music-match-status" />
+          </div>
+        </div>
+      </div>
+      <div v-if="isElectron" class="item">
+        <div class="left">
           <div class="title">{{
             $t('settings.localMusic.exportLocalMusic')
           }}</div>
@@ -613,7 +633,7 @@
           <button v-else @click="choseDir">选择</button>
         </div>
       </div>
-      <div v-if="isElectron" class="item">
+      <!-- <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title"
             >{{ $t('settings.localMusic.localMusicMatchedStatus') }}:
@@ -624,7 +644,7 @@
           <button v-if="updateFlag" @click="changeUpdateStatus">暂停</button>
           <button v-else @click="changeUpdateStatus">开始</button>
         </div>
-      </div>
+      </div> -->
 
       <h3>其他</h3>
       <div class="item">
@@ -946,7 +966,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'data', 'lastfm', 'updateFlag']),
+    ...mapState(['player', 'settings', 'data', 'lastfm']),
     isElectron() {
       return process.env.IS_ELECTRON;
     },
@@ -1389,6 +1409,17 @@ export default {
         });
       },
     },
+    localMusicMatchStatus: {
+      get() {
+        return this.settings.localMusicMatchStatus;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'localMusicMatchStatus',
+          value: value || false,
+        });
+      },
+    },
     unmEnableFlac: {
       get() {
         return this.settings.unmEnableFlac || false;
@@ -1582,9 +1613,6 @@ export default {
           });
         }
       });
-    },
-    changeUpdateStatus() {
-      this.$store.commit('toggleUpdateStatus');
     },
     getAllOutputDevices() {
       navigator.mediaDevices.enumerateDevices().then(devices => {

@@ -209,11 +209,12 @@ export default {
   },
 
   async updateTracks({ state }) {
+    if (!state.settings.localMusicMatchStatus) return;
     const tracks = state.localMusic?.tracks;
     let rawDelay = 20 * 1000;
     let code = 200;
     for (const track of tracks) {
-      if (!state.updateFlag) break;
+      if (!state.settings.localMusicMatchStatus) break;
       if (track.matched) {
         code = 0;
       } else {
@@ -225,7 +226,7 @@ export default {
         };
         code = await search(keyword).then(async result => {
           if (result.code === 200) {
-            if (result.result.songs?.length > 0) {
+            if (result?.result?.songs?.length > 0) {
               let matchTracks = result.result.songs.filter(item => {
                 return (
                   item.name === track.name &&
@@ -323,7 +324,9 @@ export default {
         const track = state.localMusic?.tracks.find(t => t.id === trackid);
         if (playlist.trackIds.includes(track.id)) continue;
         playlist.trackIds.push(track.id);
-        playlist.coverImgUrl = track.picUrl;
+        playlist.coverImgUrl = track.matched
+          ? track.picUrl
+          : `atom://get-pic/${track.filePath}`;
         playlist.trackCount = playlist.trackIds.length;
         playlist.updateTime = new Date().getTime();
       }
@@ -340,9 +343,9 @@ export default {
         playlist.trackCount = playlist.trackIds.length;
         const showId = playlist.trackIds[playlist.trackIds.length - 1];
         const showTrack = state.localMusic.tracks.find(t => t.id === showId);
-        playlist.coverImgUrl =
-          showTrack?.picUrl ||
-          'https://p1.music.126.net/jWE3OEZUlwdz0ARvyQ9wWw==/109951165474121408.jpg';
+        playlist.coverImgUrl = showTrack?.matched
+          ? showTrack?.picUrl
+          : `atom://get-pic/${showTrack?.filePath}`;
         playlist.updateTime = new Date().getTime();
         return { code: 200 };
       }
@@ -388,6 +391,14 @@ export default {
       .catch(() => {
         dispatch('showToast', '操作失败，专辑下架或版权锁定');
       });
+  },
+  deleteMatchTrack({ state }, trackID) {
+    const track = state.localMusic?.tracks.find(t => t.id === trackID);
+    // console.log('deleteMatchTrack', track);
+    track.picUrl =
+      'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg';
+    track.alia = [];
+    track.matched = false;
   },
   fetchLikedSongs: ({ state, commit }) => {
     if (!isLooseLoggedIn()) return;

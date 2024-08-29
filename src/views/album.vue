@@ -3,7 +3,7 @@
     <div class="playlist-info">
       <Cover
         :id="album.id"
-        :image-url="album.picUrl | resizeImage(1024)"
+        :image-url="album.picUrl | resizeImage(512)"
         :show-play-button="true"
         :always-show-shadow="true"
         :click-cover-to-play="true"
@@ -72,9 +72,14 @@
       </div>
     </div>
     <div v-if="tracksByDisc.length > 1">
-      <div v-for="item in tracksByDisc" :key="item.disc">
+      <div
+        v-for="item in tracksByDisc"
+        :key="item.disc"
+        :style="{ marginBottom: '20px' }"
+      >
         <h2 class="disc">Disc {{ item.disc }}</h2>
         <TrackList
+          v-if="item.tracks.length > 0"
           :id="album.id"
           :tracks="item.tracks"
           :type="'album'"
@@ -84,6 +89,7 @@
     </div>
     <div v-else>
       <TrackList
+        v-if="tracks.length > 0"
         :id="album.id"
         :tracks="tracks"
         :type="'album'"

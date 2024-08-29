@@ -42,7 +42,13 @@
           $t('home.seeMore')
         }}</router-link></div
       >
-      <TrackList :tracks="tracks" type="tracklist" />
+      <TrackList
+        v-if="tracks.length > 0"
+        :tracks="tracks"
+        type="tracklist"
+        :column-number="4"
+        :show-position="false"
+      />
     </div>
 
     <div v-show="musicVideos.length > 0" class="music-videos">

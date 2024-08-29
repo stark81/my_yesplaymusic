@@ -112,8 +112,13 @@
                   </div>
                   <div class="buttons">
                     <button-icon
-                      :title="$t('player.like')"
-                      @click.native="likeATrack(player.currentTrack.id)"
+                      :class="{ disabled: heartDisabled }"
+                      :title="
+                        heartDisabled
+                          ? $t('player.noAllowCauseLocal')
+                          : $t('player.like')
+                      "
+                      @click.native="likeTrack"
                     >
                       <svg-icon
                         :icon-class="
@@ -122,19 +127,16 @@
                       />
                     </button-icon>
                     <button-icon
-                      :title="$t('contextMenu.addToPlaylist')"
-                      @click.native="addToPlaylist(isLocal)"
-                    >
-                      <svg-icon icon-class="plus" />
-                    </button-icon>
-                    <button-icon
                       class="lyric_comment_btn"
+                      :class="{ disabled: heartDisabled }"
                       :title="
-                        $t(
-                          show === 'lyric'
-                            ? 'contextMenu.showComment'
-                            : 'contextMenu.showLyric'
-                        )
+                        heartDisabled
+                          ? $t('player.noAllowCauseLocal')
+                          : $t(
+                              show === 'lyric'
+                                ? 'contextMenu.showComment'
+                                : 'contextMenu.showLyric'
+                            )
                       "
                       @click.native="
                         switchCommentAndLyric(
@@ -144,6 +146,12 @@
                     >
                       <svg-icon v-if="show === 'lyric'" icon-class="comment" />
                       <svg-icon v-else icon-class="lyric" />
+                    </button-icon>
+                    <button-icon
+                      :title="$t('contextMenu.addToPlaylist')"
+                      @click.native="addToPlaylist(isLocal)"
+                    >
+                      <svg-icon icon-class="plus" />
                     </button-icon>
                     <button-icon
                       :title="$t('contextMenu.operationOption')"
@@ -281,7 +289,7 @@
           $t('contextMenu.playBackSpeed')
         }}</div>
         <div
-          v-if="isLocal"
+          v-if="!heartDisabled"
           ref="playBack"
           class="item"
           @click="addToPlaylist(false)"
@@ -377,10 +385,14 @@ export default {
       },
     },
     imageUrl() {
-      return this.player.currentTrack?.al?.picUrl + '?param=1024y1024';
+      return this.player.currentTrack?.matched !== false
+        ? this.player.currentTrack?.al?.picUrl + '?param=1024y1024'
+        : `atom://get-pic/${this.player.currentTrack?.filePath}`;
     },
     bgImageUrl() {
-      return this.player.currentTrack?.al?.picUrl + '?param=512y512';
+      return this.player.currentTrack?.matched !== false
+        ? this.player.currentTrack?.al?.picUrl + '?param=512y512'
+        : `atom://get-pic/${this.player.currentTrack?.filePath}`;
     },
     artist() {
       return this.currentTrack?.ar
@@ -395,6 +407,12 @@ export default {
     },
     noLyric() {
       return !this.hasLyric && this.show === 'lyric';
+    },
+    heartDisabled() {
+      return (
+        this.currentTrack.isLocal !== false &&
+        this.currentTrack.matched !== true
+      );
     },
   },
   watch: {
@@ -441,6 +459,10 @@ export default {
         _this.date = _this.formatTime(new Date());
       }, 1000);
     },
+    likeTrack() {
+      if (this.heartDisabled) return;
+      this.likeATrack(this.player.currentTrack.id);
+    },
     switchRbT() {
       this.idx = (this.idx + 1) % this.tags.length;
       const value = this.tags[this.idx];
@@ -469,13 +491,14 @@ export default {
       );
     },
     switchCommentAndLyric(show_option) {
+      if (this.heartDisabled) return;
       this.show = show_option;
     },
     addToPlaylist(isLocal = false) {
       let id = this.currentTrack.id;
       if (isLocal) {
         const localMusic = this.$store.state.localMusic;
-        const track = localMusic.tracks.find(t => t.onlineTrack.id === id);
+        const track = localMusic.tracks.find(t => t.id === id);
         if (!track) return;
         id = [track.id];
         this.updateModal({
@@ -542,7 +565,11 @@ export default {
     },
     getCoverColor() {
       if (this.settings.lyricsBackground !== true) return;
-      const cover = this.currentTrack?.al?.picUrl + '?param=256y256';
+      // const cover = this.currentTrack?.al?.picUrl + '?param=256y256';
+      const cover =
+        this.currentTrack?.matched !== false
+          ? this.currentTrack?.al?.picUrl + '?param=256y256'
+          : `atom://get-pic/${this.currentTrack?.filePath}`;
       Vibrant.from(cover, { colorCount: 1 })
         .getPalette()
         .then(palette => {
@@ -641,7 +668,7 @@ export default {
   flex: 1;
   display: flex;
   justify-content: flex-end;
-  margin-right: 80px;
+  margin-right: 12vh;
   margin-top: 24px;
   width: 50vw;
   align-items: center;
@@ -717,6 +744,17 @@ export default {
           .svg-icon {
             height: 18px;
             width: 18px;
+          }
+        }
+
+        .buttons .disabled {
+          cursor: default;
+          opacity: 0.48;
+          &:hover {
+            background: none;
+          }
+          &:active {
+            transform: unset;
           }
         }
 
@@ -857,7 +895,7 @@ export default {
   flex: 1;
   font-weight: 600;
   color: var(--color-text);
-  margin-right: 24px;
+  // margin-right: 4vh;
   z-index: 0;
 
   ::-webkit-scrollbar {

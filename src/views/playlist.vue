@@ -3,7 +3,7 @@
     <div v-if="isLocal" class="playlist-info">
       <Cover
         :id="playlist.id"
-        :image-url="playlist.coverImgUrl | resizeImage(1024)"
+        :image-url="imageUrl"
         :show-play-button="true"
         :always-show-shadow="true"
         :click-cover-to-play="true"
@@ -37,21 +37,10 @@
             @click.native="openMenu"
           >
           </ButtonTwoTone>
-        </div>
-      </div>
-      <div v-if="displaySearchInPlaylist" class="search-box">
-        <div class="container" :class="{ active: inputFocus }">
-          <svg-icon icon-class="search" />
-          <div class="input">
-            <input
-              v-model.trim="inputSearchKeyWords"
-              v-focus
-              :placeholder="inputFocus ? '' : $t('playlist.search')"
-              @input="inputDebounce()"
-              @focus="inputFocus = true"
-              @blur="inputFocus = false"
-            />
-          </div>
+          <SearchBox
+            :placeholder="$t('playlist.search')"
+            @update:keywords="doFilter($event)"
+          />
         </div>
       </div>
     </div>
@@ -61,7 +50,7 @@
     >
       <Cover
         :id="playlist.id"
-        :image-url="playlist.coverImgUrl | resizeImage(1024)"
+        :image-url="imageUrl"
         :show-play-button="true"
         :always-show-shadow="true"
         :click-cover-to-play="true"
@@ -128,9 +117,13 @@
             @click.native="openMenu"
           >
           </ButtonTwoTone>
+          <SearchBox
+            :placeholder="$t('playlist.search')"
+            @update:keywords="doFilter($event)"
+          />
         </div>
       </div>
-      <div v-if="displaySearchInPlaylist" class="search-box">
+      <!-- <div v-if="displaySearchInPlaylist" class="search-box">
         <div class="container" :class="{ active: inputFocus }">
           <svg-icon icon-class="search" />
           <div class="input">
@@ -144,7 +137,7 @@
             />
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
     <div v-if="specialPlaylistInfo !== undefined" class="special-playlist">
       <div
@@ -189,47 +182,62 @@
           @click.native="openMenu"
         >
         </ButtonTwoTone>
-      </div>
-    </div>
-    <div v-if="isLikeSongsPage" class="user-info">
-      <h1>
-        <img
-          class="avatar"
-          :src="data.user.avatarUrl | resizeImage"
-          loading="lazy"
+        <SearchBox
+          :placeholder="$t('playlist.search')"
+          @searchbox-focus="loadMore(500)"
+          @update:keywords="doFilter($event)"
         />
-        {{ data.user.nickname }}{{ $t('library.sLikedSongs') }}
-      </h1>
-      <div class="search-box-likepage" @click="searchInPlaylist()">
-        <div class="container" :class="{ active: inputFocus }">
-          <svg-icon icon-class="search" />
-          <div class="input" :style="{ width: searchInputWidth }">
-            <input
-              v-if="displaySearchInPlaylist"
-              v-model.trim="inputSearchKeyWords"
-              v-focus
-              :placeholder="inputFocus ? '' : $t('playlist.search')"
-              @input="inputDebounce()"
-              @focus="inputFocus = true"
-              @blur="inputFocus = false"
-            />
+      </div>
+    </div>
+    <div v-if="isLikeSongsPage" class="special-playlist">
+      <div class="title gradient-green">我喜欢的音乐</div>
+      <div class="buttons">
+        <ButtonTwoTone
+          class="play-button"
+          icon-class="play"
+          color="grey"
+          @click.native="playPlaylistByID()"
+        >
+          {{ $t('common.play') }}
+        </ButtonTwoTone>
+        <SearchBox
+          :placeholder="$t('playlist.search')"
+          @searchbox-focus="loadMore(500)"
+          @update:keywords="doFilter($event)"
+        />
+        <!-- <div class="search-box-likepage" @click="searchInPlaylist()">
+          <div class="container" :class="{ active: inputFocus }">
+            <svg-icon icon-class="search" />
+            <div class="input" :style="{ width: searchInputWidth }">
+              <input
+                v-if="displaySearchInPlaylist"
+                v-model.trim="inputSearchKeyWords"
+                v-focus
+                :placeholder="inputFocus ? '' : $t('playlist.search')"
+                @input="inputDebounce()"
+                @focus="inputFocus = true"
+                @blur="inputFocus = false"
+              />
+            </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
 
-    <TrackList
-      :id="playlist.id"
-      :tracks="filteredTracks"
-      :type="isLocal ? 'localtracks' : 'playlist'"
-      :extra-context-menu-item="
-        isUserOwnPlaylist ? ['removeTrackFromPlaylist'] : []
-      "
-    />
+    <div style="padding-bottom: 64px">
+      <TrackList
+        v-if="filteredTracks.length > 0"
+        :id="playlist.id"
+        :tracks="filteredTracks"
+        :type="isLocal ? 'localtracks' : 'playlist'"
+        :extra-context-menu-item="
+          isUserOwnPlaylist ? ['removeTrackFromPlaylist'] : []
+        "
+      />
+    </div>
 
-    <div class="load-more">
+    <div v-if="hasMore" class="load-more">
       <ButtonTwoTone
-        v-show="hasMore"
         color="grey"
         :loading="loadingMore"
         @click.native="loadMore(100)"
@@ -257,9 +265,9 @@
       <div v-if="isLocal" class="item" @click="convert2library()">{{
         $t('contextMenu.convertToOnlinePlaylist')
       }}</div>
-      <div class="item" @click="searchInPlaylist()">{{
+      <!-- <div class="item" @click="searchInPlaylist()">{{
         $t('contextMenu.searchInPlaylist')
-      }}</div>
+      }}</div> -->
       <div
         v-if="isLocal || playlist.creator.userId === data.user.userId"
         class="item"
@@ -294,6 +302,7 @@ import ContextMenu from '@/components/ContextMenu.vue';
 import TrackList from '@/components/TrackList.vue';
 import Cover from '@/components/Cover.vue';
 import Modal from '@/components/Modal.vue';
+import SearchBox from '@/components/SearchBox.vue';
 import { createPlaylist, addOrRemoveTrackFromPlaylist } from '@/api/playlist';
 
 const specialPlaylist = {
@@ -395,6 +404,7 @@ export default {
     TrackList,
     Modal,
     ContextMenu,
+    SearchBox,
   },
   directives: {
     focus: {
@@ -468,9 +478,16 @@ export default {
             ))
       );
     },
+    imageUrl() {
+      let url = this.playlist.coverImgUrl;
+      if (url.startsWith('atom')) {
+        return url;
+      } else {
+        return url + '?param=1024y1024';
+      }
+    },
   },
   created() {
-    this.$parent.$refs.main.scrollTo({ top: 0 });
     if (this.isLocal) {
       this.loadLocalData(this.$route.params.id);
     } else if (this.$route.name === 'likedSongs') {
@@ -481,6 +498,13 @@ export default {
     setTimeout(() => {
       if (!this.show) NProgress.start();
     }, 1000);
+  },
+  mounted() {
+    this.$parent.$refs.main.scrollTo({ top: 0 });
+    this.$parent.$refs.main.style.paddingBottom = '0';
+  },
+  beforeDestroy() {
+    this.$parent.$refs.main.style.paddingBottom = '96px';
   },
   methods: {
     ...mapMutations(['appendTrackToPlayerList']),
@@ -510,6 +534,9 @@ export default {
           });
         }
       });
+    },
+    scrollTo(top, behavior = 'smooth') {
+      this.$parent.$refs.main.scrollTo({ top, behavior });
     },
     playPlaylistByID(trackID = 'first') {
       if (this.isLocal) {
@@ -583,6 +610,7 @@ export default {
       this.tracks = tracks.slice().reverse();
       playlist.trackCount = this.tracks.length;
       this.playlist = playlist;
+      this.hasMore = false;
       NProgress.done();
       this.show = true;
     },
@@ -596,6 +624,11 @@ export default {
         }
       });
       trackIDs = trackIDs.map(t => t.id);
+      if (trackIDs.length === 0) {
+        this.hasMore = false;
+        this.loadingMore = false;
+        return;
+      }
       getTrackDetail(trackIDs.join(',')).then(data => {
         this.tracks.push(...data.songs);
         this.tracks = [...new Set(this.tracks)];
@@ -642,23 +675,26 @@ export default {
     editPlaylist() {
       nativeAlert('此功能开发中');
     },
-    searchInPlaylist() {
-      this.displaySearchInPlaylist =
-        !this.displaySearchInPlaylist || this.isLikeSongsPage;
-      if (this.displaySearchInPlaylist == false) {
-        this.searchKeyWords = '';
-        this.inputSearchKeyWords = '';
-      } else {
-        this.searchInputWidth = '172px';
-        this.loadMore(500);
-      }
+    doFilter(keyword) {
+      this.searchKeyWords = keyword;
     },
+    // searchInPlaylist() {
+    //   this.displaySearchInPlaylist =
+    //     !this.displaySearchInPlaylist || this.isLikeSongsPage;
+    //   if (this.displaySearchInPlaylist == false) {
+    //     this.searchKeyWords = '';
+    //     this.inputSearchKeyWords = '';
+    //   } else {
+    //     this.searchInputWidth = '172px';
+    //     this.loadMore(500);
+    //   }
+    // },
     removeTrack(trackID) {
       if (!this.isLocal && !isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
-      this.tracks = this.tracks.filter(t => t.id !== trackID);
+      this.tracks = this.tracks.filter(t => t && t.id !== trackID);
     },
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
@@ -738,6 +774,7 @@ export default {
     .buttons {
       margin-top: 32px;
       display: flex;
+      align-items: center;
       button {
         margin-right: 16px;
       }
@@ -807,6 +844,7 @@ export default {
     margin-top: 32px;
     display: flex;
     justify-content: center;
+    align-items: center;
     button {
       margin-right: 16px;
     }
@@ -1008,9 +1046,9 @@ export default {
 
 .search-box-likepage {
   display: flex;
-  position: absolute;
-  right: 12vw;
-  top: 95px;
+  // position: absolute;
+  // right: 12vw;
+  // top: 95px;
   justify-content: flex-end;
   -webkit-app-region: no-drag;
 

@@ -129,6 +129,7 @@ export default {
     mute: '静音',
     nextUp: '播放列表',
     osdLyrics: '桌面歌词',
+    noAllowCauseLocal: '本地歌曲，无法操作',
   },
   modal: {
     close: '关闭',
@@ -254,6 +255,10 @@ export default {
         title: '优先使用本地歌曲',
         desc: '假如本地歌曲A匹配的在线歌曲为B，当播放在线歌曲B时，使用本地歌曲A播放',
       },
+      matchStatus: {
+        title: '本地歌曲匹配状态',
+        desc: '切换开关对已匹配的歌曲无影响',
+      },
       exportLocalMusic: '导出本地歌曲信息',
       importLocalMusic: '导入本地歌曲信息',
       clearLocalMusic: '清空本地歌曲信息',
@@ -266,6 +271,7 @@ export default {
     addToQueue: '添加到队列',
     reMatchTrack: '重新匹配歌曲',
     accurateMatch: '精准匹配',
+    deleteMatch: '取消匹配',
     addToLocalPlaylist: '添加到本地歌单',
     removeFromQueue: '从队列删除',
     showInFolder: '在文件管理器中显示',

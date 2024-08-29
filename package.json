@@ -31,6 +31,8 @@
     "node": "14 || 16"
   },
   "dependencies": {
+    "@fastify/cookie": "^9.3.1",
+    "@fastify/static": "^7.0.4",
     "@unblockneteasemusic/rust-napi": "^0.4.0",
     "NeteaseCloudMusicApi": "^4.8.7",
     "axios": "^0.26.1",
@@ -58,6 +60,7 @@
     "express-fileupload": "^1.2.0",
     "express-http-proxy": "^1.6.2",
     "extract-zip": "^2.0.1",
+    "fastify": "^4.28.0",
     "howler": "^2.2.3",
     "js-cookie": "^2.2.1",
     "jsbi": "^4.1.0",

@@ -11,16 +11,18 @@
       <button @click="player.clearPlayNextList()">清除队列</button>
     </h1>
     <TrackList
-      v-show="playNextList.length > 0"
       :tracks="playNextTracks"
       type="playlist"
       :highlight-playing-track="false"
+      :show-position="false"
+      :enabled="false"
       dbclick-track-func="playTrackOnListByID"
       item-key="id+index"
       :extra-context-menu-item="['removeTrackFromQueue']"
     />
     <h1>{{ $t('next.nextUp') }}</h1>
     <TrackList
+      v-if="filteredTracks.length > 0"
       :tracks="filteredTracks"
       type="playlist"
       :highlight-playing-track="false"
@@ -79,9 +81,12 @@ export default {
       this.loadTracks();
     },
   },
-  activated() {
+  mounted() {
+    this.$parent.$refs.main.style.paddingBottom = '0';
     this.loadTracks();
-    this.$parent.$refs.scrollbar.restorePosition();
+  },
+  beforeDestroy() {
+    this.$parent.$refs.main.style.paddingBottom = '96px';
   },
   methods: {
     ...mapActions(['playTrackOnListByID']),
@@ -106,6 +111,9 @@ export default {
           this.tracks.push(...newTracks);
         });
       }
+    },
+    scrollTo(top) {
+      this.$parent.$refs.main.scrollTo({ top, behavior: 'smooth' });
     },
   },
 };

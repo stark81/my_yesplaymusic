@@ -257,44 +257,99 @@ export default {
         second.padStart(2, '0')
       );
     },
-    getLyric() {
+    async getInnerLyric(filePath) {
+      const data = await fetch(`atom://get-lyric/${filePath}`).then(res =>
+        res.json()
+      );
+      return data;
+    },
+    async getLyric() {
       if (!this.currentTrack.id) return;
-      return getLyric(this.currentTrack.id).then(data => {
-        if (!data?.lrc?.lyric) {
+
+      const fnPools = [];
+      if (this.currentTrack.matched !== false) {
+        fnPools.push([getLyric, this.currentTrack.id]);
+      }
+      if (this.currentTrack.isLocal === true) {
+        fnPools.push([this.getInnerLyric, this.currentTrack.filePath]);
+      }
+
+      let [getLyricFn, param] = fnPools.shift();
+
+      let data = await getLyricFn(param);
+
+      if (!data?.lrc?.lyric && fnPools.length > 0) {
+        [getLyricFn, param] = fnPools.shift();
+        data = await getLyricFn(param);
+      }
+
+      if (!data?.lrc?.lyric) {
+        this.lyric = [];
+        this.tlyric = [];
+        return false;
+      } else {
+        let { lyric, tlyric, rlyric } = lyricParser(data);
+        lyric = lyric.filter(l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content));
+        let includeAM =
+          lyric.length <= 10 &&
+          lyric.map(l => l.content).includes('纯音乐，请欣赏');
+        if (includeAM) {
+          let reg = /^作(词|曲)\s*(:|：)\s*/;
+          let author = this.currentTrack?.ar[0]?.name;
+          lyric = lyric.filter(l => {
+            let regExpArr = l.content.match(reg);
+            return !regExpArr || l.content.replace(regExpArr[0], '') !== author;
+          });
+        }
+        if (lyric.length === 1 && includeAM) {
           this.lyric = [];
           this.tlyric = [];
+          this.rlyric = [];
           return false;
         } else {
-          let { lyric, tlyric, rlyric } = lyricParser(data);
-          lyric = lyric.filter(
-            l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content)
-          );
-          let includeAM =
-            lyric.length <= 10 &&
-            lyric.map(l => l.content).includes('纯音乐，请欣赏');
-          if (includeAM) {
-            let reg = /^作(词|曲)\s*(:|：)\s*/;
-            let author = this.currentTrack?.ar[0]?.name;
-            lyric = lyric.filter(l => {
-              let regExpArr = l.content.match(reg);
-              return (
-                !regExpArr || l.content.replace(regExpArr[0], '') !== author
-              );
-            });
-          }
-          if (lyric.length === 1 && includeAM) {
-            this.lyric = [];
-            this.tlyric = [];
-            this.rlyric = [];
-            return false;
-          } else {
-            this.lyric = lyric;
-            this.tlyric = tlyric;
-            this.rlyric = rlyric;
-            return true;
-          }
+          this.lyric = lyric;
+          this.tlyric = tlyric;
+          this.rlyric = rlyric;
+          return true;
         }
-      });
+      }
+
+      // return getLyric(this.currentTrack.id).then(data => {
+      //   if (!data?.lrc?.lyric) {
+      //     this.lyric = [];
+      //     this.tlyric = [];
+      //     return false;
+      //   } else {
+      //     let { lyric, tlyric, rlyric } = lyricParser(data);
+      //     lyric = lyric.filter(
+      //       l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content)
+      //     );
+      //     let includeAM =
+      //       lyric.length <= 10 &&
+      //       lyric.map(l => l.content).includes('纯音乐，请欣赏');
+      //     if (includeAM) {
+      //       let reg = /^作(词|曲)\s*(:|：)\s*/;
+      //       let author = this.currentTrack?.ar[0]?.name;
+      //       lyric = lyric.filter(l => {
+      //         let regExpArr = l.content.match(reg);
+      //         return (
+      //           !regExpArr || l.content.replace(regExpArr[0], '') !== author
+      //         );
+      //       });
+      //     }
+      //     if (lyric.length === 1 && includeAM) {
+      //       this.lyric = [];
+      //       this.tlyric = [];
+      //       this.rlyric = [];
+      //       return false;
+      //     } else {
+      //       this.lyric = lyric;
+      //       this.tlyric = tlyric;
+      //       this.rlyric = rlyric;
+      //       return true;
+      //     }
+      //   }
+      // });
     },
     formatTrackTime(value) {
       return formatTrackTime(value);
@@ -354,16 +409,18 @@ export default {
 
 .right-side {
   .lyrics-container {
-    height: 100%;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    padding-left: 78px;
+    overflow-y: scroll;
+    // padding-left: 4vh;
     max-width: 460px;
     overflow-y: auto;
     transition: 0.5s;
     scrollbar-width: none; // firefox
 
     .line {
+      width: 50vh;
       margin: 2px 0;
       padding: 12px 18px;
       transition: 0.5s;

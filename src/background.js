@@ -8,6 +8,7 @@ import {
   globalShortcut,
   nativeTheme,
   screen,
+  net,
 } from 'electron';
 import {
   isWindows,
@@ -24,6 +25,7 @@ import { createMenu } from './electron/menu';
 import { createTray } from '@/electron/tray';
 import { createTouchBar } from './electron/touchBar';
 import { createDockMenu } from './electron/dockMenu';
+import { getLyrics } from './electron/utils';
 import { registerGlobalShortcut } from './electron/globalShortcut';
 import { autoUpdater } from 'electron-updater';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
@@ -32,7 +34,8 @@ import express from 'express';
 import expressProxy from 'express-http-proxy';
 import Store from 'electron-store';
 import { createMpris } from '@/electron/mpris';
-import { release } from 'os'
+import { release } from 'os';
+import { parseFile } from 'music-metadata';
 
 const clc = require('cli-color');
 const log = text => {
@@ -104,8 +107,8 @@ class Background {
     log('initializing');
 
     // Make sure the app is singleton.
-    if (release().startsWith('6.1')) app.disableHardwareAcceleration()
-    if (process.platform === 'win32') app.setAppUserModelId(app.getName())
+    if (release().startsWith('6.1')) app.disableHardwareAcceleration();
+    if (process.platform === 'win32') app.setAppUserModelId(app.getName());
     if (!app.requestSingleInstanceLock()) return app.quit();
 
     // start netease music api
@@ -117,6 +120,15 @@ class Background {
     // Scheme must be registered before the app is ready
     protocol.registerSchemesAsPrivileged([
       { scheme: 'app', privileges: { secure: true, standard: true } },
+      {
+        scheme: 'atom',
+        privileges: {
+          secure: true,
+          standard: true,
+          supportFetchAPI: true,
+          stream: true,
+        },
+      },
     ]);
 
     // handle app events
@@ -484,12 +496,48 @@ class Background {
     });
   }
 
+  handleProtocol() {
+    protocol.registerBufferProtocol('atom', async (request, callback) => {
+      const { host, pathname } = new URL(request.url);
+      if (host === 'get-pic') {
+        const filePath = pathname.slice(1);
+        const metadata = await parseFile(decodeURI(filePath));
+        let pic, format;
+        if (metadata.common.picture && metadata.common.picture.length > 0) {
+          pic = metadata.common.picture[0].data;
+          format = metadata.common.picture[0].format;
+        } else {
+          pic = await net
+            .fetch(
+              'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg'
+            )
+            .then(res => {
+              format = res.headers.get('content-type');
+              return res.arrayBuffer();
+            })
+            .then(buffer => Buffer.from(buffer));
+        }
+        callback({ mimeType: format, data: pic });
+      } else if (host === 'get-lyric') {
+        const filePath = pathname.slice(1);
+        const metadata = await parseFile(decodeURI(filePath));
+        const lyric = getLyrics(metadata);
+        callback({
+          mimeType: 'application/json',
+          data: Buffer.from(JSON.stringify(lyric)),
+        });
+      }
+    });
+  }
+
   handleAppEvents() {
     app.on('ready', async () => {
       // This method will be called when Electron has finished
       // initialization and is ready to create browser windows.
       // Some APIs can only be used after this event occurs.
       log('app ready event');
+
+      this.handleProtocol();
 
       // for development
       if (isDevelopment) {

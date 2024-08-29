@@ -53,6 +53,9 @@ export default {
         this.show = true;
       });
     },
+    scrollTo(top) {
+      this.$parent.$refs.main.scrollTo({ top, behavior: 'smooth' });
+    },
   },
 };
 </script>

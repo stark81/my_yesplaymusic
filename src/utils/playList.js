@@ -38,7 +38,12 @@ export async function getRecommendPlayList(limit, removePrivateRecommand) {
       if (removePrivateRecommand) recommend = recommend.slice(1);
       await replaceRecommendResult(recommend);
     }
-    return recommend.concat(playlists[1].result).slice(0, limit);
+    const lists = [
+      ...new Map(
+        recommend.concat(playlists[1].result).map(p => [p.id, p])
+      ).values(),
+    ];
+    return lists.slice(0, limit);
   } else {
     const response = await recommendPlaylist({ limit });
     return response.result;

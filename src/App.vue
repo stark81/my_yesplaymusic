@@ -59,6 +59,7 @@ export default {
       'enableScrolling',
       'settings',
       'localMusic',
+      'enabledVirtualScroll',
     ]),
     localMusicPath() {
       return this.settings.localMusicFolderPath;
@@ -83,6 +84,9 @@ export default {
     showNavbar() {
       return this.$route.name !== 'lastfmCallback';
     },
+    virtualScroll() {
+      return this.enabledVirtualScroll;
+    },
   },
   watch: {
     localMusicPath() {
@@ -90,6 +94,13 @@ export default {
       this.fetchLocalData().then(() => {
         this.$store.dispatch('showToast', `扫描完成`);
       });
+    },
+    virtualScroll(value) {
+      if (value) {
+        this.$store.commit('enableScrolling', false);
+      } else {
+        this.$store.commit('enableScrolling', true);
+      }
     },
   },
   created() {

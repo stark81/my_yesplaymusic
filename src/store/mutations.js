@@ -101,6 +101,9 @@ export default {
   restoreDefaultShortcuts(state) {
     state.settings.shortcuts = cloneDeep(shortcuts);
   },
+  setVirtualScroll(state, status = null) {
+    state.enabledVirtualScroll = status ? status : !state.enabledVirtualScroll;
+  },
   enableScrolling(state, status = null) {
     state.enableScrolling = status ? status : !state.enableScrolling;
   },

@@ -19,6 +19,7 @@
     </div>
     <div v-if="type === 'tracks'">
       <TrackList
+        v-if="result.length > 0"
         :tracks="result"
         type="playlist"
         dbclick-track-func="playAList"
@@ -132,6 +133,9 @@ export default {
       getTrackDetail(trackIDs.join(',')).then(result => {
         this.result = result.songs;
       });
+    },
+    scrollTo(top) {
+      this.$parent.$refs.main.scrollTo({ top, behavior: 'smooth' });
     },
   },
 };
