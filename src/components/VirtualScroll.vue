@@ -132,7 +132,7 @@ export default {
   watch: {
     ...mapMutations(['setVirtualScroll']),
     isVirtualScroll(val) {
-      this.$store.commit('setVirtualScroll', val);
+      if (this.enabled) this.$store.commit('setVirtualScroll', val);
     },
     rightClickedTrack(val) {
       if (val.id === 0) {
@@ -142,15 +142,15 @@ export default {
       }
     },
     _listData() {
-      if (this.enabled) this.initPosition();
+      this.initPosition();
       this.containerHeight = Math.min(
         this.totalRow * this.oneHeight,
-        window.innerHeight
+        window.innerHeight - 64
       );
     },
   },
   created() {
-    if (this.enabled) this.initPosition();
+    this.initPosition();
   },
   mounted() {
     this.oneHeight = this.$refs.itemsRef
@@ -158,7 +158,7 @@ export default {
       : 64;
     this.containerHeight = Math.min(
       this.totalRow * this.oneHeight,
-      window.innerHeight
+      window.innerHeight - 64
     );
     this.end = this.start + this.visibleRow;
     if (this.enabled) {
@@ -174,7 +174,11 @@ export default {
       });
     }
   },
+  deactivated() {
+    if (this.enabled) this.$store.commit('setVirtualScroll', false);
+  },
   beforeDestroy() {
+    if (this.enabled) this.$store.commit('setVirtualScroll', false);
     if (this.aber !== null) {
       this.aber.disconnect();
       this.aber = null;
@@ -267,7 +271,7 @@ export default {
             const index = this.list.findIndex(
               d => d.id === this.currentTrack.id
             );
-            this.start = Math.max(0, index - this.visibleRow / 2);
+            this.start = Math.max(0, Math.floor(index - this.visibleRow / 2));
             const startOffset = this.position[this.start].bottom;
             this.$refs.listRef.scrollTo({
               top: startOffset,
@@ -340,6 +344,7 @@ export default {
 <style scoped lang="scss">
 .virtual-scroll {
   // background-color: red;
+  // padding-bottom: 64px;
   position: relative;
 }
 .virtual-scroll::-webkit-scrollbar {

@@ -47,7 +47,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player']),
+    ...mapState(['player', 'localMusic']),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -100,17 +100,29 @@ export default {
       // 将playNextList的歌曲加进trackIDs
       trackIDs.push(...this.playNextList);
 
-      // 获取已经加载了的歌曲
+      // // 获取已经加载了的歌曲
       let loadedTrackIDs = this.tracks.map(t => t.id);
 
-      if (trackIDs.length > 0) {
+      const localTracks = this.localMusic.tracks.filter(t =>
+        trackIDs.includes(t.id)
+      );
+      let newTracks = localTracks.filter(t => !loadedTrackIDs.includes(t.id));
+
+      const newTrackIDs = trackIDs.filter(
+        t => !localTracks.map(s => s.id).includes(t)
+      );
+
+      if (newTrackIDs.length > 0) {
         getTrackDetail(trackIDs.join(',')).then(data => {
-          let newTracks = data.songs.filter(
-            t => !loadedTrackIDs.includes(t.id)
+          newTracks.push(
+            ...data.songs.filter(t => !loadedTrackIDs.includes(t.id))
           );
-          this.tracks.push(...newTracks);
         });
       }
+      newTracks = newTracks
+        .filter(t => trackIDs.includes(t.id))
+        .sort((a, b) => trackIDs.indexOf(a.id) - trackIDs.indexOf(b.id));
+      this.tracks.push(...newTracks);
     },
     scrollTo(top) {
       this.$parent.$refs.main.scrollTo({ top, behavior: 'smooth' });

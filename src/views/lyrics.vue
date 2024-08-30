@@ -79,7 +79,7 @@ export default {
         : this.onlineTrackDelay;
     },
     isLocal() {
-      return this.player.currentTrack.isLocal === true;
+      return this.player.currentTrack.isLocal || false;
     },
     lyricWithTranslation() {
       let ret = [];
@@ -167,7 +167,7 @@ export default {
     lyricDelay(val) {
       clearInterval(this.lyricsInterval);
       this.setLyricsInterval();
-      if (this.isLocal === true) {
+      if (this.isLocal) {
         const track = this.$store.state.localMusic.tracks.find(
           t => t.filePath === this.currentTrack.filePath
         );

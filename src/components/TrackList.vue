@@ -54,7 +54,7 @@
         v-show="
           !isRightClickedTrackLiked &&
           type !== 'cloudDisk' &&
-          rightClickedTrack.isLocal !== true
+          !rightClickedTrack.isLocal
         "
         class="item"
         @click="like"
@@ -65,7 +65,7 @@
         v-show="
           isRightClickedTrackLiked &&
           type !== 'cloudDisk' &&
-          rightClickedTrack.isLocal !== true
+          !rightClickedTrack.isLocal
         "
         class="item"
         @click="like"
@@ -85,7 +85,7 @@
         >{{ $t('contextMenu.addToPlaylist') }}</div
       >
       <div
-        v-show="type !== 'cloudDisk' && rightClickedTrack.isLocal !== true"
+        v-show="type !== 'cloudDisk' && !rightClickedTrack.isLocal"
         class="item"
         @click="copyLink"
         >{{ $t('contextMenu.copyUrl') }}</div
@@ -235,8 +235,8 @@ export default {
     },
     useLocal() {
       return (
-        this.rightClickedTrackComputed.isLocal !== false &&
-        this.rightClickedTrackComputed.matched !== true
+        this.rightClickedTrackComputed.isLocal &&
+        !this.rightClickedTrackComputed.matched
       );
     },
     imageUrl() {
@@ -244,6 +244,12 @@ export default {
         ? `atom://get-pic/${this.rightClickedTrackComputed.filePath}`
         : this.rightClickedTrackComputed.al.picUrl + '?param=64y64';
     },
+  },
+  mounted() {
+    this.$parent.$parent.$refs.main.style.paddingBottom = '0';
+  },
+  beforeDestroy() {
+    this.$parent.$parent.$refs.main.style.paddingBottom = '96px';
   },
   methods: {
     ...mapMutations(['updateModal']),

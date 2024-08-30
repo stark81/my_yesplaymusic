@@ -220,10 +220,7 @@ export default {
       return Boolean(ipcRenderer);
     },
     heartDisabled() {
-      return (
-        this.currentTrack.isLocal !== false &&
-        this.currentTrack.matched !== true
-      );
+      return this.currentTrack.isLocal && !this.currentTrack.matched;
     },
     imgUrl() {
       let image =

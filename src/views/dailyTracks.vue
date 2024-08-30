@@ -5,11 +5,13 @@
       <div class="subtitle">根据你的音乐口味生成 · 每天6:00更新</div>
     </div>
 
-    <TrackList
-      :tracks="dailyTracks"
-      type="playlist"
-      dbclick-track-func="dailyTracks"
-    />
+    <div style="padding-bottom: 64px">
+      <TrackList
+        :tracks="dailyTracks"
+        type="playlist"
+        dbclick-track-func="dailyTracks"
+      />
+    </div>
   </div>
 </template>
 

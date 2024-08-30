@@ -374,7 +374,7 @@ export default {
       return idx;
     },
     isLocal() {
-      return this.player.currentTrack.isLocal === true;
+      return this.player.currentTrack.isLocal || false;
     },
     volume: {
       get() {
@@ -409,10 +409,7 @@ export default {
       return !this.hasLyric && this.show === 'lyric';
     },
     heartDisabled() {
-      return (
-        this.currentTrack.isLocal !== false &&
-        this.currentTrack.matched !== true
-      );
+      return this.currentTrack.isLocal && !this.currentTrack.matched;
     },
   },
   watch: {

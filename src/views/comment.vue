@@ -353,6 +353,7 @@ export default {
   height: 100vh;
   max-width: 600px;
   margin-left: 10px;
+  padding-right: 5vw;
   .comment-head {
     line-height: 80px;
     height: 80px;

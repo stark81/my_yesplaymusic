@@ -38,6 +38,7 @@
           :tracks="liked.songsWithDetails"
           :column-number="3"
           :show-position="false"
+          :enabled="false"
           type="tracklist"
           dbclick-track-func="playPlaylistByID"
         />
@@ -145,19 +146,19 @@
         <MvRow :mvs="liked.mvs" />
       </div>
 
-      <div v-show="currentTab === 'cloudDisk'">
+      <div v-if="currentTab === 'cloudDisk'" style="padding-bottom: 64px">
         <TrackList
           v-if="liked.cloudDisk.length > 0"
           :id="-8"
           :tracks="liked.cloudDisk"
-          :column-number="3"
+          :column-number="1"
           type="cloudDisk"
           dbclick-track-func="playCloudDisk"
           :extra-context-menu-item="['removeTrackFromCloudDisk']"
         />
       </div>
 
-      <div v-show="currentTab === 'playHistory'">
+      <div v-if="currentTab === 'playHistory'" style="padding-bottom: 64px">
         <button
           :class="{
             'playHistory-button': true,

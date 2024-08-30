@@ -274,7 +274,7 @@ export default {
       this.$parent.playThisList(this.track?.id);
     },
     likeThisSong() {
-      if (this.track?.isLocal !== false && this.track?.matched !== true) return;
+      if (this.track?.isLocal && !this.track?.matched) return;
       this.$parent.likeATrack(this.track?.id);
     },
     getPublishTime(date) {
