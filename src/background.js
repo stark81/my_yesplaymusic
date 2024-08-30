@@ -8,7 +8,6 @@ import {
   globalShortcut,
   nativeTheme,
   screen,
-  net,
 } from 'electron';
 import {
   isWindows,
@@ -506,18 +505,26 @@ class Background {
         if (metadata.common.picture && metadata.common.picture.length > 0) {
           pic = metadata.common.picture[0].data;
           format = metadata.common.picture[0].format;
+          callback({ mimeType: format, data: pic });
         } else {
-          pic = await net
-            .fetch(
-              'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg'
-            )
-            .then(res => {
-              format = res.headers.get('content-type');
-              return res.arrayBuffer();
-            })
-            .then(buffer => Buffer.from(buffer));
+          const https = require('https');
+          https.get(
+            'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+            res => {
+              let data = [];
+              res.on('data', chunk => {
+                data.push(chunk);
+              });
+              res.on('end', () => {
+                const buffer = Buffer.concat(data);
+                callback({
+                  data: buffer,
+                  mimeType: res.headers['content-type'],
+                });
+              });
+            }
+          );
         }
-        callback({ mimeType: format, data: pic });
       } else if (host === 'get-lyric') {
         const filePath = pathname.slice(1);
         const metadata = await parseFile(decodeURI(filePath));
