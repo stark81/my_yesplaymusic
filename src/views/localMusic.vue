@@ -201,11 +201,12 @@ import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
 import ModalMatchTrack from '@/components/ModalMatchTrack.vue';
 import SearchBox from '@/components/SearchBox.vue';
+import { lyricParser } from '@/utils/lyrics';
 import NProgress from 'nprogress';
 
-function extractLyricPart(rawLyric) {
-  return rawLyric.split(']').pop().trim();
-}
+// function extractLyricPart(rawLyric) {
+//   return rawLyric.split(']').pop().trim();
+// }
 
 function getRandomNumbersFromList(list, count) {
   const listCopy = list.slice();
@@ -245,6 +246,7 @@ export default {
       activeTracks: [],
       activeAlbums: [],
       activeArtists: [],
+      noLyricTracks: [],
       randomShowTracks: [],
       timer: null,
     };
@@ -308,27 +310,20 @@ export default {
 
       // Returns [] if we got no lyrics.
       if (!lyric) return [];
-
-      let lyricLine = lyric.split('\n').filter(line => line !== '');
-      if (lyricLine.length > 16) {
-        lyricLine = lyricLine.slice(7, -7);
-      }
-
-      // Pick 3 or fewer lyrics based on the lyric lines.
-      const lyricsToPick = Math.min(lyricLine.length, 3);
-
-      // The upperBound of the lyric line to pick
-      const randomUpperBound = lyricLine.length - lyricsToPick;
+      const filterWords =
+        /(作词|作曲|编曲|和声|混音|录音|OP|SP|MV|吉他|二胡|古筝|曲编|键盘|贝斯|鼓|弦乐|打击乐|混音|制作人|配唱|提琴|海报|特别鸣谢)/i;
+      const lyricLines = lyric
+        .filter(l => !filterWords.test(l.content))
+        .map(l => l.content);
+      const lyricsToPick = Math.min(lyricLines.length, 3);
+      const randomUpperBound = lyricLines.length - lyricsToPick;
       const startLyricLineIndex = randomNum(0, randomUpperBound - 1);
-
-      // Pick lyric lines to render.
-      const returnLyricLine = lyricLine
-        .slice(startLyricLineIndex, startLyricLineIndex + lyricsToPick)
-        .map(extractLyricPart);
-      if (returnLyricLine.length > 0 && this.lyricSong) {
-        returnLyricLine.push(`————《${this.lyricSong}》`);
-      }
-      return returnLyricLine;
+      const returnLyric = lyricLines.slice(
+        startLyricLineIndex,
+        startLyricLineIndex + lyricsToPick
+      );
+      returnLyric.push(`————《${this.lyricSong.name}》`);
+      return returnLyric;
     },
   },
   watch: {
@@ -365,7 +360,6 @@ export default {
   },
   mounted() {
     this.$parent.$refs.main.style.paddingBottom = '0';
-    // this.$parent.$refs.scrollbar.restorePosition();
     this.getRandomLyric();
   },
   beforeDestroy() {
@@ -475,25 +469,54 @@ export default {
     playThisTrack() {
       this.player.addTrackToPlayNext(this.randomTrackID, true, true);
     },
-    getRandomLyric() {
-      const tracksID = this.allTracks.filter(tr => tr.matched).map(tr => tr.id);
-      if (tracksID.length < 1) return;
-      const randomTrackID = tracksID[randomNum(0, tracksID.length - 1)];
-      const track = this.localMusic.tracks
-        ?.filter(t => t.matched)
-        .find(t => t.id === randomTrackID);
-      this.randomTrackID = randomTrackID;
-      getLyric(randomTrackID).then(data => {
-        if (data.lrc !== undefined) {
-          const isInstrumental = data.lrc.lyric
-            .split('\n')
-            .filter(l => l.includes('纯音乐，请欣赏'));
-          if (isInstrumental.length === 0) {
-            this.lyric = data.lrc.lyric;
-            this.lyricSong = track.name;
-          }
-        }
-      });
+    async getInnerLyric(filePath) {
+      const data = await fetch(`atom://get-lyric/${filePath}`).then(res =>
+        res.json()
+      );
+      return data;
+    },
+    async getLyricFn(track) {
+      const fnPools = [];
+      let data = {
+        lrc: { lyric: [] },
+        tlyric: { lyric: [] },
+        romalrc: { lyric: [] },
+      };
+      if (track.matched) {
+        fnPools.push([getLyric, track.id]);
+      }
+      fnPools.push([this.getInnerLyric, track.filePath]);
+
+      let [lyricFn, param] = fnPools.shift();
+      data = await lyricFn(param);
+
+      if (!data?.lrc?.lyric && fnPools.length > 0) {
+        [lyricFn, param] = fnPools.shift();
+        data = await lyricFn(param);
+      }
+      return data;
+    },
+    async getRandomLyric() {
+      const randomTrack = this.allTracks.filter(
+        t => !this.noLyricTracks.includes(t)
+      )[randomNum(0, this.allTracks.length - 1)];
+      const data = await this.getLyricFn(randomTrack);
+      if (!data.lrc?.lyric?.length) {
+        this.noLyricTracks.push(randomTrack);
+        this.getRandomLyric();
+        return;
+      }
+      const { lyric } = lyricParser(data);
+      const isInstrumental = lyric.filter(l =>
+        l.content?.includes('纯音乐，请欣赏')
+      );
+      if (isInstrumental.length) {
+        this.noLyricTracks.push(randomTrack);
+        this.getRandomLyric();
+        return;
+      }
+      this.lyric = lyric;
+      this.lyricSong = randomTrack;
     },
     sortList(tracks, type) {
       if (type === 'default') {
