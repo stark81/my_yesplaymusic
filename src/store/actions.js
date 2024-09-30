@@ -129,6 +129,7 @@ export default {
           artistObj = {
             id: state.localMusic.artistsIdCounter++,
             name: artist,
+            matched: false,
             picUrl:
               'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
           };
@@ -148,6 +149,7 @@ export default {
           id: state.localMusic.albumsIdCounter++,
           name: name,
           artist: getArtists(common)[0] ?? {},
+          matched: false,
           picUrl:
             'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
         };
@@ -192,6 +194,8 @@ export default {
             };
             trackArray.push(track);
           } else {
+            foundTrack.al.matched = foundTrack.matched;
+            foundTrack.ar.map(artist => (artist.matched = foundTrack.matched));
             foundTrack.show = true;
             foundTrack.delete =
               foundTrack.delete === undefined ? false : foundTrack.delete;

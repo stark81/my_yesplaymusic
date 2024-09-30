@@ -41,6 +41,7 @@ export default {
     list: { type: Array, default: () => [] },
     type: { type: String, default: 'tracklist' },
     styleBefore: { type: String, default: '' },
+    paddingBottom: { type: Number, default: 64 },
     showPosition: { type: Boolean, default: true },
     pid: { type: Number, default: 0 },
     columnNumber: { type: Number, default: 1 },
@@ -120,9 +121,14 @@ export default {
       return this.position.length ? this.position[this.start] : null;
     },
     listStyles() {
+      const listHeight = this.totalRow * this.oneHeight;
+      const windowHeight = window.innerHeight - 64;
       return {
         gridTemplateColumns: `repeat(${this.columnNumber}, 1fr)`,
         transform: `translateY(${this.startOffset}px)`,
+        paddingBottom: `${
+          listHeight > windowHeight ? this.paddingBottom : 0
+        }px`,
       };
     },
     isVirtualScroll() {
@@ -201,7 +207,7 @@ export default {
         {
           root: null,
           // rootMargin: '-64px 0px 0px 0px',
-          threshold: 0.9,
+          threshold: 0.95,
         }
       );
       return observer;

@@ -39,7 +39,8 @@
                 :key="ar.id"
                 @click="goToArtist(ar)"
               >
-                <span :class="{ ar: ar.matched === true }"> {{ ar.name }} </span
+                <span :class="{ ar: ar.matched !== false }">
+                  {{ ar.name }} </span
                 ><span v-if="index !== currentTrack.ar.length - 1">, </span>
               </span>
             </div>

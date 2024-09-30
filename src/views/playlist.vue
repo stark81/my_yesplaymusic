@@ -224,7 +224,7 @@
       </div>
     </div>
 
-    <div style="padding-bottom: 64px">
+    <div>
       <TrackList
         v-if="filteredTracks.length > 0"
         :id="playlist.id"

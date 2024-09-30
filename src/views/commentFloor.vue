@@ -1,76 +1,73 @@
 <template>
-  <Transition ref="main" name="slide-fade">
-    <div id="CommentFloorContainer" :style="containerStyle">
-      <div class="comment-head">
-        <label style="float: left">回复({{ totalCount }})</label>
-        <div>
-          <label @click="closeFloor">关闭</label>
-        </div>
-      </div>
-      <div id="floorContainer">
-        <div
-          v-for="(comment, index) in comments"
-          :id="`comment${index}`"
-          :key="index"
-          class="one-comment"
-        >
-          <div class="comment_userinfo">
-            <div class="avatar">
-              <img :src="comment.user.avatarUrl" />
-            </div>
-            <div class="userinfo">
-              <div>
-                <label>{{ comment.user.nickname }} </label>
-                <label
-                  v-if="
-                    comment.beReplied.length == 1 &&
-                    comment.beReplied[0].beRepliedCommentId !=
-                      ownerComment.commentId &&
-                    comment.beReplied[0].status >= 0
-                  "
-                >
-                  ▶️ {{ comment.beReplied[0].user.nickname }}</label
-                >
-              </div>
-              <div class="comment-time">
-                <div>{{ comment.timeStr }}</div>
-              </div>
-            </div>
-            <div class="likedcount">
-              <LikeButton
-                class="likebutton"
-                :liked="comment.liked"
-                @liked="likeFloorComment(comment, $event)"
-              />
-              {{ comment.likedCount }}
-            </div>
-          </div>
-          <div class="comment-content">
-            <div @click="replyFloor(comment)">{{ comment.content }}</div>
-            <div
-              v-if="isAccountLoggedIn && comment.owner"
-              class="p2"
-              @click="DeleteFloor(comment)"
-              >删除</div
-            >
-          </div>
-        </div>
-      </div>
-      <div class="write_comment">
-        <WriteComment
-          ref="writeFloorRef"
-          :placeholder="reply2Name"
-          @comment-submitted="writeFloorComment"
-          @keydown.enter="writeFloorComment"
-        />
+  <div class="comment-container">
+    <div class="comment-head">
+      <label>回复({{ totalCount }})</label>
+      <div class="btns">
+        <button class="btn" @click="closeFloor">关闭</button>
       </div>
     </div>
-  </Transition>
+    <div ref="floorRef" class="comment-main" @scroll="loadMoreFloorComment">
+      <div
+        v-for="(comment, index) in comments"
+        :id="`comment${index}`"
+        :key="index"
+        class="comment-item"
+        @click="replyFloor(comment)"
+      >
+        <div class="avatar">
+          <img :src="comment.user.avatarUrl + '?param=64y64'" loading="lazy" />
+        </div>
+        <div class="comment-info">
+          <div class="comment">
+            <label class="comment-nickname"
+              >{{ comment.user.nickname }}：</label
+            >
+            <label>{{ comment.content }}</label>
+          </div>
+          <div
+            v-if="
+              comment.beReplied.length &&
+              comment.beReplied[0].beRepliedCommentId !==
+                comment.parentCommentId
+            "
+            class="comment-beReplied"
+          >
+            <label v-if="comment.beReplied[0].content" class="comment-nickname"
+              >@{{ comment.beReplied[0].user.nickname }}:
+            </label>
+            <label>{{ comment.beReplied[0].content || '该评论已删除' }}</label>
+          </div>
+          <div class="comment-ex">
+            <div>{{ comment.time | formatDate('YYYY年MM月DD日 H:mm') }}</div>
+            <div class="comment-btns">
+              <button
+                v-if="isAccountLoggedIn && comment.owner"
+                @click.stop="DeleteFloor(comment)"
+                >删除</button
+              >
+              <button @click.stop="likeFloorComment(comment)"
+                ><svg-icon :icon-class="comment.liked ? 'liked' : 'like'" />{{
+                  comment.likedCount
+                }}</button
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="write_comment">
+      <WriteComment
+        ref="writeFloorRef"
+        :placeholder="reply2Name"
+        @comment-submitted="writeFloorComment"
+        @keydown.enter="writeFloorComment"
+      />
+    </div>
+  </div>
 </template>
 <script>
 import { mapActions, mapMutations, mapState } from 'vuex';
 import { isAccountLoggedIn } from '@/utils/auth';
-import LikeButton from '@/components/LikeButton.vue';
 import WriteComment from '@/components/WriteComment.vue';
 import locale from '@/locale';
 import {
@@ -82,7 +79,6 @@ import {
 export default {
   name: 'CommentFloor',
   components: {
-    LikeButton,
     WriteComment,
   },
   data() {
@@ -91,12 +87,6 @@ export default {
       hasInit: false,
       reply2Name: '',
       limit: 20,
-      setLikedStyle: {
-        backgroundColor: 'blue',
-        height: '26px',
-        width: '26px',
-        margin: '0 0 6px 2px',
-      },
       deleteComment: null,
       ownerComment: [],
       currentComment: null,
@@ -139,8 +129,8 @@ export default {
     },
   },
   mounted: function () {
-    window.addEventListener('scroll', this.loadMoreFloorComment, true);
-    window.addEventListener('resize', this.handleResize);
+    // window.addEventListener('scroll', this.loadMoreFloorComment, true);
+    // window.addEventListener('resize', this.handleResize);
   },
   created() {
     this.commentId = this.$parent.commentId;
@@ -154,18 +144,13 @@ export default {
     ...mapActions(['showToast']),
     ...mapMutations(['updateModal']),
     loadMoreFloorComment() {
-      if (!this.hasMore) return;
-      const el = document.getElementById('floorContainer');
-      if (this.isLoading) {
-        return;
-      }
-      if (this.$parent.show === 'floor_comment' && el) {
-        let scrollTop = el.scrollTop;
-        let clientHeight = el.clientHeight;
-        let scrollHeight = el.scrollHeight;
-        if (scrollTop + clientHeight >= scrollHeight) {
-          this.showFloor();
-        }
+      if (!this.hasMore || this.isLoading) return;
+      const floorRef = this.$refs.floorRef;
+      let scrollTop = floorRef.scrollTop;
+      let clientHeight = floorRef.clientHeight;
+      let scrollHeight = floorRef.scrollHeight;
+      if (scrollTop + clientHeight >= scrollHeight) {
+        this.showFloor();
       }
     },
     async showFloor() {
@@ -221,7 +206,7 @@ export default {
         })
         .catch();
     },
-    likeFloorComment(comment, liked) {
+    likeFloorComment(comment) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
@@ -231,9 +216,18 @@ export default {
         comment.commentId,
         !comment.liked ? 1 : 0,
         this.$parent.type
-      );
-      comment.liked = liked;
-      comment.likedCount += liked ? 1 : -1;
+      )
+        .then(res => {
+          if (res.code === 200) {
+            comment.likedCount += comment.liked ? -1 : 1;
+            comment.liked = !comment.liked;
+          } else {
+            this.showToast(res.msg + res?.data?.dialog?.subtitle);
+          }
+        })
+        .catch(err => {
+          this.showToast(err);
+        });
     },
     replyFloor(comment) {
       this.commentId = comment.commentId;
@@ -273,122 +267,120 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#CommentFloorContainer {
+.comment-container {
   height: 100vh;
-  max-width: 600px;
-  margin-left: 10px;
-  z-index: 10;
-  .comment-head {
-    line-height: 80px;
-    height: 80px;
-    overflow: hidden;
-    padding-left: 18px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    div {
-      float: right;
-      label {
-        padding: 8px 20px;
-        border-radius: 8px;
-        margin-left: 10px;
-        opacity: 0.5;
+  width: 50vw;
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  scrollbar-width: none;
+  padding: 40px 6vw 0 4vw;
+  transition: all 0.5s;
+}
 
-        &:hover {
-          cursor: pointer;
-          opacity: 0.9;
-          background: var(--color-secondary-bg-for-transparent);
-        }
-      }
-      .active {
-        opacity: 0.9;
-        background: var(--color-secondary-bg-for-transparent);
-      }
+.comment-head {
+  display: flex;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  justify-content: space-between;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  .btns {
+    display: flex;
+    text-align: center;
+    justify-items: center;
+    .btn {
+      font-size: 16px;
+      font-weight: bold;
+      padding: 0 10px;
+      color: var(--color-text);
+      -webkit-app-region: no-drag;
+      cursor: pointer;
     }
   }
+}
 
-  #Container,
-  #floorContainer {
-    height: calc(100vh - 160px);
-    overflow: auto;
-    .one-comment {
-      margin: 5px 0;
-      padding: 18px 18px 0px 18px;
-      transition: 0.5s;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      opacity: 0.86;
-      .comment_userinfo {
-        height: 40px;
-        margin-bottom: 10px;
-        .avatar {
-          height: 40px;
-          width: 40px;
-          float: left;
-          margin-right: 12px;
-          background-color: #fff;
-          border-radius: 50%;
-          img {
-            height: 100%;
-            width: 100%;
-            border-radius: 50%;
-          }
-        }
-        .userinfo {
-          float: left;
-          font-size: 18px;
-          line-height: 24px;
-          opacity: 0.85;
-          .comment-time {
-            font-size: 14px;
-            opacity: 0.68;
-            line-height: 22px;
-          }
-        }
-        .likedcount {
-          float: right;
-          font-size: 14px;
-          text-align: center;
-          cursor: pointer;
-        }
-      }
-      .comment-content {
-        padding: 0 50px 0 18;
-        position: relative;
-        div {
-          font-size: 20px;
-          line-height: 28px;
-          cursor: pointer;
-          padding-bottom: 20px;
-          border-bottom: 1px solid var(--color-text-transparent);
-        }
-        .p2 {
-          position: absolute;
-          top: 0;
-          right: 0;
-          border-bottom: none;
-          padding-right: 2px;
-          font-size: 14px;
-          text-align: center;
-        }
-      }
-    }
-    .one-comment:first-child {
-      background: var(--color-secondary-bg-for-transparent);
-      border-radius: 12px;
-      .comment-content {
-        border-bottom: none;
-        // display: flex;
-        div {
-          border-bottom: none;
-        }
-      }
-    }
+.comment-main {
+  // width: 100%;
+  // height: calc(100vh - 164px);
+  overflow-y: scroll;
+}
+
+.comment-item {
+  display: flex;
+  width: 100%;
+  opacity: 0.9;
+  margin-bottom: 4px;
+
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
   }
-  .write_comment {
-    height: 80px;
-    max-width: 600px;
+}
+.comment-item:first-child {
+  padding-bottom: 10px;
+  .comment-ex {
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+.comment-info {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.comment {
+  width: auto;
+
+  .comment-nickname {
+    font-weight: bold;
+  }
+}
+.comment-beReplied {
+  font-size: 14px;
+  margin: 5px 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.1);
+
+  .comment-nickname {
+    font-weight: bold;
+  }
+}
+.comment-ex {
+  display: flex;
+  margin-top: 4px;
+  padding-bottom: 10px;
+  width: 100%;
+  font-size: 14px;
+  opacity: 0.7;
+  text-align: center;
+  justify-content: center;
+  justify-content: space-between;
+
+  .comment-btns {
+    display: flex;
+
+    button {
+      display: flex;
+      margin-left: 10px;
+      align-items: center;
+      margin: 4px;
+      border-radius: 25%;
+      color: var(--color-text);
+
+      .svg-icon {
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+      }
+    }
   }
 }
 </style>

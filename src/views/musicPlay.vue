@@ -262,9 +262,8 @@
         <div class="right-side">
           <Lyrics v-show="show === 'lyric'" ref="lyricRef" />
           <component
-            :is="
-              show === 'comment' || show === 'floor_comment' ? 'comment' : null
-            "
+            :is="show !== 'lyric' ? 'comment' : null"
+            v-show="show === 'comment'"
             ref="commentRef"
           />
           <!-- <Comment v-show="show === 'comment'" ref="commentRef" /> -->
@@ -598,8 +597,8 @@ export default {
   bottom: 0;
   z-index: 200;
   background: var(--color-body-bg);
-  display: flex;
-  clip: rect(auto, auto, auto, auto);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .lyrics-background {
@@ -662,12 +661,12 @@ export default {
 }
 
 .left-side {
-  flex: 1;
+  height: 100vh;
   display: flex;
   justify-content: flex-end;
-  margin-right: 12vh;
-  margin-top: 24px;
-  width: 50vw;
+  padding-right: 8vh;
+  box-sizing: border-box;
+  padding-top: 24px;
   align-items: center;
   transition: all 0.5s;
   z-index: 50;
@@ -881,18 +880,10 @@ export default {
 
 #comment-box {
   display: none;
-  // background-color: red;
 }
 
-// #lyrics {
-//   display: none;
-// }
-
 .right-side {
-  flex: 1;
-  font-weight: 600;
   color: var(--color-text);
-  // margin-right: 4vh;
   z-index: 0;
 
   ::-webkit-scrollbar {

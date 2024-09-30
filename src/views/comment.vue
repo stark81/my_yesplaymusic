@@ -1,71 +1,66 @@
 <template>
   <Transition ref="main" name="slide-fade">
-    <div v-show="showSelf" id="CommentContainer" :style="containerStyle">
+    <div class="comment-container">
       <div class="comment-head">
-        <label style="float: left">评论({{ sourceComments.totalCount }})</label>
-        <div>
-          <label
+        <label>评论({{ sourceComments.totalCount }})</label>
+        <div class="btns">
+          <button
+            class="btn"
             :class="{ active: sourceComments.activate == 1 }"
             @click="switchComment(1)"
             >推荐
-          </label>
-          <label
+          </button>
+          <button
+            class="btn"
             :class="{ active: sourceComments.activate == 2 }"
             @click="switchComment(2)"
             >最热
-          </label>
-          <label
+          </button>
+          <button
+            class="btn"
             :class="{ active: sourceComments.activate == 3 }"
             @click="switchComment(3)"
             >最新
-          </label>
+          </button>
         </div>
       </div>
-      <div id="Container" ref="ContainerRef">
+      <div ref="commentRef" class="comment-main" @scroll="loadMoreComments">
         <div
           v-for="(comment, index) in sourceComments.comments"
           :id="`comment${index}`"
           :key="index"
-          class="one-comment"
+          class="comment-item"
         >
-          <div class="comment_userinfo">
-            <div class="avatar">
-              <img :src="comment.user.avatarUrl" />
-            </div>
-            <div class="userinfo">
-              <div>{{ comment.user.nickname }}</div>
-              <div class="comment-time">
-                <div>{{ comment.timeStr }}</div>
-              </div>
-            </div>
-            <div class="likedcount">
-              <LikeButton
-                class="likebutton"
-                :liked="comment.liked"
-                @liked="handleLiked(comment, $event)"
-              />
-              {{ comment.likedCount }}
-              <!-- <svg-icon :icon-class="comment.liked ? 'liked' : 'like'" /> -->
-            </div>
+          <div class="avatar">
+            <img
+              :src="comment.user.avatarUrl + '?param=64y64'"
+              loading="lazy"
+            />
           </div>
-          <div class="comment-content">
-            <p @click="switch2FloorComment(comment.commentId)">{{
-              comment.content
-            }}</p>
-            <div class="reply-count">
-              <span>{{ comment.replyCount }}条回复</span>
-              <span
-                v-if="isAccountLoggedIn && comment.owner"
-                class="seperate_line"
-                >|</span
-              >
-              <span
-                v-if="isAccountLoggedIn && comment.owner"
-                class="delect_reply"
-                @click="handleDeleteComment(comment)"
-              >
-                删除
-              </span>
+          <div class="comment-info">
+            <div class="comment">
+              <label class="comment-nickname"
+                >{{ comment.user.nickname }}:
+              </label>
+              <label>{{ comment.content }}</label>
+            </div>
+            <div class="comment-ex">
+              <div>{{ comment.time | formatDate('YYYY年MM月DD日 H:mm') }}</div>
+              <div class="comment-btns">
+                <button
+                  v-if="isAccountLoggedIn && comment.owner"
+                  @click="handleDeleteComment(comment)"
+                  >删除</button
+                >
+                <button @click="handleLiked(comment)"
+                  ><svg-icon :icon-class="comment.liked ? 'liked' : 'like'" />{{
+                    comment.likedCount
+                  }}</button
+                >
+                <button @click="switch2FloorComment(comment.commentId)">
+                  <svg-icon icon-class="comment" />{{ comment.replyCount }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -88,14 +83,12 @@ import {
   handlCommentLiked,
   handleSubmitComment,
 } from '@/api/comment';
-import LikeButton from '@/components/LikeButton.vue';
 import WriteComment from '@/components/WriteComment.vue';
 import locale from '@/locale';
 
 export default {
   name: 'Comment',
   components: {
-    LikeButton,
     WriteComment,
   },
   data() {
@@ -107,7 +100,7 @@ export default {
         isLoading: false,
         sortType: 1,
         activate: 1,
-        pageSize: 50,
+        pageSize: 30,
         pageNo: 1,
         hasMore: true,
         totalCount: 0,
@@ -116,12 +109,6 @@ export default {
         comments: [],
       },
       deleteComment: null,
-      setLikedStyle: {
-        backgroundColor: 'blue',
-        height: '26px',
-        width: '26px',
-        margin: '0 0 6px 2px',
-      },
     };
   },
   computed: {
@@ -131,10 +118,6 @@ export default {
     },
     isAccountLoggedIn() {
       return isAccountLoggedIn();
-    },
-    containerStyle() {
-      const height = this.clientHeight - 180;
-      return { height: `${height}px` };
     },
     isFloorComment() {
       return this.modals.deleteCommentModal.isFloorComment;
@@ -159,10 +142,10 @@ export default {
       }
     },
   },
-  mounted: function () {
-    window.addEventListener('scroll', this.loadMoreComments, true);
-    window.addEventListener('resize', this.handleResize);
-  },
+  // mounted: function () {
+  //   window.addEventListener('scroll', this.loadMoreComments, true);
+  //   window.addEventListener('resize', this.handleResize);
+  // },
   created() {
     this.getComment();
   },
@@ -193,7 +176,7 @@ export default {
       // this.sourceComments.totalCount = 0;
     },
     // 点赞/取消点赞
-    handleLiked(comment, liked) {
+    handleLiked(comment) {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
@@ -203,9 +186,18 @@ export default {
         comment.commentId,
         !comment.liked ? 1 : 0,
         this.sourceComments.type
-      );
-      comment.liked = liked;
-      comment.likedCount += liked ? 1 : -1;
+      )
+        .then(res => {
+          if (res.code === 200) {
+            comment.likedCount += comment.liked ? -1 : 1;
+            comment.liked = !comment.liked;
+          } else {
+            this.showToast(res.msg + res?.data?.dialog?.subtitle);
+          }
+        })
+        .catch(err => {
+          this.showToast(err);
+        });
     },
     // 评论相关功能
     switchComment(activate) {
@@ -224,6 +216,7 @@ export default {
         this.sourceComments.pageNo =
           this.sourceComments.addedCountList.length + 1;
       }
+      if (this.currentTrack.matched === false) return;
       this.sourceComments.isLoading = true;
       const data = await getSongNewComment(
         this.player.currentTrack.onlineTrack?.id || this.player.currentTrack.id,
@@ -264,24 +257,20 @@ export default {
       }
     },
     loadMoreComments() {
-      if (this.$parent.show == 'comment') {
-        const el = document.getElementById('Container');
-        if (this.$parent.show === 'comment' && el) {
-          let scrollTop = el.scrollTop;
-          let clientHeight = el.clientHeight;
-          let scrollHeight = el.scrollHeight;
-          if (scrollTop + clientHeight >= scrollHeight) {
-            if (
-              !this.sourceComments.hasMore &&
-              this.sourceComments.sortType === 1
-            ) {
-              this.sourceComments.hasMore = true;
-              this.sourceComments.sortType = 3;
-              this.pageNo = 0;
-            }
-            this.getComment();
-          }
+      const commentRef = this.$refs.commentRef;
+      let scrollTop = commentRef.scrollTop;
+      let clientHeight = commentRef.clientHeight;
+      let scrollHeight = commentRef.scrollHeight;
+      if (scrollTop + clientHeight >= scrollHeight) {
+        if (
+          !this.sourceComments.hasMore &&
+          this.sourceComments.sortType === 1
+        ) {
+          this.sourceComments.hasMore = true;
+          this.sourceComments.sortType = 3;
+          this.pageNo = 0;
         }
+        this.getComment();
       }
     },
     // 删除评论
@@ -324,7 +313,7 @@ export default {
       handleSubmitComment(
         1,
         this.sourceComments.type,
-        this.player.currentTrack.onlineTrack?.id || this.player.currentTrack.id,
+        this.player.currentTrack.id,
         comment
       )
         .then(response => {
@@ -334,126 +323,123 @@ export default {
             const data = response.comment;
             data.likedCount = 0;
             data.replyCount = 0;
-            data.timeStr = '刚刚';
+            data.time = Date.now();
             this.sourceComments.comments.push(response.comment);
-          } else if (response && response.code !== 200) {
-            this.showToast(response.data.dialog.subtitle);
           } else {
-            this.showToast(locale.t('toast.commentFailed'));
+            this.showToast(
+              response?.body?.message || locale.t('toast.commentFailed')
+            );
           }
         })
-        .catch();
+        .catch(error => {
+          this.showToast(error);
+        });
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-#CommentContainer {
+.comment-container {
   height: 100vh;
-  max-width: 600px;
-  margin-left: 10px;
-  padding-right: 5vw;
-  .comment-head {
-    line-height: 80px;
-    height: 80px;
-    overflow: hidden;
-    padding-left: 18px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    div {
-      float: right;
-      label {
-        padding: 8px 20px;
-        border-radius: 8px;
-        margin-left: 10px;
-        opacity: 0.5;
+  width: 50vw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+  padding: 40px 6vw 0 4vw;
+  transition: all 0.5s;
+}
 
-        &:hover {
-          cursor: pointer;
-          opacity: 0.9;
-          background: var(--color-secondary-bg-for-transparent);
-        }
-      }
-      .active {
-        opacity: 0.9;
-        background: var(--color-secondary-bg-for-transparent);
-      }
+.comment-head {
+  display: flex;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  justify-content: space-between;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  .btns {
+    display: flex;
+    text-align: center;
+    justify-items: center;
+    .btn {
+      font-size: 16px;
+      font-weight: bold;
+      padding: 0 10px;
+      opacity: 0.5;
+      color: var(--color-text);
+      -webkit-app-region: no-drag;
+      cursor: pointer;
+    }
+    .btn.active {
+      opacity: 1;
     }
   }
+}
 
-  #Container {
-    height: calc(100vh - 160px);
-    overflow: auto;
-    .one-comment {
-      margin: 5px 0;
-      padding: 12px 18px 8px 18px;
-      transition: 0.5s;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      opacity: 0.86;
-      &:hover {
-        background: var(--color-secondary-bg-for-transparent);
-      }
-      .comment_userinfo {
-        height: 40px;
-        margin-bottom: 10px;
-        .avatar {
-          height: 40px;
-          width: 40px;
-          float: left;
-          margin-right: 12px;
-          background-color: #fff;
-          border-radius: 50%;
-          img {
-            height: 100%;
-            width: 100%;
-            border-radius: 50%;
-          }
-        }
-        .userinfo {
-          float: left;
-          font-size: 18px;
-          line-height: 24px;
-          opacity: 0.85;
-          .comment-time {
-            font-size: 14px;
-            opacity: 0.68;
-            line-height: 22px;
-          }
-        }
-        .likedcount {
-          float: right;
-          font-size: 14px;
-          text-align: center;
-          cursor: pointer;
-        }
-      }
-      .comment-content {
-        p {
-          font-size: 20px;
-          line-height: 28px;
-          cursor: pointer;
-        }
-        // padding-left: 50px;
-        .reply-count {
-          font-size: 14px;
-          opacity: 0.68;
-          .seperate_line {
-            margin: 0 10px;
-          }
-          .delect_reply {
-            cursor: pointer;
-          }
-        }
+.comment-main {
+  height: calc(100vh - 140px);
+  overflow-y: scroll;
+}
+
+.comment-item {
+  display: flex;
+  width: 100%;
+  opacity: 0.9;
+  margin-bottom: 10px;
+
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+}
+.comment-info {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.comment {
+  width: auto;
+
+  .comment-nickname {
+    font-weight: bold;
+  }
+}
+.comment-ex {
+  display: flex;
+  margin-top: 4px;
+  padding-bottom: 10px;
+  width: 100%;
+  font-size: 14px;
+  opacity: 0.7;
+  text-align: center;
+  justify-content: center;
+  justify-content: space-between;
+
+  .comment-btns {
+    display: flex;
+
+    button {
+      display: flex;
+      margin-left: 10px;
+      align-items: center;
+      margin: 4px;
+      border-radius: 25%;
+      color: var(--color-text);
+      cursor: pointer;
+
+      .svg-icon {
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
       }
     }
-  }
-  .write_comment {
-    height: 80px;
-    max-width: 600px;
   }
 }
 .slide-fade-enter-active {

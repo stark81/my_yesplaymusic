@@ -18,6 +18,7 @@ button {
   margin: 4px;
   border-radius: 25%;
   transition: 0.2s;
+  color: var(--color-text);
   .svg-icon {
     color: var(--color-text);
     height: 16px;

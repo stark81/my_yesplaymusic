@@ -407,80 +407,78 @@ export default {
   }
 }
 
-.right-side {
-  .lyrics-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-y: scroll;
-    // padding-left: 4vh;
-    max-width: 460px;
-    overflow-y: auto;
+.lyrics-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  font-weight: 600;
+  padding-left: 4vh;
+  overflow-y: auto;
+  transition: 0.5s;
+  scrollbar-width: none; // firefox
+
+  .line {
+    width: 40vw;
+    margin: 2px 0;
+    padding: 12px;
     transition: 0.5s;
-    scrollbar-width: none; // firefox
+    border-radius: 12px;
 
-    .line {
-      width: 50vh;
-      margin: 2px 0;
-      padding: 12px 18px;
-      transition: 0.5s;
-      border-radius: 12px;
-
-      &:hover {
-        background: var(--color-secondary-bg-for-transparent);
-      }
-
-      .content {
-        transform-origin: center left;
-        transform: scale(0.95);
-        transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-        span {
-          opacity: 0.28;
-          cursor: default;
-          font-size: 1em;
-          transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        span.translation {
-          opacity: 0.2;
-          font-size: 0.925em;
-        }
-      }
+    &:hover {
+      background: var(--color-secondary-bg-for-transparent);
     }
 
-    .line#line-1:hover {
-      background: unset;
-    }
+    .content {
+      transform-origin: center left;
+      transform: scale(0.95);
+      transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    .translation {
-      margin-top: 0.1em;
-    }
-
-    .highlight div.content {
-      // transform: scale(1);
       span {
-        opacity: 0.98;
-        display: inline-block;
+        opacity: 0.28;
+        cursor: default;
+        font-size: 1em;
+        transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
 
       span.translation {
-        opacity: 0.65;
+        opacity: 0.2;
+        font-size: 0.925em;
       }
     }
   }
 
-  ::-webkit-scrollbar {
-    display: none;
+  .line#line-1:hover {
+    background: unset;
   }
 
-  .lyrics-container .line:first-child {
-    margin-top: 50vh;
+  .translation {
+    margin-top: 0.1em;
   }
 
-  .lyrics-container .line:last-child {
-    margin-bottom: calc(50vh - 128px);
+  .highlight div.content {
+    // transform: scale(1);
+    span {
+      opacity: 0.98;
+      display: inline-block;
+    }
+
+    span.translation {
+      opacity: 0.65;
+    }
   }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.lyrics-container .line:first-child {
+  margin-top: 50vh;
+}
+
+.lyrics-container .line:last-child {
+  margin-bottom: calc(50vh - 128px);
 }
 
 @media screen and (min-width: 1200px) {

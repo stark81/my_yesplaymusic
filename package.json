@@ -34,7 +34,7 @@
     "@fastify/cookie": "^9.3.1",
     "@fastify/static": "^7.0.4",
     "@unblockneteasemusic/rust-napi": "^0.4.0",
-    "NeteaseCloudMusicApi": "^4.8.7",
+    "NeteaseCloudMusicApi": "4.15.6",
     "axios": "^0.26.1",
     "change-case": "^4.1.2",
     "cli-color": "^2.0.0",

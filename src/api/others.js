@@ -62,7 +62,7 @@ export function fmTrash(id) {
  * @param {string} params.duration
  * @param {string} params.md5
  */
-export function localMatch(params) {
+export function searchMatch(params) {
   return request({
     url: '/search/match',
     method: 'get',

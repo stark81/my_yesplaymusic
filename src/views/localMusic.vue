@@ -111,7 +111,7 @@
         </button>
       </div>
 
-      <div v-show="currentTab === 'localSongs'" style="padding-bottom: 64px">
+      <div v-show="currentTab === 'localSongs'">
         <TrackList
           ref="trackListRef"
           :tracks="filterLocalTracks"
@@ -359,11 +359,7 @@ export default {
     this.loadData();
   },
   mounted() {
-    this.$parent.$refs.main.style.paddingBottom = '0';
     this.getRandomLyric();
-  },
-  beforeDestroy() {
-    this.$parent.$refs.main.style.paddingBottom = '96px';
   },
   methods: {
     ...mapMutations(['updateData', 'updateLocalMusicXXX', 'updateModal']),

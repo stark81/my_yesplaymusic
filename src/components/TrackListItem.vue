@@ -66,7 +66,7 @@
         :to="`/album/${album.id}`"
         >{{ album.name }}</router-link
       >
-      <div></div>
+      <div v-else>{{ album.name }}</div>
     </div>
 
     <div v-if="showTrackTime" class="createTime">
@@ -112,8 +112,8 @@ export default {
   components: { ArtistsInLine, ExplicitSymbol },
 
   props: {
-    trackProp: Object,
-    trackNo: Number,
+    trackProp: { type: Object, default: () => {} },
+    trackNo: { type: Number, default: 0 },
     batchOp: {
       type: Boolean,
       default: false,

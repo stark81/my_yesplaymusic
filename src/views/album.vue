@@ -111,7 +111,7 @@
           >{{ album.artist.name }}
         </router-link>
       </div>
-      <div>
+      <div style="margin-bottom: 96px">
         <CoverRow
           type="album"
           :items="filteredMoreAlbums"

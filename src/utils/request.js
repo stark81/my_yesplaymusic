@@ -51,7 +51,7 @@ service.interceptors.request.use(function (config) {
 
 service.interceptors.response.use(
   response => {
-    const res = response.data;
+    const res = response.data ?? response.body;
     return res;
   },
   async error => {

@@ -19,6 +19,9 @@
 [![Library][library-screenshot]](https://music.qier222.com)
 
 ==========================================================================
+## 推广
+- 拥有开发能力的Mac用户，可访问[VutronMusic](https://github.com/stark81/VutronMusic)项目进行编译，该项目使用vue3 + ts + better-sqlite3 + fastify + pinia + electron29+进行开发，UI界面大量参考复用[YesPlayMusic](https://github.com/qier222/YesPlayMusic)，但对于本地音乐的支持更为强大，同时使用虚拟列表以减少内存占用、提高性能等，且UnblockNeteaseMusic解锁更为稳定，推荐使用。其他系统用户亦可在该项目上进行二次开发，以便更好支持其他系统的使用。
+
 ## 特性✨
  - 新增歌曲评论功能，包括：查看评论、发表评论、回复评论、点赞等。注：因未对歌曲本身进行校验，因此可能会出现评论失败的情况(且没有失败提示)；
  - 针对Mac系统，增加了状态栏歌词显示，包括：独立控制歌词、控制按钮等显示；
