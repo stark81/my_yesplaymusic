@@ -156,7 +156,7 @@ yarn run build
 
 7. 将 `/dist` 目录下的文件上传到你的 Web 服务器
 
-## ⚙️ Docker 部署
+## ⚙️ Docker 部署（Yesplaymusic原版）
 
 1. 构建 Docker Image
 
@@ -176,7 +176,25 @@ docker run -d --name YesPlayMusic -p 80:80 yesplaymusic
 docker-compose up -d
 ```
 
-YesPlayMusic 地址为 `http://localhost`
+YesPlayMusic 地址为 ``
+
+## ⚙️ Docker 部署（适用于由Dnyo666构建的docker版）
+
+1.拉取 Docker Image（可指定版本）
+
+```sh
+docker pull dnyo666/my_yesplaymusic:v0.4.16-3
+```
+
+2.运行Docker（将80端口映射到3001，可自定义）
+
+```sh
+docker run -d --name My_YesPlayMusic -p 3001:80 dnyo666/my_yesplaymusic:v0.4.16-3
+```
+
+3.打开My_YesPlayMusic
+
+浏览器输入：http://localhost:3001 成功进入
 
 ## ⚙️ 部署至 Replit
 
