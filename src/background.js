@@ -33,7 +33,7 @@ import express from 'express';
 import expressProxy from 'express-http-proxy';
 import Store from 'electron-store';
 import { createMpris } from '@/electron/mpris';
-import { release } from 'os';
+import { release, type } from 'os';
 import { parseFile } from 'music-metadata';
 
 const clc = require('cli-color');
@@ -106,7 +106,8 @@ class Background {
     log('initializing');
 
     // Make sure the app is singleton.
-    if (release().startsWith('6.1')) app.disableHardwareAcceleration();
+    if (release().startsWith("6.1") && type() == 'Windows_NT')
+      app.disableHardwareAcceleration();
     if (process.platform === 'win32') app.setAppUserModelId(app.getName());
     if (!app.requestSingleInstanceLock()) return app.quit();
 
