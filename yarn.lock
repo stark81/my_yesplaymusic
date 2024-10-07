@@ -2791,10 +2791,10 @@
   resolved "https://mirrors.cloud.tencent.com/npm/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-NeteaseCloudMusicApi@4.15.6:
-  version "4.15.6"
-  resolved "https://mirrors.cloud.tencent.com/npm/NeteaseCloudMusicApi/-/NeteaseCloudMusicApi-4.15.6.tgz#c6339b33ec3888887cdce7e2ce6f3553503b1b14"
-  integrity sha512-MNd5TUUNRCTeVsEZ+ogag5DZbIUWLDKNdNW29+aIi8NN9IXALWe5OBH22GJsf7idpYlVo2usORBM4so2CnwdkA==
+NeteaseCloudMusicApi@^4.15.6:
+  version "4.23.1"
+  resolved "https://mirrors.cloud.tencent.com/npm/NeteaseCloudMusicApi/-/NeteaseCloudMusicApi-4.23.1.tgz#2479addbb02d9224a0aab3309a970dd51dfdb32e"
+  integrity sha512-knjTB2g7CcogBG9yaxj37BoazBH8a5r0kJgFfLo1JJngdUhRapk0z20XOAtG8mrSoFd6yxW8fimFqcL5lbmwEw==
   dependencies:
     axios "^1.2.2"
     crypto-js "^4.2.0"

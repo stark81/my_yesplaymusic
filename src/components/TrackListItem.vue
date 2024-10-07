@@ -81,10 +81,7 @@
         <svg-icon
           icon-class="heart"
           :style="{
-            visibility:
-              focus && !isLiked && !(track.isLocal || false)
-                ? 'visible'
-                : 'hidden',
+            visibility: focus && !isLiked ? 'visible' : 'hidden',
           }"
         ></svg-icon>
         <svg-icon v-show="isLiked" icon-class="heart-solid"></svg-icon>
@@ -104,7 +101,7 @@
 <script>
 import ArtistsInLine from '@/components/ArtistsInLine.vue';
 import ExplicitSymbol from '@/components/ExplicitSymbol.vue';
-import { mapState } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 import { isNil } from 'lodash';
 
 export default {
@@ -266,6 +263,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(['showToast']),
     goToAlbum() {
       if (this.track.al.id === 0) return;
       this.$router.push({ path: '/album/' + this.track?.al?.id });
@@ -274,7 +272,10 @@ export default {
       this.$parent.playThisList(this.track?.id);
     },
     likeThisSong() {
-      if (this.track?.isLocal && !this.track?.matched) return;
+      if (this.track?.isLocal && !this.track?.matched) {
+        this.showToast('本地歌曲，无法操作');
+        return;
+      }
       this.$parent.likeATrack(this.track?.id);
     },
     getPublishTime(date) {

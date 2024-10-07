@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapMutations, mapActions } from 'vuex';
 
 export default {
   name: 'VirtualScroll',
@@ -67,7 +67,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player']),
+    ...mapState(['player', 'liked']),
     _listData() {
       return this.list.reduce((init, cur, index) => {
         init.push({
@@ -191,6 +191,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['likeATrack']),
     observer() {
       const observer = new IntersectionObserver(
         entries => {
