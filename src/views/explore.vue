@@ -1,6 +1,6 @@
 <template>
   <div class="explore-page">
-    <h1>{{ $t('explore.explore') }}</h1>
+    <!-- <h1>{{ $t('explore.explore') }}</h1> -->
     <div class="buttons">
       <div
         v-for="category in settings.enabledPlaylistCategories"

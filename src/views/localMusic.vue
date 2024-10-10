@@ -31,6 +31,7 @@
           :column-number="3"
           type="tracklist"
           :show-position="false"
+          :item-size="57"
           :enabled="false"
           :extra-context-menu-item="[
             'showInFolder',
@@ -196,7 +197,8 @@ import { mapState, mapMutations, mapActions } from 'vuex';
 import { randomNum } from '@/utils/common';
 import TrackList from '@/components/TrackList.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
-import CoverRow from '@/components/CoverRow.vue';
+// import CoverRow from '@/components/CoverRow.vue';
+import CoverRow from '@/components/VirtualCoverRow.vue';
 import { getLyric } from '@/api/track';
 import SvgIcon from '@/components/SvgIcon.vue';
 import ModalMatchTrack from '@/components/ModalMatchTrack.vue';
@@ -327,13 +329,13 @@ export default {
     },
   },
   watch: {
-    currentTab(val) {
-      if (val !== 'localSongs') {
-        this.$parent.$refs.main.style.paddingBottom = '96px';
-      } else {
-        this.$parent.$refs.main.style.paddingBottom = '0';
-      }
-    },
+    // currentTab(val) {
+    //   if (val !== 'localSongs') {
+    //     this.$parent.$refs.main.style.paddingBottom = '96px';
+    //   } else {
+    //     this.$parent.$refs.main.style.paddingBottom = '0';
+    //   }
+    // },
     sortBy(val) {
       this.activeTracks = this.sortList(this.activeTracks, val);
     },

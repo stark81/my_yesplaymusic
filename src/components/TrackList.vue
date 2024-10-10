@@ -103,6 +103,7 @@
       :list="tracks"
       :column-number="columnNumber"
       :show-position="showPosition"
+      :item-size="itemSize"
       :type="type"
       :enabled="enabled"
     >
@@ -201,6 +202,10 @@ export default {
     itemKey: {
       type: String,
       default: 'id',
+    },
+    itemSize: {
+      type: Number,
+      default: 64,
     },
   },
   data() {

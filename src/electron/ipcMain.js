@@ -1,5 +1,5 @@
 import { app, dialog, globalShortcut, ipcMain } from 'electron';
-import UNM from '@unblockneteasemusic/rust-napi';
+// import UNM from '@unblockneteasemusic/rust-napi';
 import { registerGlobalShortcut } from '@/electron/globalShortcut';
 import cloneDeep from 'lodash/cloneDeep';
 import shortcuts from '@/utils/shortcuts';
@@ -81,13 +81,13 @@ const client = require('discord-rich-presence')('818936529484906596');
  * @param {?} data The data to convert.
  * @returns {import("buffer").Buffer} The converted data.
  */
-function toBuffer(data) {
-  if (data instanceof Buffer) {
-    return data;
-  } else {
-    return Buffer.from(data);
-  }
-}
+// function toBuffer(data) {
+//   if (data instanceof Buffer) {
+//     return data;
+//   } else {
+//     return Buffer.from(data);
+//   }
+// }
 
 /**
  * Get the file base64 data from bilivideo.
@@ -95,21 +95,21 @@ function toBuffer(data) {
  * @param {string} url The URL to fetch.
  * @returns {Promise<string>} The file base64 data.
  */
-async function getBiliVideoFile(url) {
-  const axios = await import('axios').then(m => m.default);
-  const response = await axios.get(url, {
-    headers: {
-      Referer: 'https://www.bilibili.com/',
-      'User-Agent': 'okhttp/3.4.1',
-    },
-    responseType: 'arraybuffer',
-  });
+// async function getBiliVideoFile(url) {
+//   const axios = await import('axios').then(m => m.default);
+//   const response = await axios.get(url, {
+//     headers: {
+//       Referer: 'https://www.bilibili.com/',
+//       'User-Agent': 'okhttp/3.4.1',
+//     },
+//     responseType: 'arraybuffer',
+//   });
 
-  const buffer = toBuffer(response.data);
-  const encodedData = buffer.toString('base64');
+//   const buffer = toBuffer(response.data);
+//   const encodedData = buffer.toString('base64');
 
-  return encodedData;
-}
+//   return encodedData;
+// }
 
 /**
  * Parse the source string (`a, b`) to source list `['a', 'b']`.
@@ -118,27 +118,27 @@ async function getBiliVideoFile(url) {
  * @param {string} sourceString The source string.
  * @returns {string[]} The source list.
  */
-function parseSourceStringToList(executor, sourceString) {
-  const availableSource = executor.list();
+// function parseSourceStringToList(executor, sourceString) {
+//   const availableSource = executor.list();
 
-  return sourceString
-    .split(',')
-    .map(s => s.trim().toLowerCase())
-    .filter(s => {
-      const isAvailable = availableSource.includes(s);
+//   return sourceString
+//     .split(',')
+//     .map(s => s.trim().toLowerCase())
+//     .filter(s => {
+//       const isAvailable = availableSource.includes(s);
 
-      if (!isAvailable) {
-        log(`This source is not one of the supported source: ${s}`);
-      }
+//       if (!isAvailable) {
+//         log(`This source is not one of the supported source: ${s}`);
+//       }
 
-      return isAvailable;
-    });
-}
+//       return isAvailable;
+//     });
+// }
 
 export function initIpcMain(win, store, tray, lrc) {
   // WIP: Do not enable logging as it has some issues in non-blocking I/O environment.
   // UNM.enableLogging(UNM.LoggingType.ConsoleEnv);
-  const unmExecutor = new UNM.Executor();
+  // const unmExecutor = new UNM.Executor();
 
   ipcMain.handle(
     'unblock-music',
@@ -149,55 +149,64 @@ export function initIpcMain(win, store, tray, lrc) {
      * @param {Record<string, any>} ncmTrack
      * @param {UNM.Context} context
      */
-    async (_, sourceListString, ncmTrack, context) => {
-      // Formt the track input
-      // FIXME: Figure out the structure of Track
-      const song = {
-        id: ncmTrack.id && ncmTrack.id.toString(),
-        name: ncmTrack.name,
-        duration: ncmTrack.dt,
-        album: ncmTrack.al && {
-          id: ncmTrack.al.id && ncmTrack.al.id.toString(),
-          name: ncmTrack.al.name,
-        },
-        artists: ncmTrack.ar
-          ? ncmTrack.ar.map(({ id, name }) => ({
-              id: id && id.toString(),
-              name,
-            }))
-          : [],
-      };
-
-      const sourceList =
-        typeof sourceListString === 'string'
-          ? parseSourceStringToList(unmExecutor, sourceListString)
-          : ['ytdl', 'bilibili', 'pyncm', 'kugou'];
-      log(`[UNM] using source: ${sourceList.join(', ')}`);
-      log(`[UNM] using configuration: ${JSON.stringify(context)}`);
-
-      try {
-        // TODO: tell users to install yt-dlp.
-        const matchedAudio = await unmExecutor.search(
-          sourceList,
-          song,
-          context
-        );
-        const retrievedSong = await unmExecutor.retrieve(matchedAudio, context);
-
-        // bilibili's audio file needs some special treatment
-        if (retrievedSong.url.includes('bilivideo.com')) {
-          retrievedSong.url = await getBiliVideoFile(retrievedSong.url);
-        }
-
-        log(`respond with retrieve song…`);
-        log(JSON.stringify(matchedAudio));
-        return retrievedSong;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? `${err.message}` : `${err}`;
-        log(`UnblockNeteaseMusic failed: ${errorMessage}`);
-        return null;
-      }
+    async (_, sourceListString, ncmTrack) => {
+      const sourceList = sourceListString
+        .split(',')
+        .map(s => s.trim().toLowerCase());
+      // console.log(sourceList, ncmTrack, context);
+      const match = require('@unblockneteasemusic/server');
+      const result = await match(ncmTrack.id, sourceList);
+      return result;
     }
+    // async (_, sourceListString, ncmTrack, context) => {
+    //   // Formt the track input
+    //   // FIXME: Figure out the structure of Track
+    //   const song = {
+    //     id: ncmTrack.id && ncmTrack.id.toString(),
+    //     name: ncmTrack.name,
+    //     duration: ncmTrack.dt,
+    //     album: ncmTrack.al && {
+    //       id: ncmTrack.al.id && ncmTrack.al.id.toString(),
+    //       name: ncmTrack.al.name,
+    //     },
+    //     artists: ncmTrack.ar
+    //       ? ncmTrack.ar.map(({ id, name }) => ({
+    //           id: id && id.toString(),
+    //           name,
+    //         }))
+    //       : [],
+    //   };
+
+    //   const sourceList =
+    //     typeof sourceListString === 'string'
+    //       ? parseSourceStringToList(unmExecutor, sourceListString)
+    //       : ['ytdl', 'bilibili', 'pyncm', 'kugou'];
+    //   log(`[UNM] using source: ${sourceList.join(', ')}`);
+    //   log(`[UNM] using configuration: ${JSON.stringify(context)}`);
+
+    //   try {
+    //     // TODO: tell users to install yt-dlp.
+    //     const matchedAudio = await unmExecutor.search(
+    //       sourceList,
+    //       song,
+    //       context
+    //     );
+    //     const retrievedSong = await unmExecutor.retrieve(matchedAudio, context);
+
+    //     // bilibili's audio file needs some special treatment
+    //     if (retrievedSong.url.includes('bilivideo.com')) {
+    //       retrievedSong.url = await getBiliVideoFile(retrievedSong.url);
+    //     }
+
+    //     log(`respond with retrieve song…`);
+    //     log(JSON.stringify(matchedAudio));
+    //     return retrievedSong;
+    //   } catch (err) {
+    //     const errorMessage = err instanceof Error ? `${err.message}` : `${err}`;
+    //     log(`UnblockNeteaseMusic failed: ${errorMessage}`);
+    //     return null;
+    //   }
+    // }
   );
 
   ipcMain.on('close', e => {

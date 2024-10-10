@@ -1,12 +1,12 @@
 <template>
   <div v-show="show" ref="library">
-    <h1>
+    <!-- <h1>
       <img
         class="avatar"
         :src="data.user.avatarUrl | resizeImage"
         loading="lazy"
       />{{ data.user.nickname }}{{ $t('library.sLibrary') }}
-    </h1>
+    </h1> -->
     <div class="section-one">
       <div class="liked-songs" @click="goToLikedSongsList">
         <div class="top">
@@ -37,6 +37,7 @@
           :id="liked.playlists.length > 0 ? liked.playlists[0].id : 0"
           :tracks="liked.songsWithDetails"
           :column-number="3"
+          :item-size="57"
           :show-position="false"
           :enabled="false"
           type="tracklist"

@@ -106,7 +106,7 @@ class Background {
     log('initializing');
 
     // Make sure the app is singleton.
-    if (release().startsWith("6.1") && type() == 'Windows_NT')
+    if (release().startsWith('6.1') && type() == 'Windows_NT')
       app.disableHardwareAcceleration();
     if (process.platform === 'win32') app.setAppUserModelId(app.getName());
     if (!app.requestSingleInstanceLock()) return app.quit();

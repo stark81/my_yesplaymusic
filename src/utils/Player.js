@@ -645,7 +645,7 @@ export default class {
       this._localPic = null;
     }
     let artists = track.ar.map(a => a.name);
-    const useLocal = track.isLocal !== false && track.matched !== true;
+    const useLocal = track.isLocal && !track.matched;
     if (useLocal) {
       const blob = await fetch(`atom://get-pic/${track.filePath}`).then(res =>
         res.blob()

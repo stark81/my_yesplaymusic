@@ -374,23 +374,27 @@ export default {
     let like = true;
     if (state.liked.songs.includes(id)) like = false;
     likeATrack({ id, like })
-      .then(() => {
-        if (like === false) {
-          commit('updateLikedXXX', {
-            name: 'songs',
-            data: state.liked.songs.filter(d => d !== id),
-          });
+      .then(res => {
+        if (res.code === 200) {
+          if (like === false) {
+            commit('updateLikedXXX', {
+              name: 'songs',
+              data: state.liked.songs.filter(d => d !== id),
+            });
+          } else {
+            let newLikeSongs = state.liked.songs;
+            newLikeSongs.push(id);
+            commit('updateLikedXXX', {
+              name: 'songs',
+              data: newLikeSongs,
+            });
+          }
+          dispatch('fetchLikedSongsWithDetails');
+          const { ipcRenderer } = require('electron');
+          ipcRenderer.send('updateTrayLikeState', like);
         } else {
-          let newLikeSongs = state.liked.songs;
-          newLikeSongs.push(id);
-          commit('updateLikedXXX', {
-            name: 'songs',
-            data: newLikeSongs,
-          });
+          dispatch('showToast', '操作失败，专辑下架或版权锁定');
         }
-        dispatch('fetchLikedSongsWithDetails');
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('updateTrayLikeState', like);
       })
       .catch(() => {
         dispatch('showToast', '操作失败，专辑下架或版权锁定');

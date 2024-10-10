@@ -2,8 +2,9 @@
   <div
     class="cover"
     :class="{ 'cover-hover': coverHover }"
-    @mouseover="focus = true"
-    @mouseleave="focus = false"
+    :title="matched ? '' : '本地文件，无法操作'"
+    @mouseover="mouseOper(true)"
+    @mouseleave="mouseOper(false)"
     @click="clickCoverToPlay ? play() : goTo()"
   >
     <div class="cover-container">
@@ -33,6 +34,7 @@ export default {
   props: {
     id: { type: Number, required: true },
     type: { type: String, required: true },
+    matched: { type: Boolean, default: true },
     imageUrl: { type: String, required: true },
     fixedSize: { type: Number, default: 0 },
     playButtonSize: { type: Number, default: 22 },
@@ -73,6 +75,7 @@ export default {
   },
   methods: {
     play() {
+      if (!this.matched) return;
       const player = this.$store.state.player;
       const playActions = {
         album: player.playAlbumByID,
@@ -96,7 +99,12 @@ export default {
       }
     },
     goTo() {
+      if (!this.matched) return;
       this.$router.push({ name: this.type, params: { id: this.id } });
+    },
+    mouseOper(focus) {
+      if (!this.matched) return;
+      this.focus = focus;
     },
   },
 };

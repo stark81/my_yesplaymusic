@@ -3,7 +3,7 @@
     ref="listRef"
     class="virtual-scroll"
     :style="{ height: containerHeight + 'px' }"
-    @scroll="scrollEvent(false)"
+    @scroll="scrollEvent"
   >
     <div v-if="showPosition" class="position">
       <div
@@ -45,18 +45,20 @@ export default {
     showPosition: { type: Boolean, default: true },
     pid: { type: Number, default: 0 },
     columnNumber: { type: Number, default: 1 },
+    aboveValue: { type: Number, default: 5 },
+    belowValue: { type: Number, default: 5 },
+    gap: { type: Number, default: 4 },
     itemSize: { type: Number, default: 64 },
     enabled: { type: Boolean, default: true },
+    propsHeight: { type: Number, default: 656 },
     extraContextMenuItem: { type: Array, default: () => [] },
   },
   data() {
     return {
       screenHeight: 0,
       start: 0,
-      end: 0,
       startOffset: 0,
       position: [],
-      containerHeight: 100,
       oneHeight: 0,
       lastScrollTop: 0,
       scrollTop: 0,
@@ -103,10 +105,14 @@ export default {
       return this.position[this.position.length - 1]?.bottom || 0;
     },
     aboveRow() {
-      return Math.min(this.start, 5);
+      return Math.min(this.start, this.aboveValue);
     },
     belowRow() {
-      return Math.min(this.totalRow - this.end, 5);
+      return Math.min(this.totalRow - this.end, this.belowValue);
+    },
+    containerHeight() {
+      const windowHeight = window.innerHeight - 64;
+      return Math.min(windowHeight, this.listHeight, this.propsHeight);
     },
     visibleRow() {
       return Math.ceil(this.containerHeight / this.oneHeight);
@@ -118,12 +124,18 @@ export default {
       );
     },
     anchorPoint() {
-      return this.position.length ? this.position[this.start] : null;
+      return this.position.length
+        ? this.position[this.start * this.columnNumber]
+        : null;
+    },
+    end() {
+      return this.start + this.visibleRow;
     },
     listStyles() {
       const listHeight = this.totalRow * this.oneHeight;
       const windowHeight = window.innerHeight - 64;
       return {
+        gap: `0 ${this.gap}px`,
         gridTemplateColumns: `repeat(${this.columnNumber}, 1fr)`,
         transform: `translateY(${this.startOffset}px)`,
         paddingBottom: `${
@@ -149,10 +161,6 @@ export default {
     },
     _listData() {
       this.initPosition();
-      this.containerHeight = Math.min(
-        this.totalRow * this.oneHeight,
-        window.innerHeight - 64
-      );
     },
   },
   created() {
@@ -162,11 +170,6 @@ export default {
     this.oneHeight = this.$refs.itemsRef
       ? this.$refs.itemsRef[0]?.getBoundingClientRect()?.height
       : 64;
-    this.containerHeight = Math.min(
-      this.totalRow * this.oneHeight,
-      window.innerHeight - 64
-    );
-    this.end = this.start + this.visibleRow;
     if (this.enabled) {
       this.aber = this.observer();
       this.aber.observe(this.$refs.listRef);
@@ -217,18 +220,18 @@ export default {
       this.position = this._listData.map((d, index) => ({
         index,
         height: this.itemSize,
-        top: Math.ceil(index / this.columnNumber) * this.itemSize,
-        bottom: Math.ceil(index / this.columnNumber + 1) * this.itemSize,
+        top: Math.floor(index / this.columnNumber) * this.itemSize,
+        bottom: Math.floor(index / this.columnNumber + 1) * this.itemSize,
       }));
     },
     getStartIndex(scrollTop = 0) {
       let start = 0;
-      let end = this.position.length - 1;
+      let end = Math.ceil(this.position.length / this.columnNumber) - 1;
       let tempIndex = null;
 
       while (start <= end) {
         const midIndex = Math.floor((start + end) / 2);
-        const midValue = this.position[midIndex].bottom;
+        const midValue = this.position[midIndex * this.columnNumber].bottom;
 
         if (midValue === scrollTop) {
           return midIndex;
@@ -312,24 +315,28 @@ export default {
         scrollTop < this.anchorPoint.top
       ) {
         this.start = this.getStartIndex(scrollTop);
-        this.end = this.start + this.visibleRow;
+        this.setStartOffset();
       }
     },
     updateItemsSize() {
       this.$refs.itemsRef?.forEach(node => {
-        const height = node.getBoundingClientRect().height;
-        const index = +node.id;
-        const oldHeight = this.position[index].height;
-        const diff = oldHeight - height;
+        if (node.id % this.columnNumber === 0) {
+          const height = node.getBoundingClientRect().height;
+          const index = +node.id;
+          const oldHeight = this.position[index].height;
+          const diff = oldHeight - height;
 
-        if (diff) {
-          this.position[index].bottom -= diff;
-          this.position[index].height = height;
-          this.position[index].over = true;
+          if (diff) {
+            this.position[index].bottom -= diff;
+            this.position[index].height = height;
+            this.position[index].over = true;
 
-          for (let k = index + 1; k < this.position.length; k++) {
-            this.position[k].top = this.position[k - 1].bottom;
-            this.position[k].bottom -= diff;
+            for (let k = index + 1; k < this.position.length; k++) {
+              if (k % this.columnNumber !== 0) break;
+              this.position[k].top =
+                this.position[k - this.columnNumber].bottom;
+              this.position[k].bottom -= diff;
+            }
           }
         }
       });
@@ -337,9 +344,11 @@ export default {
     setStartOffset() {
       if (this.start >= 1) {
         const size =
-          this.position[this.start].top -
-          (this.position[this.start - this.aboveRow].top || 0);
-        this.startOffset = this.position[this.start - 1].bottom - size;
+          this.position[this.start * this.columnNumber].top -
+          (this.position[(this.start - this.aboveRow) * this.columnNumber]
+            .top || 0);
+        this.startOffset =
+          this.position[(this.start - 1) * this.columnNumber].bottom - size;
       } else {
         this.startOffset = 0;
       }
