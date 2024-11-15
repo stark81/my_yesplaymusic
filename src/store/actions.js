@@ -254,11 +254,14 @@ export default {
               track.id = matchtrack.id;
               track.alia = matchtrack.alias;
               track.al.id = matchtrack.album.id;
-              const onlineAlbum = await getAlbum(matchtrack.album.id);
-              track.al.picUrl = onlineAlbum.album.picUrl;
-              track.al.artist = onlineAlbum.album.artist ?? {};
-              track.picUrl = onlineAlbum.album.picUrl;
+              if (track.al.id !== 0) {
+                const onlineAlbum = await getAlbum(matchtrack.album.id);
+                track.al.picUrl = onlineAlbum.album.picUrl;
+                track.al.artist = onlineAlbum.album.artist ?? {};
+                track.picUrl = onlineAlbum.album.picUrl;
+              }
               for (const artist of matchtrack.artists) {
+                if (artist.id === 0) break;
                 getArtist(artist.id).then(result => {
                   const ar = track.ar.find(ar => ar.name === artist.name);
                   if (ar) {

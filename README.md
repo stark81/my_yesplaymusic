@@ -20,7 +20,17 @@
 
 ==========================================================================
 ## 推广
-- 拥有开发能力的Mac用户，可访问[VutronMusic](https://github.com/stark81/VutronMusic)项目进行编译，该项目使用vue3 + ts + better-sqlite3 + fastify + pinia + electron29+进行开发，UI界面大量参考复用[YesPlayMusic](https://github.com/qier222/YesPlayMusic)，但对于本地音乐的支持更为强大，同时使用虚拟列表以减少内存占用、提高性能等，且UnblockNeteaseMusic解锁更为稳定，推荐使用。其他系统用户亦可在该项目上进行二次开发，以便更好支持其他系统的使用。
+- 本项目使用低版本的node、低版本electron，导致某些功能，如Linux下的桌面歌词体验不佳；
+- 本地音乐的匹配问题。项目集成的express + NeteaseCloudMusicApi无法使用search_match这个API(本地音乐匹配线上信息)，每次使用都只显示参数错误，导致本项目的本地歌曲只能使用“搜索 + 筛选”的方式(该方式增加搜索间隔来避免搜索功能被封)来进行匹配，效率低下；
+- 更新API的依赖后，由于未知bug导致掉登陆，即登陆后几分钟内便会自动登出（自动登出不会导致封号）；
+- 基于以上几个原因，在解决掉登陆的问题之前，本人将暂停本项目的更新，转而维护自己开发的另一个项目：[VutronMusic](https://github.com/stark81/VutronMusic)。其他用户如果发现本项目掉登陆的原因，请提issue或者pull request，本人会尽快更新处理。
+  - 该项目使用vue3 + ts + better-sqlite3 + fastify + pinia + electron32+进行开发，且可快速进行electron版本更新，以保障用户体验；
+  - 该项目暂时仅支持客户端，不会像YesPlayMusic一样支持web端，因此无法实现Vercel部署、服务器部署等功能。如果需要可以自行fork后进行修改；
+  - UI界面和功能大量【参考和复用】[YesPlayMusic](https://github.com/qier222/YesPlayMusic)，延续了YesPlayMusic的美观和优雅；
+  - 对本地音乐的支持更为强大，包括但不限于：①支持读取本地歌曲内嵌歌词、封面、音量平衡信息等；②离线歌单封面支持读取本地歌曲内嵌封面；③使用匹配API进行歌曲匹配，匹配结果快速准确；等等。
+  - 使用虚拟列表以减少内存占用、提高性能；
+  - UnblockNeteaseMusic解锁更为稳定；
+  - 等等。
 
 ## 特性✨
  - 新增歌曲评论功能，包括：查看评论、发表评论、回复评论、点赞等。注：因未对歌曲本身进行校验，因此可能会出现评论失败的情况(且没有失败提示)；

@@ -281,7 +281,10 @@ export default {
             const index = this.list.findIndex(
               d => d.id === this.currentTrack.id
             );
-            this.start = Math.max(0, Math.floor(index - this.visibleRow / 2));
+            this.start = Math.max(
+              0,
+              Math.floor(index - this.visibleRow / 2) + 1
+            );
             const startOffset = this.position[this.start].bottom;
             this.$refs.listRef.scrollTo({
               top: startOffset,
