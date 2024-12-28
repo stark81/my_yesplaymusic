@@ -33,7 +33,7 @@ import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import MusicPlay from './views/musicPlay.vue';
 import { mapState } from 'vuex';
-import { isMac } from './utils/platform';
+import { isMac, isLinux } from './utils/platform';
 
 export default {
   name: 'App',
@@ -116,9 +116,11 @@ export default {
         render.send('switchRepeatMode', this.player.repeatMode);
         render.send('switchShuffle', this.player.shuffle);
       }
-      render.invoke('checkExtensionStatus').then(res => {
-        this.$store.commit('updateDBusStatus', res);
-      });
+      if (isLinux) {
+        render.invoke('checkExtensionStatus').then(res => {
+          this.$store.commit('updateDBusStatus', res);
+        });
+      }
     }
     if (isMac && this.isElectron) {
       const { initMacStatusbarLyric } = require('./utils/macStatusBarLyric');

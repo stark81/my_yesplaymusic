@@ -5,7 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import shortcuts from '@/utils/shortcuts';
 import { createMenu } from './menu';
 import { createDBus } from './dbus-client';
-import { isCreateTray, isMac } from '@/utils/platform';
+import { isCreateTray, isMac, isLinux } from '@/utils/platform';
 
 let lyrics;
 let lyricIdx;
@@ -413,16 +413,18 @@ export function initIpcMain(win, store, tray, lrc) {
       }
     });
 
-    const busName = 'org.gnome.Shell.TrayLyric';
-    const dbus = createDBus(busName, win);
+    if (isLinux) {
+      const busName = 'org.gnome.Shell.TrayLyric';
+      const dbus = createDBus(busName, win);
 
-    ipcMain.handle('checkExtensionStatus', () => {
-      return dbus.status;
-    });
+      ipcMain.handle('checkExtensionStatus', () => {
+        return dbus.status || false;
+      });
 
-    ipcMain.on('updateCurrentLyric', (_, data) => {
-      data.sender = 'YesPlayMusic';
-      dbus.iface.UpdateLyric(JSON.stringify(data));
-    });
+      ipcMain.on('updateCurrentLyric', (_, data) => {
+        data.sender = 'YesPlayMusic';
+        dbus.iface.UpdateLyric(JSON.stringify(data));
+      });
+    }
   }
 }

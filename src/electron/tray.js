@@ -14,11 +14,12 @@ function createNativeImage(filename) {
 }
 
 function getIcon() {
-  const isDarkMode = nativeTheme.shouldUseDarkColors;
-  let iconPath = isDarkMode
-    ? 'img/icons/menu@88.png'
-    : 'img/icons/menu@88_dark.png';
+  // const isDarkMode = nativeTheme.shouldUseDarkColors;
+  // let iconPath = isDarkMode
+  //   ? 'img/icons/menu@88.png'
+  //   : 'img/icons/menu@88_dark.png';
 
+  const iconPath = 'img/icons/favicon-32x32.png';
   return nativeImage.createFromPath(path.join(__static, iconPath)).resize({
     height: 20,
     width: 20,
