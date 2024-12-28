@@ -265,6 +265,13 @@ export default {
       localMusicPath: '本地歌曲扫描路径',
       localMusicMatchedStatus: '本地歌曲匹配状态',
     },
+    extension: {
+      status: '歌词插件服务状态',
+      showLyric: {
+        text: '显示状态栏歌词',
+        desc: '该功能需要安装并启用歌词插件服务',
+      },
+    },
   },
   contextMenu: {
     play: '播放',

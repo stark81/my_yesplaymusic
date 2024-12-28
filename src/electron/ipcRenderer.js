@@ -102,4 +102,9 @@ export function ipcRenderer(vueInstance) {
   ipcRenderer.on('setPosition', (event, position) => {
     player._howler.seek(position);
   });
+
+  ipcRenderer.on('dbus-status', (event, status) => {
+    console.log('dbus-status', status);
+    store.commit('updateDBusStatus', status);
+  });
 }

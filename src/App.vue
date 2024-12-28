@@ -106,16 +106,19 @@ export default {
   created() {
     if (this.isElectron) {
       ipcRenderer(this);
+      const render = require('electron').ipcRenderer;
       const show_menu = isMac
         ? this.settings.showLyricsMenu &&
           !this.settings.showStatusBarLyric &&
           !this.settings.showControl
         : true;
       if (show_menu) {
-        const render = require('electron').ipcRenderer;
         render.send('switchRepeatMode', this.player.repeatMode);
         render.send('switchShuffle', this.player.shuffle);
       }
+      render.invoke('checkExtensionStatus').then(res => {
+        this.$store.commit('updateDBusStatus', res);
+      });
     }
     if (isMac && this.isElectron) {
       const { initMacStatusbarLyric } = require('./utils/macStatusBarLyric');

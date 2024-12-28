@@ -414,10 +414,15 @@ class Background {
       this.store.set('osdlyrics.height', height);
     });
 
+    let moveTimeout;
     this.osdlyrics.on('move', () => {
-      var pos = this.osdlyrics.getPosition();
-      this.store.set('osdlyrics.x_pos', pos[0]);
-      this.store.set('osdlyrics.y_pos', pos[1]);
+      if (moveTimeout) clearTimeout(moveTimeout);
+
+      moveTimeout = setTimeout(() => {
+        var pos = this.osdlyrics.getPosition();
+        this.store.set('osdlyrics.x_pos', pos[0]);
+        this.store.set('osdlyrics.y_pos', pos[1]);
+      }, 500);
     });
   }
 
@@ -457,10 +462,15 @@ class Background {
       this.store.set('window', this.window.getBounds());
     });
 
+    let moveTimeout;
     this.window.on('move', () => {
-      var pos = this.window.getPosition();
-      this.store.set('window.x', pos[0]);
-      this.store.set('window.y', pos[1]);
+      if (moveTimeout) clearTimeout(moveTimeout);
+
+      moveTimeout = setTimeout(() => {
+        var pos = this.window.getPosition();
+        this.store.set('window.x', pos[0]);
+        this.store.set('window.y', pos[1]);
+      }, 500);
     });
 
     this.window.on('maximize', () => {

@@ -43,6 +43,7 @@
     "core-js": "^3.6.5",
     "crypto-js": "^4.0.0",
     "dayjs": "^1.8.36",
+    "dbus-native": "^0.4.0",
     "dexie": "^3.0.3",
     "discord-rich-presence": "^0.0.8",
     "electron": "^13.6.7",

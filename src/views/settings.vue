@@ -166,7 +166,7 @@
         </div>
       </div>
 
-      <h3 v-show="isMac && isElectron">状态栏</h3>
+      <h3 v-show="(isMac || isLinux) && isElectron">状态栏</h3>
       <!-- <div v-show="isMac && isElectron" class="item">
         <div class="left">
           <div class="title">{{ $t('settings.showTray') }}</div>
@@ -232,6 +232,42 @@
               name="show-lyrics-menu"
             />
             <label for="show-lyrics-menu"></label>
+          </div>
+        </div>
+      </div>
+
+      <div v-show="isLinux && isElectron" class="item">
+        <div class="left">
+          <div class="title"
+            >{{ $t('settings.extension.status') }}：{{
+              extension ? '已开启' : '已停用'
+            }}</div
+          >
+          <div class="description"
+            >如果未安装插件，可点击
+            <a href="https://github.com/stark81/media-controls" target="_blank"
+              >此处</a
+            >
+            下载</div
+          >
+        </div>
+      </div>
+      <div v-show="isLinux && isElectron" class="item">
+        <div class="left">
+          <div class="title">{{ $t('settings.extension.showLyric.text') }}</div>
+          <div class="description">{{
+            $t('settings.extension.showLyric.desc')
+          }}</div>
+        </div>
+        <div class="right">
+          <div class="toggle">
+            <input
+              id="show-lyrics-extension"
+              v-model="showLyricsExtension"
+              type="checkbox"
+              name="show-lyrics-extension"
+            />
+            <label for="show-lyrics-extension"></label>
           </div>
         </div>
       </div>
@@ -966,12 +1002,15 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'data', 'lastfm']),
+    ...mapState(['player', 'settings', 'data', 'lastfm', 'extensionStatus']),
     isElectron() {
       return process.env.IS_ELECTRON;
     },
     isMac() {
       return /macintosh|mac os x/i.test(navigator.userAgent);
+    },
+    extension() {
+      return this.extensionStatus;
     },
     isLinux() {
       return process.platform === 'linux';
@@ -1217,6 +1256,17 @@ export default {
         ipcRenderer.send('switchShowTray', 'switchControl');
         this.$store.commit('updateSettings', {
           key: 'showControl',
+          value,
+        });
+      },
+    },
+    showLyricsExtension: {
+      get() {
+        return this.settings.sendLyricToDBus || false;
+      },
+      set(value) {
+        this.$store.commit('updateSettings', {
+          key: 'sendLyricToDBus',
           value,
         });
       },
@@ -1761,6 +1811,7 @@ export default {
       this.$store.commit('restoreDefaultShortcuts');
       ipcRenderer.send('restoreDefaultShortcuts');
     },
+    openOnBrowser() {},
   },
 };
 </script>

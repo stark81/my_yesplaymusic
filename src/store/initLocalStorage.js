@@ -46,6 +46,7 @@ let localStorage = {
     },
     shortcuts: shortcuts,
     showOsdLyric: false,
+    sendLyricToDBus: false,
   },
   data: {
     user: {},
