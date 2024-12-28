@@ -4,6 +4,7 @@ import { registerGlobalShortcut } from '@/electron/globalShortcut';
 import cloneDeep from 'lodash/cloneDeep';
 import shortcuts from '@/utils/shortcuts';
 import { createMenu } from './menu';
+import { createDBus } from './dbus-client';
 import { isCreateTray, isMac } from '@/utils/platform';
 
 let lyrics;
@@ -410,6 +411,18 @@ export function initIpcMain(win, store, tray, lrc) {
       } else {
         return null;
       }
+    });
+
+    const busName = 'org.gnome.Shell.TrayLyric';
+    const dbus = createDBus(busName, win);
+
+    ipcMain.handle('checkExtensionStatus', () => {
+      return dbus.status;
+    });
+
+    ipcMain.on('updateCurrentLyric', (_, data) => {
+      data.sender = 'YesPlayMusic';
+      dbus.iface.UpdateLyric(JSON.stringify(data));
     });
   }
 }

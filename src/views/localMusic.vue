@@ -26,10 +26,10 @@
       </div>
       <div class="songs">
         <TrackList
-          :id="sortedTracks.id"
+          :id="0"
           :tracks="randomShowTracks"
           :column-number="3"
-          type="tracklist"
+          type="localTracklist"
           :show-position="false"
           :item-size="57"
           :enabled="false"
@@ -114,10 +114,11 @@
 
       <div v-show="currentTab === 'localSongs'">
         <TrackList
+          :id="0"
           ref="trackListRef"
           :tracks="filterLocalTracks"
           :column-number="1"
-          type="localTracks"
+          type="localPlaylist"
           :is-batch-op="isBatchOp"
           :extra-context-menu-item="[
             'showInFolder',

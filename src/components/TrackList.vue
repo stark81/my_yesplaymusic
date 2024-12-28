@@ -104,6 +104,7 @@
       :column-number="columnNumber"
       :show-position="showPosition"
       :item-size="itemSize"
+      :pid="id"
       :type="type"
       :enabled="enabled"
     >
@@ -112,7 +113,7 @@
           ref="trackListItemRef"
           :key="itemKey === 'id' ? item.id : `${item.id}${index}`"
           :track-prop="item"
-          :type="type"
+          :type="type === 'localTracklist' ? 'tracklist' : type"
           :track-no="index + 1"
           :album-object="albumObject"
           :batch-op="isBatchOp"
@@ -307,9 +308,17 @@ export default {
       } else if (this.type === 'tracklist') {
         let trackIDs = this.tracks.map(t => t.id);
         this.player.replacePlaylist(trackIDs, this.id, 'artist', trackID);
-      } else if (this.type === 'localTracks') {
+      } else if (
+        this.type === 'localPlaylist' ||
+        this.type === 'localTracklist'
+      ) {
         let trackIDs = this.tracks.map(t => t.id);
-        this.player.replacePlaylist(trackIDs, this.id, 'localTracks', trackID);
+        this.player.replacePlaylist(
+          trackIDs,
+          this.id,
+          'localPlaylist',
+          trackID
+        );
       }
     },
     scrollTo(top, behavior = 'smooth') {

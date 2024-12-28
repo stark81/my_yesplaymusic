@@ -63,7 +63,13 @@ export default {
     };
   },
   computed: {
-    ...mapState(['player', 'settings', 'showLyrics', 'modals']),
+    ...mapState([
+      'player',
+      'settings',
+      'showLyrics',
+      'modals',
+      'extensionStatus',
+    ]),
     currentTrack() {
       return this.player.currentTrack;
     },
@@ -143,6 +149,12 @@ export default {
     needToSendLyric() {
       return this.settings.showOsdLyric || isMac;
     },
+    dbusStatus() {
+      return this.extensionStatus;
+    },
+    sendDBusLrc() {
+      return this.settings.sendLyricToDBus || false;
+    },
     isLyricPage() {
       return this.showLyrics && this.$parent.show === 'lyric';
     },
@@ -219,6 +231,20 @@ export default {
             block: 'center',
           });
         }
+      }
+    },
+    sendDBusLrc(value) {
+      const { ipcRenderer } = require('electron');
+      if (!value) {
+        ipcRenderer.send('updateCurrentLyric', {
+          content: '',
+          time: 10,
+        });
+      } else {
+        ipcRenderer.send('updateCurrentLyric', {
+          content: this.currentTrack?.name || '听你想听的音乐',
+          time: 10,
+        });
       }
     },
   },
@@ -383,6 +409,26 @@ export default {
           if (this.osdLyric) {
             const { ipcRenderer } = require('electron');
             ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
+          }
+          if (this.dbusStatus && this.sendDBusLrc) {
+            const { ipcRenderer } = require('electron');
+            let result = {};
+            if (this.highlightLyricIndex < this.lyric.length) {
+              const lyric = this.lyric[this.highlightLyricIndex];
+              const nextLyric = this.lyric[this.highlightLyricIndex + 1];
+              const diff = nextLyric.time - lyric.time || 10;
+              result = {
+                content:
+                  lyric.content || this.currentTrack?.name || '听你想听的音乐',
+                time: diff,
+              };
+            } else {
+              result = {
+                content: this.currentTrack?.name || '听你想听的音乐',
+                time: 10,
+              };
+            }
+            ipcRenderer.send('updateCurrentLyric', result);
           }
           const el = document.getElementById(`line${this.highlightLyricIndex}`);
           if (el)

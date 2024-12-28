@@ -81,6 +81,9 @@ export default {
   toggleLyrics(state) {
     state.showLyrics = !state.showLyrics;
   },
+  updateDBusStatus(state, status) {
+    state.extensionStatus = status;
+  },
   toggleUpdateStatus(state) {
     state.updateFlag = !state.updateFlag;
   },

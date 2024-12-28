@@ -229,7 +229,7 @@
         v-if="filteredTracks.length > 0"
         :id="playlist.id"
         :tracks="filteredTracks"
-        :type="isLocal ? 'localtracks' : 'playlist'"
+        :type="$route.name"
         :extra-context-menu-item="
           isUserOwnPlaylist ? ['removeTrackFromPlaylist'] : []
         "
@@ -547,7 +547,7 @@ export default {
         this.$store.state.player.replacePlaylist(
           trackIDs.slice().reverse(),
           this.playlist.id,
-          'localMusic',
+          'localPlaylist',
           trackID
         );
       } else {

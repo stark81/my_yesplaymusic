@@ -174,7 +174,8 @@ module.exports = {
           icon: 'build/icons/icon.icns',
         },
         nsis: {
-          oneClick: true,
+          oneClick: false,
+          allowToChangeInstallationDirectory: true,
           perMachine: true,
           deleteAppDataOnUninstall: true,
         },

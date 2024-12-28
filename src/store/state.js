@@ -16,6 +16,7 @@ updateApp();
 
 export default {
   showLyrics: false,
+  extensionStatus: false,
   updateFlag: true,
   enableScrolling: true,
   enabledVirtualScroll: false,
