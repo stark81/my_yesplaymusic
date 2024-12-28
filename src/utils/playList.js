@@ -8,7 +8,11 @@ import {
 import { isAccountLoggedIn } from '@/utils/auth';
 
 export function hasListSource() {
-  return !state.player.isPersonalFM && state.player.playlistSource.id !== 0;
+  return (
+    !state.player.isPersonalFM &&
+    (state.player.playlistSource.id !== 0 ||
+      state.player.playlistSource.type.includes('local'))
+  );
 }
 
 export function goToListSource() {
@@ -22,6 +26,11 @@ export function getListSourcePath() {
     return state.player.playlistSource.id;
   } else if (state.player.playlistSource.type === 'cloudDisk') {
     return '/library';
+  } else if (
+    state.player.playlistSource.type.includes('local') &&
+    state.player.playlistSource.id === 0
+  ) {
+    return '/local-music';
   } else {
     return `/${state.player.playlistSource.type}/${state.player.playlistSource.id}`;
   }

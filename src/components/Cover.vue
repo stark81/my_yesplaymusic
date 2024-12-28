@@ -91,7 +91,7 @@ export default {
         playActions[this.type].bind(player)(
           trackIDs.slice().reverse(),
           this.id,
-          'localMusic',
+          'localPlaylist',
           'first'
         );
       } else {
