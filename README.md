@@ -34,6 +34,7 @@
 ## 特性✨
  - 新增歌曲评论功能，包括：查看评论、发表评论、回复评论、点赞等。注：因未对歌曲本身进行校验，因此可能会出现评论失败的情况(且没有失败提示)；
  - 针对Mac系统，增加了状态栏歌词显示，包括：独立控制歌词、控制按钮等显示；
+ - 对于Linux-gnome桌面环境，通过插件[media-controls](https://github.com/stark81/media-controls)将歌词显示在TopBar里
  - 新增了桌面歌词功能；
  - 新增本地歌词播放功能，包括：①本地歌曲扫描、播放、在线匹配封面、歌词等；②离线歌单功能等；
 ## 说明
@@ -51,6 +52,7 @@
 
 ## 截图
 
+![extension][extension-screenshot]
 ![comment][comment-screenshot]
 ![floor][floor-screenshot]
 ![tray][trayLyric-screenshot]
@@ -321,3 +323,4 @@ API 源代码来自 [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryif
 [trayLyric-screenshot]: images/statusBarLyric.png
 [localMusic-screenshot]: images/localMusic.png
 [localPlaylist-screenshot]: images/localPlaylist.png
+[extension-screenshot]: images/extension.png
