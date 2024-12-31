@@ -3,9 +3,10 @@ import { getArtist } from '@/api/artist';
 import { trackScrobble, trackUpdateNowPlaying } from '@/api/lastfm';
 import { fmTrash, personalFM } from '@/api/others';
 import { getPlaylistDetail, intelligencePlaylist } from '@/api/playlist';
-import { getMP3, getTrackDetail } from '@/api/track';
+import { getMP3, getTrackDetail, getLyric } from '@/api/track';
 import store from '@/store';
 import { isAccountLoggedIn } from '@/utils/auth';
+import { lyricParser } from '@/utils/lyrics';
 import { cacheTrackSource, getTrackSource } from '@/utils/db';
 import { isCreateMpris, isCreateTray, isMac } from '@/utils/platform';
 import { Howl, Howler } from 'howler';
@@ -34,7 +35,7 @@ const delay = ms =>
     }, ms);
   });
 const excludeSaveKeys = [
-  '_playing',
+  // '_playing',
   '_personalFMLoading',
   '_personalFMNextLoading',
 ];
@@ -82,6 +83,8 @@ export default class {
     this._playNextList = []; // 当这个list不为空时，会优先播放这个list的歌
     this._isPersonalFM = false; // 是否是私人FM模式
     this._personalFMTrack = { id: 0 }; // 私人FM当前歌曲
+    this._lyrics = { lyric: [], tlyric: [], rlyric: [] };
+    this._currentLyricIndex = -1;
     this._personalFMNextTrack = {
       id: 0,
     }; // 私人FM下一首歌曲信息（为了快速加载下一首）
@@ -211,6 +214,14 @@ export default class {
     return store.state.liked.songs.includes(this.currentTrack.id);
   }
 
+  get currentLyricIndex() {
+    return this._currentLyricIndex;
+  }
+
+  get lyrics() {
+    return this._lyrics;
+  }
+
   _init() {
     this._loadSelfFromLocalStorage();
     this._howler?.volume(this.volume);
@@ -240,9 +251,7 @@ export default class {
   }
   _setPlaying(isPlaying) {
     this._playing = isPlaying;
-    if (isCreateTray) {
-      ipcRenderer?.send('updateTrayPlayState', this._playing);
-    }
+    ipcRenderer?.send('updateTrayPlayState', this._playing);
   }
   _setIntervals() {
     // 同步播放进度
@@ -256,6 +265,19 @@ export default class {
         ipcRenderer?.send('playerCurrentTrackTime', this._progress);
       }
     }, 1000);
+
+    // 同步歌词进度
+    setInterval(() => {
+      const offset = this._currentTrack?.lyricDelay ?? 0;
+      const progress = this._howler.seek() + offset;
+      this._currentLyricIndex = this._lyrics.lyric.findIndex((l, index) => {
+        const nextLyric = this._lyrics.lyric[index + 1];
+        const nextLrcTime = nextLyric
+          ? nextLyric.time
+          : this.currentTrackDuration;
+        return progress >= l.time && progress < nextLrcTime;
+      });
+    }, 50);
   }
   _getNextTrack() {
     const next = this._reversed ? this.current - 1 : this.current + 1;
@@ -537,8 +559,7 @@ export default class {
       })
       .then(data => {
         const track = data.songs[0];
-        this._currentTrack = track;
-        this._updateMediaSessionMetaData(track);
+        this._udpateTrackInfo(track);
         return this._replaceCurrentTrackAudio(
           track,
           autoplay,
@@ -547,6 +568,74 @@ export default class {
         );
       });
   }
+
+  // 切换歌曲后的所有更新操作，包括：替换歌曲、获取歌词、更新歌词idx等；
+  _udpateTrackInfo(track) {
+    this._currentTrack = track;
+    this._currentLyricIndex = -1;
+    this._getLyric(track).then(() => {
+      this.saveSelfToLocalStorage();
+    });
+    this._updateMediaSessionMetaData(track);
+  }
+
+  async _getLyric(track) {
+    const fnPools = [];
+    if (track.matched !== false) {
+      fnPools.push([getLyric, track.id]);
+    }
+    if (track.isLocal) {
+      fnPools.push([this._getInnerLyric, track.filePath]);
+    }
+
+    let [getLyricFn, param] = fnPools.shift();
+    let data = await getLyricFn(param);
+
+    if (!data?.lrc?.lyric && fnPools.length > 0) {
+      [getLyricFn, param] = fnPools.shift();
+      data = await getLyricFn(param);
+    }
+
+    if (!data?.lrc?.lyric) {
+      this._lyrics.lyric = [];
+      this._lyrics.tlyric = [];
+      this._lyrics.rlyric = [];
+      return;
+    } else {
+      let { lyric, tlyric, rlyric } = lyricParser(data);
+      lyric = lyric.filter(l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content));
+      let includeAM =
+        lyric.length <= 10 &&
+        lyric.map(l => l.content).includes('纯音乐，请欣赏');
+      if (includeAM) {
+        let reg = /^作(词|曲)\s*(:|：)\s*/;
+        let author = track?.ar[0]?.name;
+        lyric = lyric.filter(l => {
+          let regExpArr = l.content.match(reg);
+          return !regExpArr || l.content.replace(regExpArr[0], '') !== author;
+        });
+      }
+      if (lyric.length === 1 && includeAM) {
+        this._lyrics.lyric = [];
+        this._lyrics.tlyric = [];
+        this._lyrics.rlyric = [];
+        return false;
+      } else {
+        this._lyrics.lyric = lyric;
+        this._lyrics.tlyric = tlyric;
+        this._lyrics.rlyric = rlyric;
+        return true;
+      }
+    }
+  }
+
+  async _getInnerLyric(filePath) {
+    const data = await fetch(`atom://get-lyric/${filePath}`).then(res =>
+      res.json()
+    );
+    return data;
+  }
+
   /**
    * @returns 是否成功加载音频，并使用加载完成的音频替换了howler实例
    */

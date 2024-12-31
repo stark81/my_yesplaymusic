@@ -1,4 +1,4 @@
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import eventBus from '@/utils/eventBus';
 import { Lyric, Control, Canvas } from '@/utils/trayCanvas';
 
@@ -13,8 +13,6 @@ import thumbs_down from '@/assets/tray/thumbs_down.png';
 
 import store from '@/store';
 const player = store.state.player;
-const setTray = remote.getGlobal('setTray');
-const setBarLyric = remote.getGlobal('setBarLyric');
 
 class TrayLiric {
   constructor() {
@@ -69,11 +67,11 @@ class TrayLiric {
       x += this._control.canvas.width;
     }
     this._tray.ctx.drawImage(this._icon.canvas, x, 0);
-    setTray(
-      this._tray.canvas.toDataURL(),
-      this._tray.canvas.width / this._tray.devicePixelRatio,
-      this._tray.canvas.height / this._tray.devicePixelRatio
-    );
+    ipcRenderer.send('updateTray', {
+      img: this._tray.canvas.toDataURL(),
+      width: this._tray.canvas.width / this._tray.devicePixelRatio,
+      height: this._tray.canvas.height / this._tray.devicePixelRatio,
+    });
   }
   drawTray(changeLyric, changeControl, changeIcon) {
     if (changeLyric) this._lyric.draw();
@@ -187,11 +185,11 @@ class TouchBarLyric {
     const height = this._touchBar.canvas.height;
     this._touchBar.ctx.clearRect(0, 0, width, height);
     this._touchBar.ctx.drawImage(this._lyric.canvas, 0, 0);
-    setBarLyric(
-      this._touchBar.canvas.toDataURL(),
-      this._touchBar.canvas.width,
-      this._touchBar.canvas.height
-    );
+    ipcRenderer.send('updateBarLyric', {
+      img: this._touchBar.canvas.toDataURL(),
+      width: this._touchBar.canvas.width,
+      height: this._touchBar.canvas.height,
+    });
   }
   handleEvent() {
     eventBus.$on('lyric-draw', () => {

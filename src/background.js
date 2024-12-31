@@ -35,6 +35,7 @@ import Store from 'electron-store';
 import { createMpris } from '@/electron/mpris';
 import { release, type } from 'os';
 import { parseFile } from 'music-metadata';
+import path from 'path';
 
 const clc = require('cli-color');
 const log = text => {
@@ -88,6 +89,7 @@ class Background {
   constructor() {
     this.window = null;
     this.osdlyrics = null;
+    this.osdMode = null;
     this.ypmTrayImpl = null;
     this.store = new Store({
       windowWidth: {
@@ -102,7 +104,7 @@ class Background {
     this.init();
   }
 
-  init() {
+  async init() {
     log('initializing');
 
     // Make sure the app is singleton.
@@ -283,15 +285,38 @@ class Background {
     }
   }
 
-  createOSDWindow() {
+  createOSDWindow(type) {
+    this.osdMode = type;
+    this.store.set('osdlyrics.type', type);
+
     this.osdlyrics = new BrowserWindow({
-      x: this.store.get('osdlyrics.x_pos') || 0,
-      y: this.store.get('osdlyrics.y_pos') || 0,
-      width: this.store.get('osdlyrics.width') || 840,
-      height: this.store.get('osdlyrics.height') || 110,
+      // x: this.store.get('osdlyrics.x_pos') || 0,
+      // y: this.store.get('osdlyrics.y_pos') || 0,
+      x:
+        (type === 'small'
+          ? this.store.get('osdlyrics.x')
+          : this.store.get('osdlyrics.x_pos')) || undefined,
+      y:
+        (type === 'small'
+          ? this.store.get('osdlyrics.y')
+          : this.store.get('osdlyrics.y_pos')) || undefined,
+      // width: this.store.get('osdlyrics.width') || 840,
+      // height: this.store.get('osdlyrics.height') || 110,
+      width:
+        type === 'small'
+          ? this.store.get('osdlyrics.width1') || 700
+          : this.store.get('osdlyrics.width') || 700,
+      height:
+        type === 'small'
+          ? this.store.get('osdlyrics.height2') || 160
+          : this.store.get('osdlyrics.height') || 600,
+      minHeight: type === 'small' ? 160 : undefined,
+      maxHeight: type === 'small' ? 160 : undefined,
+      minWidth: type === 'small' ? 500 : undefined,
       transparent: true,
-      // backgroundColor: '#00000000',
+      // backgroundColor: '#333333',
       frame: false,
+      useContentSize: true,
       // show: false,
       skipTaskbar: true,
       alwaysOnTop: true,
@@ -303,35 +328,44 @@ class Background {
         nodeIntegration: true,
         enableRemoteModule: true,
         contextIsolation: false,
+        preload: path.join(__dirname, '../public/preload.js'),
       },
     });
 
-    this.osdlyrics.setVisibleOnAllWorkspaces(true);
+    // this.osdlyrics.setVisibleOnAllWorkspaces(true);
     if (process.env.WEBPACK_DEV_SERVER_URL) {
       // Load the url of the dev server if in development mode
       this.osdlyrics.loadURL(
-        `${process.env.WEBPACK_DEV_SERVER_URL}/osdlyric.html`
+        `${process.env.WEBPACK_DEV_SERVER_URL}/lyricWin.html`
       );
     } else {
       createProtocol('app');
-      this.osdlyrics.loadURL('http://localhost:27232/osdlyric.html');
+      this.osdlyrics.loadURL('http://localhost:27232/lyricWin.html');
     }
   }
 
   initOSDLyrics() {
     const osdState = this.store.get('osdlyrics.show') || false;
+    const showMode = this.store.get('osdlyrics.type') || 'small';
     if (osdState) {
-      this.showOSDLyrics();
+      this.showOSDLyrics(showMode);
     }
   }
 
   toggleOSDLyrics() {
     const osdState = this.store.get('osdlyrics.show') || false;
+    const showMode = this.store.get('osdlyrics.type') || 'small';
     if (osdState) {
-      this.hideOSDLyrics();
+      this.showOSDLyrics(showMode);
     } else {
-      this.showOSDLyrics();
+      this.hideOSDLyrics();
     }
+  }
+
+  toggleMouseIgnore() {
+    const isLock = this.store.get('osdlyrics.isLock') || false;
+    this.osdlyrics.setIgnoreMouseEvents(isLock, { forward: !isLinux });
+    this.osdlyrics.setVisibleOnAllWorkspaces(isLock);
   }
 
   receiveLyric(arg) {
@@ -346,10 +380,10 @@ class Background {
     }
   }
 
-  showOSDLyrics() {
+  showOSDLyrics(type = 'small') {
     this.store.set('osdlyrics.show', true);
     if (!this.osdlyrics) {
-      this.createOSDWindow();
+      this.createOSDWindow(type);
       this.handleOSDEvents();
     }
   }
@@ -358,7 +392,19 @@ class Background {
     this.store.set('osdlyrics.show', false);
     if (this.osdlyrics) {
       this.osdlyrics.close();
+      this.osdlyrics = null;
     }
+  }
+
+  updateOSDPlayingState(status) {
+    if (this.osdlyrics) {
+      this.osdlyrics.webContents.send('update-osd-playing-status', status);
+    }
+  }
+
+  switchOSDWindow(type) {
+    this.hideOSDLyrics();
+    this.showOSDLyrics(type);
   }
 
   resizeOSDLyrics(height) {
@@ -400,18 +446,25 @@ class Background {
       const osdState = this.store.get('osdlyrics.show') || false;
       if (osdState) {
         this.osdlyrics.showInactive();
+        if (!isLinux) this.toggleMouseIgnore();
       }
     });
 
-    this.osdlyrics.on('closed', () => {
-      log('OSD close event');
-      this.osdlyrics = null;
-    });
+    // this.osdlyrics.on('closed', () => {
+    //   log('OSD close event');
+    //   this.osdlyrics = null;
+    // });
 
     this.osdlyrics.on('resize', () => {
       let { height, width } = this.osdlyrics.getBounds();
-      this.store.set('osdlyrics.width', width);
-      this.store.set('osdlyrics.height', height);
+      this.store.set(
+        this.osdMode === 'small' ? 'osdlyrics.width1' : 'osdlyrics.width',
+        width
+      );
+      this.store.set(
+        this.osdMode === 'small' ? 'osdlyrics.height1' : 'osdlyrics.height',
+        height
+      );
     });
 
     let moveTimeout;
@@ -420,8 +473,14 @@ class Background {
 
       moveTimeout = setTimeout(() => {
         var pos = this.osdlyrics.getPosition();
-        this.store.set('osdlyrics.x_pos', pos[0]);
-        this.store.set('osdlyrics.y_pos', pos[1]);
+        this.store.set(
+          this.osdMode === 'small' ? 'osdlyrics.x' : 'osdlyrics.x_pos',
+          pos[0]
+        );
+        this.store.set(
+          this.osdMode === 'small' ? 'osdlyrics.y' : 'osdlyrics.y_pos',
+          pos[1]
+        );
       }, 500);
     });
   }
@@ -576,13 +635,18 @@ class Background {
         this.ypmTrayImpl = createTray(this.window);
       }
 
-      // init ipcMain
-      initIpcMain(this.window, this.store, this.ypmTrayImpl, {
+      const lyricWin = {
         resizeOSDLyrics: height => this.resizeOSDLyrics(height),
         toggleOSDLyrics: () => this.toggleOSDLyrics(),
         receiveLyric: lyric => this.receiveLyric(lyric),
         sendLyricIndex: index => this.sendLyricIndex(index),
-      });
+        updateOSDPlayingState: status => this.updateOSDPlayingState(status),
+        toggleMouseIgnore: () => this.toggleMouseIgnore(),
+        switchOSDWindow: mode => this.switchOSDWindow(mode),
+      };
+
+      // init ipcMain
+      initIpcMain(this.window, this.store, this.ypmTrayImpl, lyricWin);
 
       // set proxy
       const proxyRules = this.store.get('proxy');

@@ -128,7 +128,7 @@ export default {
     }
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    this.fetchLocalData();
+    // this.fetchLocalData();
   },
   methods: {
     async fetchLocalData() {

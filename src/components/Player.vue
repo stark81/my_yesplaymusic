@@ -239,11 +239,12 @@ export default {
     ...mapActions(['showToast', 'likeATrack']),
     toggleOSDLyrics() {
       if (ipcRenderer) {
+        const show = !this.settings.showOsdLyric;
         this.$store.commit('updateSettings', {
           key: 'showOsdLyric',
-          value: !this.settings.showOsdLyric,
+          value: show,
         });
-        ipcRenderer.send('toggleOSDLyrics');
+        ipcRenderer.send('toggleOSDLyrics', show);
       }
     },
     playPrevTrack() {

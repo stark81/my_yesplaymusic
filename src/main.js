@@ -55,13 +55,6 @@ Vue.config.productionTip = false;
 NProgress.configure({ showSpinner: false, trickleSpeed: 100 });
 dailyTask();
 
-// if (isMac && process.env.IS_ELECTRON) {
-//   import('./electron/macStatusBarLyric').then(module => {
-//     const initMacStatusbarLyric = module.default;
-//     initMacStatusbarLyric();
-//   });
-// }
-
 new Vue({
   i18n,
   store,

@@ -7,8 +7,6 @@ import { createMenu } from './menu';
 import { createDBus } from './dbus-client';
 import { isCreateTray, isMac, isLinux } from '@/utils/platform';
 
-let lyrics;
-let lyricIdx;
 const clc = require('cli-color');
 const log = text => {
   console.log(`${clc.blueBright('[ipcMain.js]')} ${text}`);
@@ -141,6 +139,7 @@ export function initIpcMain(win, store, tray, lrc) {
   // UNM.enableLogging(UNM.LoggingType.ConsoleEnv);
   // const unmExecutor = new UNM.Executor();
 
+  let isLock = store.get('osdlyrics.isLock');
   ipcMain.handle(
     'unblock-music',
     /**
@@ -295,19 +294,47 @@ export function initIpcMain(win, store, tray, lrc) {
     lrc.resizeOSDLyrics(arg);
   });
 
-  ipcMain.on('toggleOSDLyrics', () => {
+  ipcMain.on('toggleOSDLyrics', (event, show) => {
+    store.set('osdlyrics.show', show);
     lrc.toggleOSDLyrics();
   });
   ipcMain.on('sendLyrics', (_, arg) => {
-    lyrics = arg;
     lrc.receiveLyric(arg);
     if (isCreateTray) win.webContents.send('lyricsReceived', arg[0]);
   });
-  ipcMain.handle('onloadLyric', () => {
-    return [lyrics, lyricIdx];
+  ipcMain.on('from-osd', (_, arg) => {
+    if (arg === 'showMainWin') {
+      win.show();
+    } else if (arg === 'playPrev') {
+      win.webContents.send('previous');
+    } else if (arg === 'playNext') {
+      win.webContents.send('next');
+    } else if (arg === 'playOrPause') {
+      win.webContents.send('play');
+    }
+  });
+  ipcMain.on('set-osd-window', (_, data) => {
+    const [key, value] = Object.entries(data)[0];
+    store.set(`osdlyrics.${key}`, value);
+    if (key === 'isLock') {
+      isLock = value;
+      lrc.toggleMouseIgnore();
+    } else if (key === 'type') {
+      lrc.switchOSDWindow(value);
+    } else if (key === 'show') {
+      win.webContents.send('updateOSDShow', value);
+      lrc.toggleOSDLyrics();
+    }
+  });
+  ipcMain.on('set-ignore-mouse', (e, isLock) => {
+    store.set('osdlyrics.isLock', isLock);
+    lrc.toggleMouseIgnore();
+  });
+  ipcMain.on('mouseleave', () => {
+    store.set('osdlyrics.isLock', isLock);
+    lrc.toggleMouseIgnore();
   });
   ipcMain.on('lyricIndex', (_, index) => {
-    lyricIdx = index;
     lrc.sendLyricIndex(index);
   });
 
@@ -370,6 +397,10 @@ export function initIpcMain(win, store, tray, lrc) {
         : true;
       if (show_menu) tray.setPlayState(isPlaying);
       if (isMac) win.webContents.send('changeTrayPlayingStatus');
+      lrc.updateOSDPlayingState(isPlaying);
+    });
+    ipcMain.on('updateTray', (_, { img, width, height }) => {
+      tray.updateTray(img, width, height);
     });
     ipcMain.on('updateTrayLikeState', (_, isLiked) => {
       const show_menu = isMac

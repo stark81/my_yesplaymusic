@@ -50,20 +50,12 @@ export function createTouchBar(window) {
     icon: getNativeIcon('like.png'),
   });
 
-  // const showLyric = new TouchBarButton({
-  //   label: '听你想听的音乐',
-  // });
+  const showLyric = new TouchBarButton({ icon: nativeImage.createEmpty() });
 
-  const barLyric = () => {
-    const showLyric = new TouchBarButton({ icon: nativeImage.createEmpty() });
-    global.setBarLyric = function (img, width, height) {
-      const Image = nativeImage
-        .createFromDataURL(img)
-        .resize({ width, height });
-      Image.setTemplateImage(true);
-      showLyric.icon = Image;
-    };
-    return showLyric;
+  const updateBarLyric = (img, width, height) => {
+    const image = nativeImage.createFromDataURL(img).resize({ width, height });
+    image.setTemplateImage(true);
+    showLyric.icon = image;
   };
 
   ipcMain.on('player', (e, { playing, likedCurrentTrack, isPersionalFM }) => {
@@ -77,6 +69,10 @@ export function createTouchBar(window) {
     window.setTouchBar(touch);
   });
 
+  ipcMain.on('updateBarLyric', (e, { img, width, height }) => {
+    updateBarLyric(img, width, height);
+  });
+
   const options = {
     items: [
       previousTrackButton,
@@ -84,7 +80,7 @@ export function createTouchBar(window) {
       nextTrackButton,
       likeButton,
       new TouchBarSpacer({ size: 'flexible' }),
-      barLyric(),
+      showLyric,
       // new TouchBarSpacer({ size: 'flexible' }),
     ],
   };

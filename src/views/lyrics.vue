@@ -13,7 +13,7 @@
         :key="index"
         class="line"
         :class="{
-          highlight: highlightLyricIndex === index,
+          highlight: currentLyricIndex === index,
         }"
         @click="clickLyricLine(line.time)"
         @dblclick="clickLyricLine(line.time, true)"
@@ -44,8 +44,6 @@
 
 import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
-import { getLyric } from '@/api/track';
-import { lyricParser } from '@/utils/lyrics';
 import { isMac } from '@/utils/platform';
 
 export default {
@@ -53,10 +51,6 @@ export default {
   data() {
     return {
       lyricsInterval: null,
-      lyric: [],
-      tlyric: [],
-      rlyric: [],
-      highlightLyricIndex: -1,
       minimize: true,
       background: '',
       date: this.formatTime(new Date()),
@@ -72,6 +66,21 @@ export default {
     ]),
     currentTrack() {
       return this.player.currentTrack;
+    },
+    lyric() {
+      return this.player.lyrics.lyric;
+    },
+    tlyric() {
+      return this.player.lyrics.tlyric;
+    },
+    rlyric() {
+      return this.player.lyrics.rlyric;
+    },
+    currentLyricIndex() {
+      return this.player.currentLyricIndex;
+    },
+    currentLyric() {
+      return this.lyric[this.currentLyricIndex];
     },
     showTranslation() {
       return this.settings.showLyricsTranslation;
@@ -146,8 +155,8 @@ export default {
     osdLyric() {
       return this.settings.showOsdLyric;
     },
-    needToSendLyric() {
-      return this.settings.showOsdLyric || isMac;
+    showOsdLyric() {
+      return this.settings.showOsdLyric;
     },
     dbusStatus() {
       return this.extensionStatus;
@@ -160,25 +169,8 @@ export default {
     },
   },
   watch: {
-    currentTrack() {
-      this.getLyric().then(data => {
-        this.$parent.hasLyric = data;
-        if (this.needToSendLyric) {
-          const { ipcRenderer } = require('electron');
-          const lyric = [
-            {
-              content: this.currentTrack.name,
-              time: 0.0,
-              rawTime: '[00:00.000]',
-            },
-          ].concat(this.lyric);
-          ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
-        }
-      });
-    },
     lyricDelay(val) {
       clearInterval(this.lyricsInterval);
-      this.setLyricsInterval();
       if (this.isLocal) {
         const track = this.$store.state.localMusic.tracks.find(
           t => t.filePath === this.currentTrack.filePath
@@ -188,43 +180,68 @@ export default {
     },
     showLyrics(show) {
       if (show) {
-        this.setLyricsInterval();
         this.$store.commit('enableScrolling', false);
       } else {
-        // clearInterval(this.lyricsInterval);
         this.$store.commit('enableScrolling', true);
       }
     },
+    lyric(value) {
+      if (this.showOsdLyric || isMac) {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.send('sendLyrics', [value, this.tlyric]);
+      }
+    },
+    currentLyricIndex(value) {
+      if (this.showOsdLyric || isMac) {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.send('lyricIndex', value);
+      }
+      const el = document.getElementById(`line${value}`);
+      if (el) {
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
+    },
+    currentLyric(value) {
+      if (this.dbusStatus && this.sendDBusLrc) {
+        const { ipcRenderer } = require('electron');
+        let result = {};
+        if (this.currentLyricIndex < this.lyric.length) {
+          const nextLyric = this.lyric[this.currentLyricIndex + 1];
+          const diff = nextLyric?.time - value?.time || 10;
+          result = {
+            content:
+              value?.content || this.currentTrack?.name || '听你想听的音乐',
+            time: diff,
+          };
+        } else {
+          result = {
+            content: this.currentTrack?.name || '听你想听的音乐',
+            time: 10,
+          };
+        }
+        ipcRenderer.send('updateCurrentLyric', result);
+      }
+    },
     tlyric(val) {
-      this.$parent.hasTLyric = val.length > 0 ? true : false;
+      this.$parent.hasTLyric = val.length > 0;
     },
     rlyric(val) {
-      this.$parent.hasRLyric = val.length > 0 ? true : false;
+      this.$parent.hasRLyric = val.length > 0;
     },
     osdLyric(val) {
       if (val) {
         const { ipcRenderer } = require('electron');
         setTimeout(() => {
-          ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
-        }, 100);
-      }
-    },
-    needToSendLyric(val) {
-      if (val) {
-        const { ipcRenderer } = require('electron');
-        const lyric = [
-          {
-            content: this.currentTrack.name,
-            time: 0.0,
-            rawTime: '[00:00.000]',
-          },
-        ].concat(this.lyric);
-        ipcRenderer.send('sendLyrics', [lyric, this.tlyric]);
+          ipcRenderer.send('lyricIndex', this.currentLyricIndex);
+        }, 1000);
       }
     },
     isLyricPage(val) {
       if (val) {
-        const el = document.getElementById(`line${this.highlightLyricIndex}`);
+        const el = document.getElementById(`line${this.currentLyricIndex}`);
         if (el) {
           el.scrollIntoView({
             behavior: 'smooth',
@@ -250,17 +267,6 @@ export default {
   },
   created() {
     this.initDate();
-  },
-  mounted() {
-    this.setLyricsInterval();
-  },
-  beforeDestroy: function () {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-  },
-  destroyed() {
-    clearInterval(this.lyricsInterval);
   },
   methods: {
     ...mapMutations(['toggleLyrics']),
@@ -289,94 +295,6 @@ export default {
       );
       return data;
     },
-    async getLyric() {
-      if (!this.currentTrack.id) return;
-
-      const fnPools = [];
-      if (this.currentTrack.matched !== false) {
-        fnPools.push([getLyric, this.currentTrack.id]);
-      }
-      if (this.currentTrack.isLocal === true) {
-        fnPools.push([this.getInnerLyric, this.currentTrack.filePath]);
-      }
-
-      let [getLyricFn, param] = fnPools.shift();
-
-      let data = await getLyricFn(param);
-
-      if (!data?.lrc?.lyric && fnPools.length > 0) {
-        [getLyricFn, param] = fnPools.shift();
-        data = await getLyricFn(param);
-      }
-
-      if (!data?.lrc?.lyric) {
-        this.lyric = [];
-        this.tlyric = [];
-        return false;
-      } else {
-        let { lyric, tlyric, rlyric } = lyricParser(data);
-        lyric = lyric.filter(l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content));
-        let includeAM =
-          lyric.length <= 10 &&
-          lyric.map(l => l.content).includes('纯音乐，请欣赏');
-        if (includeAM) {
-          let reg = /^作(词|曲)\s*(:|：)\s*/;
-          let author = this.currentTrack?.ar[0]?.name;
-          lyric = lyric.filter(l => {
-            let regExpArr = l.content.match(reg);
-            return !regExpArr || l.content.replace(regExpArr[0], '') !== author;
-          });
-        }
-        if (lyric.length === 1 && includeAM) {
-          this.lyric = [];
-          this.tlyric = [];
-          this.rlyric = [];
-          return false;
-        } else {
-          this.lyric = lyric;
-          this.tlyric = tlyric;
-          this.rlyric = rlyric;
-          return true;
-        }
-      }
-
-      // return getLyric(this.currentTrack.id).then(data => {
-      //   if (!data?.lrc?.lyric) {
-      //     this.lyric = [];
-      //     this.tlyric = [];
-      //     return false;
-      //   } else {
-      //     let { lyric, tlyric, rlyric } = lyricParser(data);
-      //     lyric = lyric.filter(
-      //       l => !/^作(词|曲)\s*(:|：)\s*无$/.exec(l.content)
-      //     );
-      //     let includeAM =
-      //       lyric.length <= 10 &&
-      //       lyric.map(l => l.content).includes('纯音乐，请欣赏');
-      //     if (includeAM) {
-      //       let reg = /^作(词|曲)\s*(:|：)\s*/;
-      //       let author = this.currentTrack?.ar[0]?.name;
-      //       lyric = lyric.filter(l => {
-      //         let regExpArr = l.content.match(reg);
-      //         return (
-      //           !regExpArr || l.content.replace(regExpArr[0], '') !== author
-      //         );
-      //       });
-      //     }
-      //     if (lyric.length === 1 && includeAM) {
-      //       this.lyric = [];
-      //       this.tlyric = [];
-      //       this.rlyric = [];
-      //       return false;
-      //     } else {
-      //       this.lyric = lyric;
-      //       this.tlyric = tlyric;
-      //       this.rlyric = rlyric;
-      //       return true;
-      //     }
-      //   }
-      // });
-    },
     formatTrackTime(value) {
       return formatTrackTime(value);
     },
@@ -394,50 +312,6 @@ export default {
       if (startPlay === true) {
         this.player.play();
       }
-    },
-    setLyricsInterval() {
-      this.lyricsInterval = setInterval(() => {
-        const progress = this.player.seek() + this.lyricDelay ?? 0;
-        let oldHighlightLyricIndex = this.highlightLyricIndex;
-        this.highlightLyricIndex = this.lyric.findIndex((l, index) => {
-          const nextLyric = this.lyric[index + 1];
-          return (
-            progress >= l.time && (nextLyric ? progress < nextLyric.time : true)
-          );
-        });
-        if (oldHighlightLyricIndex !== this.highlightLyricIndex) {
-          if (this.osdLyric) {
-            const { ipcRenderer } = require('electron');
-            ipcRenderer.send('lyricIndex', this.highlightLyricIndex);
-          }
-          if (this.dbusStatus && this.sendDBusLrc) {
-            const { ipcRenderer } = require('electron');
-            let result = {};
-            if (this.highlightLyricIndex < this.lyric.length) {
-              const lyric = this.lyric[this.highlightLyricIndex];
-              const nextLyric = this.lyric[this.highlightLyricIndex + 1];
-              const diff = nextLyric.time - lyric.time || 10;
-              result = {
-                content:
-                  lyric.content || this.currentTrack?.name || '听你想听的音乐',
-                time: diff,
-              };
-            } else {
-              result = {
-                content: this.currentTrack?.name || '听你想听的音乐',
-                time: 10,
-              };
-            }
-            ipcRenderer.send('updateCurrentLyric', result);
-          }
-          const el = document.getElementById(`line${this.highlightLyricIndex}`);
-          if (el)
-            el.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-        }
-      }, 50);
     },
   },
 };

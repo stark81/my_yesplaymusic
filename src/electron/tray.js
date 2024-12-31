@@ -148,18 +148,16 @@ class YPMTrayImpl {
   createTray() {
     if (isMac) {
       const tray = new Tray(nativeImage.createEmpty());
-      global.setTray = function (img, width, height) {
-        const image = nativeImage
-          .createFromDataURL(img)
-          .resize({ width, height });
-        image.setTemplateImage(true);
-        tray.setImage(image);
-      };
       this._tray = tray;
     } else {
       let icon = getIcon();
       this._tray = new Tray(icon);
     }
+  }
+  updateTray(img, width, height) {
+    const image = nativeImage.createFromDataURL(img).resize({ height, width });
+    image.setTemplateImage(true);
+    this._tray.setImage(image);
   }
   setContextMenu() {
     this._template = createMenuTemplate(this._win);

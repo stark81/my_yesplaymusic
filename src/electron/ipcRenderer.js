@@ -99,12 +99,18 @@ export function ipcRenderer(vueInstance) {
     });
   });
 
+  ipcRenderer.on('updateOSDShow', () => {
+    store.commit('updateSettings', {
+      key: 'showOsdLyric',
+      value: !store.state.settings.showOsdLyric,
+    });
+  });
+
   ipcRenderer.on('setPosition', (event, position) => {
     player._howler.seek(position);
   });
 
   ipcRenderer.on('dbus-status', (event, status) => {
-    console.log('dbus-status', status);
     store.commit('updateDBusStatus', status);
   });
 }

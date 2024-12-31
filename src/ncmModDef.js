@@ -180,6 +180,11 @@ module.exports = [
     module: require('NeteaseCloudMusicApi/module/simi_artist'),
   },
   {
+    identifier: 'search_match',
+    route: '/search/match',
+    module: require('NeteaseCloudMusicApi/module/search_match'),
+  },
+  {
     identifier: 'search',
     route: '/search',
     module: require('NeteaseCloudMusicApi/module/search'),
@@ -633,11 +638,6 @@ module.exports = [
     identifier: 'comment',
     route: '/comment',
     module: require('NeteaseCloudMusicApi/module/comment'),
-  },
-  {
-    identifier: 'search_match',
-    route: '/search/match',
-    module: require('NeteaseCloudMusicApi/module/search_match'),
   },
   {
     identifier: 'song_red_count',
