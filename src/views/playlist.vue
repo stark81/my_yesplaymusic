@@ -652,14 +652,8 @@ export default {
       let confirmation = confirm(`确定要删除歌单 ${this.playlist.name}？`);
       if (confirmation === true) {
         if (this.isLocal) {
-          this.deleteLocalPlaylist(this.playlist.id).then(data => {
-            if (data.code === 200) {
-              nativeAlert(`已删除歌单 ${this.playlist.name}`);
-              this.$router.go(-1);
-            } else {
-              nativeAlert(data.message);
-            }
-          });
+          this.deleteLocalPlaylist(this.playlist.id);
+          this.$router.go(-1);
         } else {
           deletePlaylist(this.playlist.id).then(data => {
             if (data.code === 200) {
@@ -689,12 +683,18 @@ export default {
     //     this.loadMore(500);
     //   }
     // },
-    removeTrack(trackID) {
+    removeTrack(trackIDs) {
       if (!this.isLocal && !isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
-      this.tracks = this.tracks.filter(t => t && t.id !== trackID);
+      this.tracks = this.tracks.filter(t => t && !trackIDs.includes(t.id));
+      if (this.isLocal) {
+        const playlist = this.$store.state.localMusic.playlists.find(
+          p => p.id === this.playlist.id
+        );
+        this.playlist = playlist;
+      }
     },
     inputDebounce() {
       if (this.debounceTimeout) clearTimeout(this.debounceTimeout);

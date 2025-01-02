@@ -90,7 +90,8 @@ export default {
         (this.playlistSource.type === this.type &&
           this.playlistSource.id === this.pid) ||
         (this.playlistSource.type === this.type &&
-          this.type === 'localPlaylist')
+          this.type === 'localPlaylist' &&
+          this.pid === 0)
       );
     },
     rightClickedTrack() {

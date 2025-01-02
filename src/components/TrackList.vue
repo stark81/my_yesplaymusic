@@ -26,30 +26,15 @@
         >{{ $t('contextMenu.deleteMatch') }}</div
       >
       <div
-        v-if="extraContextMenuItem.includes('addToLocalList')"
-        class="item"
-        @click="addTrack2LocalPlaylist([rightClickedTrack.id])"
-        >{{ $t('contextMenu.addToLocalPlaylist') }}</div
-      >
-      <div
         v-if="extraContextMenuItem.includes('removeTrackFromQueue')"
         class="item"
         @click="removeTrackFromQueue"
         >{{ $t('contextMenu.removeFromQueue') }}</div
       >
-      <div
-        v-if="extraContextMenuItem.includes('showInFolder')"
-        class="item"
-        @click="showInFolder"
-        >{{ $t('contextMenu.showInFolder') }}</div
-      >
-      <div
-        v-if="extraContextMenuItem.includes('removeLocalTrack')"
-        class="item"
-        @click="removeLocalTrack"
-        >{{ $t('contextMenu.removeLocalTrack') }}</div
-      >
-      <hr v-show="type !== 'cloudDisk' || 'localtracks'" />
+      <hr v-show="type !== 'cloudDisk' && type !== 'localTracks'" />
+      <div v-if="!type.includes('local')" class="item" @click="copyId">{{
+        $t('contextMenu.copyId')
+      }}</div>
       <div
         v-show="
           !isRightClickedTrackLiked &&
@@ -83,6 +68,24 @@
         class="item"
         @click="addTrackToPlaylist(rightClickedTrack.matched === true)"
         >{{ $t('contextMenu.addToPlaylist') }}</div
+      >
+      <div
+        v-if="extraContextMenuItem.includes('addToLocalList')"
+        class="item"
+        @click="addTrack2LocalPlaylist([rightClickedTrack.id])"
+        >{{ $t('contextMenu.addToLocalPlaylist') }}</div
+      >
+      <div
+        v-if="extraContextMenuItem.includes('removeLocalTrack')"
+        class="item"
+        @click="removeLocalTrack"
+        >{{ $t('contextMenu.removeLocalTrack') }}</div
+      >
+      <div
+        v-if="extraContextMenuItem.includes('showInFolder')"
+        class="item"
+        @click="showInFolder"
+        >{{ $t('contextMenu.showInFolder') }}</div
       >
       <div
         v-show="type !== 'cloudDisk' && !rightClickedTrack.isLocal"
@@ -264,7 +267,7 @@ export default {
       'showToast',
       'likeATrack',
       'deleteMatchTrack',
-      'rmTrackFromLocalPlaylist',
+      'addOrRemoveTrackFromLocalPlaylist',
     ]),
     openMenu(e, track, index = -1) {
       this.rightClickedTrack = track;
@@ -389,12 +392,11 @@ export default {
     },
     showInFolder() {
       const songID = this.rightClickedTrack.id;
-      const { songs, tracks } = this.$store.state.localMusic;
-      const song = songs.find(s => s.id === songID);
-      const track = tracks.find(t => t.id === song.trackID);
-      const filePath = track.filePath;
+      const track = this.$store.state.localMusic.tracks.find(
+        t => t.id === songID
+      );
       const { shell } = require('electron');
-      shell.showItemInFolder(filePath);
+      shell.showItemInFolder(track.filePath);
     },
     removeLocalTrack() {
       this.$store.dispatch('removeLocalTrack', {
@@ -412,30 +414,32 @@ export default {
       });
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
-        key: 'show',
-        value: true,
-      });
-      this.updateModal({
-        modalName: 'addTrackToPlaylistModal',
         key: 'selectedTrackID',
         value: trackIDs,
       });
+      this.updateModal({
+        modalName: 'addTrackToPlaylistModal',
+        key: 'show',
+        value: true,
+      });
+    },
+    copyId() {
+      navigator.clipboard
+        .writeText(this.rightClickedTrack.id.toString())
+        .then(() => {
+          this.showToast(locale.t('toast.copied'));
+        });
     },
     removeTrackFromPlaylist() {
-      if (this.type === 'localtracks') {
+      if (this.type.includes('local')) {
         if (confirm(`确定要从歌单删除 ${this.rightClickedTrack.name}？`)) {
-          let trackID = this.rightClickedTrack.id;
-          this.rmTrackFromLocalPlaylist({
+          let trackID = [this.rightClickedTrack.id];
+          this.addOrRemoveTrackFromLocalPlaylist({
+            op: 'del',
             pid: this.id,
             tracks: trackID,
-          }).then(data => {
-            this.showToast(
-              data.code === 200
-                ? locale.t('toast.removedFromPlaylist')
-                : data.message
-            );
-            this.$parent.removeTrack(trackID);
           });
+          this.$parent.loadLocalData(this.id.toString());
         }
       } else {
         if (!isAccountLoggedIn()) {
@@ -454,7 +458,7 @@ export default {
                 ? locale.t('toast.removedFromPlaylist')
                 : data.body.message
             );
-            this.$parent.removeTrack(trackID);
+            this.$parent.removeTrack([trackID]);
           });
         }
       }

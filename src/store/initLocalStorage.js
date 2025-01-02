@@ -55,11 +55,6 @@ let localStorage = {
     loginMode: null,
   },
   localMusic: {
-    version: 'v1',
-    trackIdCounter: 1,
-    albumsIdCounter: 1,
-    artistsIdCounter: 1,
-    playlistIdCounter: 1,
     playlists: [],
     tracks: [],
     sortBy: 'default',

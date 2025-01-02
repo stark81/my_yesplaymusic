@@ -1,7 +1,7 @@
 import { getAlbum } from '@/api/album';
 import { getArtist } from '@/api/artist';
 import { trackScrobble, trackUpdateNowPlaying } from '@/api/lastfm';
-import { fmTrash, personalFM } from '@/api/others';
+import { fmTrash, personalFM, searchMatch } from '@/api/others';
 import { getPlaylistDetail, intelligencePlaylist } from '@/api/playlist';
 import { getMP3, getTrackDetail, getLyric } from '@/api/track';
 import store from '@/store';
@@ -42,7 +42,7 @@ const excludeSaveKeys = [
 
 function setTitle(track) {
   document.title = track
-    ? `${track.name} · ${track.ar[0].name} - YesPlayMusic`
+    ? `${track.name} · ${(track.ar || track.artists)[0].name} - YesPlayMusic`
     : 'YesPlayMusic';
   if (!isMac) {
     ipcRenderer?.send('updateTrayTooltip', document.title);
@@ -268,6 +268,7 @@ export default class {
 
     // 同步歌词进度
     setInterval(() => {
+      if (this._howler === null) return;
       const offset = this._currentTrack?.lyricDelay ?? 0;
       const progress = this._howler.seek() + offset;
       this._currentLyricIndex = this._lyrics.lyric.findIndex((l, index) => {
@@ -326,7 +327,9 @@ export default class {
   }
   async _scrobble(track, time, completed = false) {
     console.debug(
-      `[debug][Player.js] scrobble track 👉 ${track.name} by ${track.ar[0].name} 👉 time:${time} completed: ${completed}`
+      `[debug][Player.js] scrobble track 👉 ${track.name} by ${
+        (track.ar || track.artists)[0].name
+      } 👉 time:${time} completed: ${completed}`
     );
     const trackDuration = ~~(track.dt / 1000);
     time = completed ? trackDuration : ~~time;
@@ -341,7 +344,7 @@ export default class {
     ) {
       const timestamp = ~~(new Date().getTime() / 1000) - time;
       trackScrobble({
-        artist: track.ar[0].name,
+        artist: (track.ar || track.artists)[0].name,
         track: track.name,
         timestamp,
         album: track.al.name,
@@ -573,10 +576,50 @@ export default class {
   _udpateTrackInfo(track) {
     this._currentTrack = track;
     this._currentLyricIndex = -1;
-    this._getLyric(track).then(() => {
-      this.saveSelfToLocalStorage();
+    if (!track) return;
+    this._searchMatchTrack(track).then(track => {
+      this._getLyric(track).then(() => {
+        this.saveSelfToLocalStorage();
+      });
+      this._updateMediaSessionMetaData(track);
     });
-    this._updateMediaSessionMetaData(track);
+  }
+
+  _searchMatchTrack(track) {
+    return new Promise(resolve => {
+      if (track.isLocal && !track.matched) {
+        const params = {
+          title: track.name,
+          album: '',
+          artist: track.ar[0].name,
+          duration: track.dt / 1000,
+          md5: track.md5,
+        };
+        searchMatch(params).then(res => {
+          if (res.code === 200) {
+            const result = res?.result?.songs[0];
+            if (result) {
+              const newTrack = {
+                ...result,
+                al: result.album,
+                ar: result.artists,
+              };
+              delete newTrack.album;
+              delete newTrack.artists;
+              store.dispatch('updateALocalTrack', [track.filePath, newTrack]);
+              this._list[this._current] = newTrack.id;
+              resolve(newTrack);
+            } else {
+              resolve(track);
+            }
+          } else {
+            resolve(track);
+          }
+        });
+      } else {
+        resolve(track);
+      }
+    });
   }
 
   async _getLyric(track) {
@@ -609,7 +652,7 @@ export default class {
         lyric.map(l => l.content).includes('纯音乐，请欣赏');
       if (includeAM) {
         let reg = /^作(词|曲)\s*(:|：)\s*/;
-        let author = track?.ar[0]?.name;
+        let author = (track?.ar || track?.artists)[0]?.name;
         lyric = lyric.filter(l => {
           let regExpArr = l.content.match(reg);
           return !regExpArr || l.content.replace(regExpArr[0], '') !== author;
@@ -733,7 +776,7 @@ export default class {
       URL.revokeObjectURL(this._localPic);
       this._localPic = null;
     }
-    let artists = track.ar.map(a => a.name);
+    let artists = track.ar?.map(a => a.name);
     const useLocal = track.isLocal && !track.matched;
     if (useLocal) {
       const blob = await fetch(`atom://get-pic/${track.filePath}`).then(res =>
@@ -744,7 +787,7 @@ export default class {
     const metadata = {
       title: track.name,
       artist: artists.join(','),
-      album: track.al.name ?? track.album.name,
+      album: track.al.name,
       artwork: [
         {
           src: useLocal ? this._localPic : track.al.picUrl + '?param=224y224',
@@ -945,7 +988,7 @@ export default class {
       this._playDiscordPresence(this._currentTrack, this.seek());
       if (store.state.lastfm.key !== undefined) {
         trackUpdateNowPlaying({
-          artist: this.currentTrack.ar[0].name,
+          artist: (this.currentTrack.ar || this.currentTrack.artists)[0].name,
           track: this.currentTrack.name,
           album: this.currentTrack.al.name,
           trackNumber: this.currentTrack.no || 1,

@@ -21,6 +21,7 @@ export default {
   enableScrolling: true,
   enabledVirtualScroll: false,
   title: 'YesPlayMusic',
+  modalOpen: false,
   liked: {
     songs: [],
     songsWithDetails: [], // 只有前12首

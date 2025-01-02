@@ -89,11 +89,10 @@ export default {
     },
   },
   watch: {
-    localMusicPath() {
-      this.$store.dispatch('showToast', '正在扫描本地音乐...');
-      this.fetchLocalData().then(() => {
-        this.$store.dispatch('showToast', `扫描完成`);
-      });
+    localMusicPath(value) {
+      if (!value) return;
+      const render = require('electron').ipcRenderer;
+      render.send('msgScanLocalMusic', value);
     },
     virtualScroll(value) {
       if (value) {
@@ -128,15 +127,8 @@ export default {
     }
     window.addEventListener('keydown', this.handleKeydown);
     this.fetchData();
-    // this.fetchLocalData();
   },
   methods: {
-    async fetchLocalData() {
-      await this.$store.dispatch('localMusicMigration');
-      this.$store.dispatch('clearDeletedMusic');
-      await this.$store.dispatch('loadLocalMusic');
-      this.$store.dispatch('updateTracks');
-    },
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;

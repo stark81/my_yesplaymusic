@@ -3,7 +3,13 @@ function getLyricsFromMetadata(metadata) {
   let lyrics = '';
   if (common.lyrics) {
     // 这种一般是iTunes的歌词
-    lyrics = common.lyrics.length ? common.lyrics[0] : '';
+    if (typeof common.lyrics[0] === 'string') {
+      lyrics = common.lyrics[0];
+    } else if (typeof common.lyrics[0] === 'object') {
+      lyrics = common.lyrics[0].syncText
+        ? common.lyrics[0].syncText[0].text
+        : common.lyrics[0].text || '';
+    }
   } else {
     for (const tag of format.tagTypes || []) {
       if (tag === 'vorbis') {

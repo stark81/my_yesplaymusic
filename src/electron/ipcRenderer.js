@@ -1,6 +1,8 @@
 import store from '@/store';
 
 const player = store.state.player;
+const settings = store.state.settings;
+const localMusic = store.state.localMusic;
 
 export function ipcRenderer(vueInstance) {
   const self = vueInstance;
@@ -17,6 +19,18 @@ export function ipcRenderer(vueInstance) {
   // listens to the main process 'changeRouteTo' event and changes the route from
   // inside this Vue instance, according to what path the main process requires.
   // responds to Menu click() events at the main process and changes the route accordingly.
+
+  if (settings.localMusicFolderPath) {
+    ipcRenderer.send('currentLocalMusic', localMusic?.tracks || []);
+    ipcRenderer.send('msgScanLocalMusic', settings.localMusicFolderPath);
+  }
+  ipcRenderer.on('msgHandleScanLocalMusic', (event, data) => {
+    store.commit('addALocalTrack', data.song);
+  });
+  // ipcRenderer.on('scanLocalMusicDone', () => {
+  //   console.log('scanLocalMusicDone', localMusic);
+  //   // localStorage.setItem('localMusic', JSON.stringify(localMusic));
+  // });
 
   ipcRenderer.on('changeRouteTo', (event, path) => {
     self.$router.push(path);

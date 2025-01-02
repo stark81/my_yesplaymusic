@@ -77,6 +77,18 @@ export default {
         });
       },
     },
+    ids: {
+      get() {
+        return this.modals.addTrackToPlaylistModal.selectedTrackID;
+      },
+      set(value) {
+        this.updateModal({
+          modalName: 'addTrackToPlaylistModal',
+          key: 'selectedTrackID',
+          value,
+        });
+      },
+    },
     isLyricPage() {
       return (
         this.settings.lyricsBackground !== false && this.$parent.showLyrics
@@ -85,12 +97,7 @@ export default {
   },
   methods: {
     ...mapMutations(['updateModal', 'updateData']),
-    ...mapActions([
-      'showToast',
-      'fetchLikedPlaylist',
-      'createLocalPlayList',
-      'addTrackToLocalPlaylist',
-    ]),
+    ...mapActions(['showToast', 'fetchLikedPlaylist', 'createLocalPlayList']),
     close() {
       this.show = false;
       this.isLocal = false;
@@ -99,27 +106,20 @@ export default {
       this.resetAfterCreateAddTrackID();
     },
     createPlaylist() {
-      let params = { name: this.title };
       if (this.isLocal) {
-        params.description = locale.t('localMusic.description');
-        this.createLocalPlayList(params).then(playlist => {
-          if (this.modals.newPlaylistModal.afterCreateAddTrackID !== 0) {
-            this.addTrackToLocalPlaylist({
-              pid: playlist.id,
-              tracks: this.modals.newPlaylistModal.afterCreateAddTrackID,
-            }).then(data => {
-              if (data.code === 200) {
-                this.showToast(locale.t('toast.savedToPlaylist'));
-              } else {
-                this.showToast(data.message);
-              }
-              this.resetAfterCreateAddTrackID();
-            });
-          }
-          this.close();
-          this.showToast('成功创建本地歌单');
-        });
+        let imgID = 0;
+        if (this.ids.length > 0) imgID = this.ids[this.ids.length - 1];
+        const params = {
+          name: this.title,
+          trackIds: this.ids,
+          trackCount: this.ids.length,
+          imgID,
+          description: locale.t('localMusic.description'),
+        };
+        this.createLocalPlayList(params);
+        this.close();
       } else {
+        let params = { name: this.title };
         if (this.private) params.type = 10;
         createPlaylist(params).then(data => {
           if (data.code === 200) {

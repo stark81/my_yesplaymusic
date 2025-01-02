@@ -313,6 +313,8 @@ export default {
     ascendSort: '按时间升序排列',
     descendSort: '按时间降序排列',
     cardiacMode: '心动模式',
+    reScan: '重新扫描',
+    copyId: '复制ID',
   },
   toast: {
     savedToPlaylist: '已添加到歌单',

@@ -84,8 +84,6 @@ export default {
       this.selectedTrackID = 0;
     },
     async accurateMatchTrack() {
-      // const localMusic = this.$store.state.localMusic;
-      // const track = localMusic.trakcs.find(t => t.id === this.selectedTrackID);
       this.$store
         .dispatch('accurateMatchTrack', {
           id: this.selectedTrackID,
@@ -94,13 +92,6 @@ export default {
         .then(() => {
           this.close();
         });
-      // getTrackDetail(this.title).then(async data => {
-      //   const matchTrack = data.songs[0];
-      //   const al = await getAlbum(matchTrack.al.id);
-      //   track.onlineTrack = matchTrack;
-      //   album.onlineAlbum = al.album;
-      // });
-      // this.close();
     },
   },
 };

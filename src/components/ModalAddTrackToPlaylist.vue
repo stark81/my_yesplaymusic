@@ -18,7 +18,7 @@
         class="playlist"
         @click="addTrackToPlaylist(playlist.id)"
       >
-        <img :src="playlist.coverImgUrl | resizeImage(224)" loading="lazy" />
+        <img :src="getCoverImage(playlist)" loading="lazy" />
         <div class="info">
           <div class="title">{{ playlist.name }}</div>
           <div class="track-count">{{ playlist.trackCount }} 首</div>
@@ -75,6 +75,18 @@ export default {
         });
       },
     },
+    ids: {
+      get() {
+        return this.modals.addTrackToPlaylistModal.selectedTrackID;
+      },
+      set(value) {
+        this.updateModal({
+          modalName: 'addTrackToPlaylistModal',
+          key: 'selectedTrackID',
+          value,
+        });
+      },
+    },
     ownPlaylists() {
       if (this.isLocal) {
         const playlist = this.localMusic.playlists.slice();
@@ -94,27 +106,28 @@ export default {
       );
     },
   },
+  watch: {
+    show(value) {
+      this.updateModalStatus(value);
+    },
+  },
   methods: {
-    ...mapMutations(['updateModal']),
-    ...mapActions(['showToast', 'addTrackToLocalPlaylist']),
+    ...mapMutations(['updateModal', 'updateModalStatus']),
+    ...mapActions(['showToast', 'addOrRemoveTrackFromLocalPlaylist']),
     close() {
       this.isLocal = false;
       this.show = false;
     },
     addTrackToPlaylist(playlistID) {
       if (this.isLocal) {
-        this.addTrackToLocalPlaylist({
+        this.addOrRemoveTrackFromLocalPlaylist({
+          op: 'add',
           pid: playlistID,
-          tracks: this.modals.addTrackToPlaylistModal.selectedTrackID,
-        }).then(result => {
-          if (result.code === 200) {
-            this.isLocal = false;
-            this.show = false;
-            this.showToast(locale.t('toast.savedToPlaylist'));
-          } else {
-            this.showToast(result.message);
-          }
+          tracks: this.ids,
         });
+        this.close();
+        this.ids = [];
+        this.updateModalStatus(false);
       } else {
         addOrRemoveTrackFromPlaylist({
           op: 'add',
@@ -139,7 +152,7 @@ export default {
       this.updateModal({
         modalName: 'newPlaylistModal',
         key: 'afterCreateAddTrackID',
-        value: this.modals.addTrackToPlaylistModal.selectedTrackID,
+        value: this.ids,
       });
       this.close();
       this.updateModal({
@@ -147,6 +160,12 @@ export default {
         key: 'show',
         value: true,
       });
+    },
+    getCoverImage(playlist) {
+      if (playlist.coverImgUrl.startsWith('http')) {
+        return playlist.coverImgUrl + '?param=224y224';
+      }
+      return playlist.coverImgUrl;
     },
   },
 };

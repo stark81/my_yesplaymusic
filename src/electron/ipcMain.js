@@ -6,11 +6,41 @@ import shortcuts from '@/utils/shortcuts';
 import { createMenu } from './menu';
 import { createDBus } from './dbus-client';
 import { isCreateTray, isMac, isLinux } from '@/utils/platform';
+import { parseFile } from 'music-metadata';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const clc = require('cli-color');
 const log = text => {
   console.log(`${clc.blueBright('[ipcMain.js]')} ${text}`);
 };
+
+const createMD5 = filePath => {
+  const hash = crypto.createHash('md5');
+  const data = fs.readFileSync(filePath);
+  hash.update(data);
+  return hash.digest('hex');
+};
+
+const splitArtist = artist => {
+  if (!artist) return ['未知歌手'];
+  let result = [];
+  if (artist.includes('&')) {
+    result = artist.split('&');
+  } else if (artist.includes('、')) {
+    result = artist.split('、');
+  } else if (artist.includes(',')) {
+    result = artist.split(',');
+  } else if (artist.includes('/')) {
+    result = artist.split('/');
+  } else {
+    result = [artist];
+  }
+  return result;
+};
+
+let isLock = false;
 
 const exitAsk = (e, win) => {
   e.preventDefault(); //阻止默认行为
@@ -74,141 +104,7 @@ const exitAskWithoutMac = (e, win) => {
 
 const client = require('discord-rich-presence')('818936529484906596');
 
-/**
- * Make data a Buffer.
- *
- * @param {?} data The data to convert.
- * @returns {import("buffer").Buffer} The converted data.
- */
-// function toBuffer(data) {
-//   if (data instanceof Buffer) {
-//     return data;
-//   } else {
-//     return Buffer.from(data);
-//   }
-// }
-
-/**
- * Get the file base64 data from bilivideo.
- *
- * @param {string} url The URL to fetch.
- * @returns {Promise<string>} The file base64 data.
- */
-// async function getBiliVideoFile(url) {
-//   const axios = await import('axios').then(m => m.default);
-//   const response = await axios.get(url, {
-//     headers: {
-//       Referer: 'https://www.bilibili.com/',
-//       'User-Agent': 'okhttp/3.4.1',
-//     },
-//     responseType: 'arraybuffer',
-//   });
-
-//   const buffer = toBuffer(response.data);
-//   const encodedData = buffer.toString('base64');
-
-//   return encodedData;
-// }
-
-/**
- * Parse the source string (`a, b`) to source list `['a', 'b']`.
- *
- * @param {import("@unblockneteasemusic/rust-napi").Executor} executor
- * @param {string} sourceString The source string.
- * @returns {string[]} The source list.
- */
-// function parseSourceStringToList(executor, sourceString) {
-//   const availableSource = executor.list();
-
-//   return sourceString
-//     .split(',')
-//     .map(s => s.trim().toLowerCase())
-//     .filter(s => {
-//       const isAvailable = availableSource.includes(s);
-
-//       if (!isAvailable) {
-//         log(`This source is not one of the supported source: ${s}`);
-//       }
-
-//       return isAvailable;
-//     });
-// }
-
-export function initIpcMain(win, store, tray, lrc) {
-  // WIP: Do not enable logging as it has some issues in non-blocking I/O environment.
-  // UNM.enableLogging(UNM.LoggingType.ConsoleEnv);
-  // const unmExecutor = new UNM.Executor();
-
-  let isLock = store.get('osdlyrics.isLock');
-  ipcMain.handle(
-    'unblock-music',
-    /**
-     *
-     * @param {*} _
-     * @param {string | null} sourceListString
-     * @param {Record<string, any>} ncmTrack
-     * @param {UNM.Context} context
-     */
-    async (_, sourceListString, ncmTrack) => {
-      const sourceList = sourceListString
-        .split(',')
-        .map(s => s.trim().toLowerCase());
-      // console.log(sourceList, ncmTrack, context);
-      const match = require('@unblockneteasemusic/server');
-      const result = await match(ncmTrack.id, sourceList);
-      return result;
-    }
-    // async (_, sourceListString, ncmTrack, context) => {
-    //   // Formt the track input
-    //   // FIXME: Figure out the structure of Track
-    //   const song = {
-    //     id: ncmTrack.id && ncmTrack.id.toString(),
-    //     name: ncmTrack.name,
-    //     duration: ncmTrack.dt,
-    //     album: ncmTrack.al && {
-    //       id: ncmTrack.al.id && ncmTrack.al.id.toString(),
-    //       name: ncmTrack.al.name,
-    //     },
-    //     artists: ncmTrack.ar
-    //       ? ncmTrack.ar.map(({ id, name }) => ({
-    //           id: id && id.toString(),
-    //           name,
-    //         }))
-    //       : [],
-    //   };
-
-    //   const sourceList =
-    //     typeof sourceListString === 'string'
-    //       ? parseSourceStringToList(unmExecutor, sourceListString)
-    //       : ['ytdl', 'bilibili', 'pyncm', 'kugou'];
-    //   log(`[UNM] using source: ${sourceList.join(', ')}`);
-    //   log(`[UNM] using configuration: ${JSON.stringify(context)}`);
-
-    //   try {
-    //     // TODO: tell users to install yt-dlp.
-    //     const matchedAudio = await unmExecutor.search(
-    //       sourceList,
-    //       song,
-    //       context
-    //     );
-    //     const retrievedSong = await unmExecutor.retrieve(matchedAudio, context);
-
-    //     // bilibili's audio file needs some special treatment
-    //     if (retrievedSong.url.includes('bilivideo.com')) {
-    //       retrievedSong.url = await getBiliVideoFile(retrievedSong.url);
-    //     }
-
-    //     log(`respond with retrieve song…`);
-    //     log(JSON.stringify(matchedAudio));
-    //     return retrievedSong;
-    //   } catch (err) {
-    //     const errorMessage = err instanceof Error ? `${err.message}` : `${err}`;
-    //     log(`UnblockNeteaseMusic failed: ${errorMessage}`);
-    //     return null;
-    //   }
-    // }
-  );
-
+const initWindowIpcMain = (win, store) => {
   ipcMain.on('close', e => {
     if (isMac) {
       win.hide();
@@ -228,47 +124,32 @@ export function initIpcMain(win, store, tray, lrc) {
     }
   });
 
+  ipcMain.handle(
+    'unblock-music',
+    /**
+     *
+     * @param {*} _
+     * @param {string | null} sourceListString
+     * @param {Record<string, any>} ncmTrack
+     * @param {UNM.Context} context
+     */
+    async (_, sourceListString, ncmTrack) => {
+      const sourceList = sourceListString
+        .split(',')
+        .map(s => s.trim().toLowerCase());
+      // console.log(sourceList, ncmTrack, context);
+      const match = require('@unblockneteasemusic/server');
+      const result = await match(ncmTrack.id, sourceList);
+      return result;
+    }
+  );
+
   ipcMain.on('minimize', () => {
     win.minimize();
   });
 
   ipcMain.on('maximizeOrUnmaximize', () => {
     win.isMaximized() ? win.unmaximize() : win.maximize();
-  });
-
-  ipcMain.on('settings', (event, options) => {
-    store.set('settings', options);
-    if (options.enableGlobalShortcut) {
-      registerGlobalShortcut(win, store);
-    } else {
-      log('unregister global shortcut');
-      globalShortcut.unregisterAll();
-    }
-  });
-
-  ipcMain.on('playDiscordPresence', (event, track) => {
-    client.updatePresence({
-      details: track.name + ' - ' + track.ar.map(ar => ar.name).join(','),
-      state: track.al.name,
-      endTimestamp: Date.now() + track.dt,
-      largeImageKey: track.al.picUrl,
-      largeImageText: track.al.name,
-      smallImageKey: 'play',
-      smallImageText: 'Playing',
-      instance: true,
-    });
-  });
-
-  ipcMain.on('pauseDiscordPresence', (event, track) => {
-    client.updatePresence({
-      details: track.name + ' - ' + track.ar.map(ar => ar.name).join(','),
-      state: track.al.name,
-      largeImageKey: track.al.picUrl,
-      largeImageText: track.al.name,
-      smallImageKey: 'pause',
-      smallImageText: 'Pause',
-      instance: true,
-    });
   });
 
   ipcMain.on('setProxy', (event, config) => {
@@ -289,19 +170,20 @@ export function initIpcMain(win, store, tray, lrc) {
     win.webContents.session.setProxy({});
     store.set('proxy', '');
   });
+};
 
-  ipcMain.on('resizeOSDLyrics', (event, arg) => {
-    lrc.resizeOSDLyrics(arg);
-  });
-
+const initOsdWinIpcMain = (win, store, lrc) => {
   ipcMain.on('toggleOSDLyrics', (event, show) => {
     store.set('osdlyrics.show', show);
     lrc.toggleOSDLyrics();
   });
+
   ipcMain.on('sendLyrics', (_, arg) => {
     lrc.receiveLyric(arg);
+    // 这里可以看看是否可以使用emit事件来避免需要主进城来控制状态栏歌词更新
     if (isCreateTray) win.webContents.send('lyricsReceived', arg[0]);
   });
+
   ipcMain.on('from-osd', (_, arg) => {
     if (arg === 'showMainWin') {
       win.show();
@@ -336,6 +218,154 @@ export function initIpcMain(win, store, tray, lrc) {
   });
   ipcMain.on('lyricIndex', (_, index) => {
     lrc.sendLyricIndex(index);
+  });
+
+  // ipcMain.on('resizeOSDLyrics', (event, arg) => {
+  //   lrc.resizeOSDLyrics(arg);
+  // });
+};
+
+const initPlayerIpcMain = () => {};
+
+const initMprisIpcMain = () => {};
+
+const initOtherIpcMain = win => {
+  let songs = [];
+  ipcMain.on('currentLocalMusic', (event, arg) => {
+    songs = arg;
+  });
+  ipcMain.on('msgScanLocalMusic', async (event, filePath) => {
+    if (!filePath) return;
+    const musicFileExtensions = /\.(mp3|aiff|flac|alac|m4a|aac|wav)$/i;
+
+    const albums = songs.map(song => song.album);
+    const artists = songs.map(song => song.artist).flat();
+    const newTracks = [];
+    const newAlbums = [];
+    const newArtists = [];
+
+    const walk = async dir => {
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+
+        if (stat.isFile() && musicFileExtensions.test(filePath)) {
+          const foundTrack = songs.find(track => track.filePath === filePath);
+          if (!foundTrack) {
+            const md5 = createMD5(filePath);
+            const metadata = await parseFile(filePath);
+            const birthDate = new Date(stat.birthtime).getTime();
+            const { common, format } = metadata;
+
+            // 获取艺术家信息
+            const arIDsResult = [];
+            const arts = splitArtist(common.albumartist || common.artist);
+            for (const art of arts) {
+              const foundArtist = [...artists, ...newArtists].find(
+                a => a.name === art
+              );
+              if (foundArtist) {
+                arIDsResult.push(foundArtist);
+              } else {
+                const artist = {
+                  id: artists.length + newArtists.length + 1,
+                  name: art,
+                  matched: false,
+                  picUrl:
+                    'https://p1.music.126.net/VnZiScyynLG7atLIZ2YPkw==/18686200114669622.jpg',
+                };
+                arIDsResult.push(artist);
+                newArtists.push(artist);
+              }
+            }
+
+            // 获取专辑信息
+            let album = [...albums, ...newAlbums].find(
+              al => al.name === common.album
+            );
+            if (!album) {
+              album = {
+                id: albums.length + newAlbums.length + 1,
+                name: common.album || 'Unknown Album',
+                matched: false,
+                picUrl:
+                  'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+              };
+              newAlbums.push(album);
+            }
+
+            // 获取歌曲信息
+            const song = {
+              id: songs.length + newTracks.length + 1,
+              name: common.title || 'Unknown Title',
+              dt: (format.duration || 0) * 1000,
+              filePath,
+              isLocal: true,
+              matched: false,
+              offset: 0,
+              md5,
+              createTime: birthDate,
+              alias: [],
+              al: album,
+              ar: arIDsResult,
+              picUrl:
+                'https://p2.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg',
+            };
+            win.webContents.send('msgHandleScanLocalMusic', { song });
+            newTracks.push(song);
+          }
+        } else if (stat.isDirectory()) {
+          await walk(filePath);
+        }
+      }
+    };
+    await walk(filePath);
+    win.webContents.send('scanLocalMusicDone');
+  });
+};
+
+export function initIpcMain(win, store, tray, lrc) {
+  isLock = store.get('osdlyrics.isLock');
+  initWindowIpcMain(win, store);
+  initOsdWinIpcMain(win, store, lrc);
+  initPlayerIpcMain();
+  initMprisIpcMain();
+  initOtherIpcMain(win);
+
+  ipcMain.on('settings', (event, options) => {
+    store.set('settings', options);
+    if (options.enableGlobalShortcut) {
+      registerGlobalShortcut(win, store);
+    } else {
+      log('unregister global shortcut');
+      globalShortcut.unregisterAll();
+    }
+  });
+
+  ipcMain.on('playDiscordPresence', (event, track) => {
+    client.updatePresence({
+      details: track.name + ' - ' + track.ar.map(ar => ar.name).join(','),
+      state: track.al.name,
+      endTimestamp: Date.now() + track.dt,
+      largeImageKey: track.al.picUrl,
+      largeImageText: track.al.name,
+      smallImageKey: 'play',
+      smallImageText: 'Playing',
+      instance: true,
+    });
+  });
+
+  ipcMain.on('pauseDiscordPresence', (event, track) => {
+    client.updatePresence({
+      details: track.name + ' - ' + track.ar.map(ar => ar.name).join(','),
+      state: track.al.name,
+      largeImageKey: track.al.picUrl,
+      largeImageText: track.al.name,
+      smallImageKey: 'pause',
+      smallImageText: 'Pause',
+      instance: true,
+    });
   });
 
   ipcMain.on('switchGlobalShortcutStatusTemporary', (e, status) => {

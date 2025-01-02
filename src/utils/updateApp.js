@@ -51,7 +51,9 @@ const updatePlayer = () => {
 
 const updateLocalMusic = () => {
   let parsedData = JSON.parse(localStorage.getItem('localMusic'));
-  const data = { ...parsedData };
+  let appVersion = localStorage.getItem('appVersion');
+  if (appVersion === `"0.4.18"`) parsedData = {};
+  const data = { ...initLocalStorage.localMusic, ...parsedData };
   localStorage.setItem('localMusic', JSON.stringify(data));
 };
 
