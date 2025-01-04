@@ -66,7 +66,7 @@
       <div
         v-show="type !== 'cloudDisk'"
         class="item"
-        @click="addTrackToPlaylist(rightClickedTrack.matched === true)"
+        @click="addTrackToPlaylist"
         >{{ $t('contextMenu.addToPlaylist') }}</div
       >
       <div
@@ -372,11 +372,16 @@ export default {
         this.deleteMatchTrack(this.rightClickedTrackComputed.id);
       }
     },
-    addTrackToPlaylist(useOnline = false) {
+    addTrackToPlaylist() {
       if (!isAccountLoggedIn()) {
         this.showToast(locale.t('toast.needToLogin'));
         return;
       }
+      this.updateModal({
+        modalName: 'addTrackToPlaylistModal',
+        key: 'isLocal',
+        value: false,
+      });
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'show',
@@ -385,9 +390,7 @@ export default {
       this.updateModal({
         modalName: 'addTrackToPlaylistModal',
         key: 'selectedTrackID',
-        value: !useOnline
-          ? this.rightClickedTrack.id
-          : this.rightClickedTrack.onlineTrack.id,
+        value: this.rightClickedTrack.id,
       });
     },
     showInFolder() {

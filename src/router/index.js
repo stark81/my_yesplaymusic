@@ -138,36 +138,6 @@ const routes = [
     name: 'lastfmCallback',
     component: () => import('@/views/lastfmCallback.vue'),
   },
-  {
-    path: '/comment/new',
-    name: 'musicComment',
-    component: () => [
-      import('@/views/comment.vue'),
-      import('@/views/commentFloor.vue'),
-    ],
-  },
-  {
-    path: '/comment/like',
-    name: 'commentLike',
-    component: () => [
-      import('@/views/comment.vue'),
-      import('@/views/commentFloor.vue'),
-    ],
-    meta: {
-      requireAccountLogin: true,
-    },
-  },
-  {
-    path: '/comment/floor',
-    name: 'commentFloor',
-    component: () => [
-      import('@/views/comment.vue'),
-      import('@/views/commentFloor.vue'),
-    ],
-    meta: {
-      requireAccountLogin: true,
-    },
-  },
 ];
 
 const router = new VueRouter({

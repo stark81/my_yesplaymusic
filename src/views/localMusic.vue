@@ -142,26 +142,18 @@
     <ModalMatchTrack />
 
     <ContextMenu ref="localTracksTabMenu">
-      <div
-        class="item"
-        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'default' })"
-        >{{ $t('contextMenu.defaultSort') }}</div
-      >
-      <div
-        class="item"
-        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'byname' })"
-        >{{ $t('contextMenu.sortByName') }}</div
-      >
-      <div
-        class="item"
-        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'descend' })"
-        >{{ $t('contextMenu.descendSort') }}</div
-      >
-      <div
-        class="item"
-        @click="updateLocalMusicXXX({ name: 'sortBy', data: 'ascend' })"
-        >{{ $t('contextMenu.ascendSort') }}</div
-      >
+      <div class="item" @click="updateSortBy('default')">{{
+        $t('contextMenu.defaultSort')
+      }}</div>
+      <div class="item" @click="updateSortBy('byname')">{{
+        $t('contextMenu.sortByName')
+      }}</div>
+      <div class="item" @click="updateSortBy('descend')">{{
+        $t('contextMenu.descendSort')
+      }}</div>
+      <div class="item" @click="updateSortBy('ascend')">{{
+        $t('contextMenu.ascendSort')
+      }}</div>
       <hr />
       <div v-if="!isBatchOp" class="item" @click="scanLocalMusic">{{
         $t('contextMenu.reScan')
@@ -317,7 +309,7 @@ export default {
     this.getShowTracks();
   },
   methods: {
-    ...mapMutations(['updateLocalMusicXXX', 'updateModal']),
+    ...mapMutations(['updateSortBy', 'updateModal']),
     async getRandomLyric() {
       if (!this.localTracks.length) return;
       const randomTrack = this.localTracks?.filter(

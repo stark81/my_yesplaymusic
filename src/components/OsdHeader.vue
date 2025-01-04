@@ -65,6 +65,9 @@ export default {
   },
   created() {
     this.isPlaying = this.playingStatus;
+    if (process.platform === 'linux') {
+      this.updateSettings({ key: 'isLock', value: false });
+    }
     ipcRenderer.on('update-osd-playing-status', (_, status) => {
       this.isPlaying = status;
     });

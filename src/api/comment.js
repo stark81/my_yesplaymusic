@@ -1,64 +1,33 @@
 import request from '@/utils/request';
 
-export function getSongNewComment(
-  id,
-  type,
-  pageNo,
-  pageSize,
-  sortType,
-  cursor
-) {
+export function getComment(params) {
   return request({
     url: '/comment/new',
     method: 'post',
-    params: {
-      id,
-      type,
-      pageNo,
-      pageSize,
-      sortType,
-      cursor,
-    },
+    params,
   });
 }
 
-export function handlCommentLiked(id, cid, t, type) {
+export function likeComment(params) {
   return request({
     url: '/comment/like',
-    method: 'post',
-    params: {
-      id,
-      cid,
-      t,
-      type,
-    },
+    method: 'get',
+    params,
   });
 }
 
-export function handleSubmitComment(t, type, id, content, commentId) {
+export function submitComment(params) {
   return request({
     url: '/comment',
-    method: 'post',
-    params: {
-      t,
-      type,
-      id,
-      content,
-      commentId,
-    },
+    method: 'get',
+    params,
   });
 }
 
-export function getFloorComment(parentCommentId, id, type, limit, time) {
+export function getFloorComment(params) {
   return request({
     url: '/comment/floor',
-    method: 'post',
-    params: {
-      parentCommentId,
-      id,
-      type,
-      limit,
-      time,
-    },
+    method: 'get',
+    params,
   });
 }

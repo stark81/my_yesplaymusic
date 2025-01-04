@@ -57,11 +57,26 @@ export default {
     oldTrack.al.matched = true;
     oldTrack.ar.forEach(a => (a.matched = true));
   },
+  updateOffset(state, offset) {
+    const playerTrack = state.player.currentTrack;
+    if (playerTrack) {
+      playerTrack.offset = offset;
+      const localTrack = state.localMusic.tracks.find(
+        t => t.id === playerTrack.id
+      );
+      if (localTrack) {
+        localTrack.offset = offset;
+      }
+    }
+  },
   deleteLocalPlaylist(state, id) {
     const idx = state.localMusic.playlists.findIndex(p => p.id === id);
     if (idx !== -1) {
       state.localMusic.playlists.splice(idx, 1);
     }
+  },
+  updateSortBy(state, value) {
+    state.localMusic.sortBy = value;
   },
   changeLang(state, lang) {
     state.settings.lang = lang;

@@ -111,6 +111,8 @@ class Background {
     if (release().startsWith('6.1') && type() == 'Windows_NT')
       app.disableHardwareAcceleration();
     if (process.platform === 'win32') app.setAppUserModelId(app.getName());
+    if (process.platform === 'linux')
+      app.commandLine.appendSwitch('disable-gpu');
     if (!app.requestSingleInstanceLock()) return app.quit();
 
     // start netease music api

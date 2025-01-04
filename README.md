@@ -19,10 +19,8 @@
 [![Library][library-screenshot]](https://music.qier222.com)
 
 ==========================================================================
-## 推广
-- 本项目使用低版本的node、低版本electron，导致某些功能，如Linux下的桌面歌词体验不佳；
-- 本地音乐的匹配问题。项目集成的express + NeteaseCloudMusicApi无法使用search_match这个API(本地音乐匹配线上信息)，每次使用都只显示参数错误，导致本项目的本地歌曲只能使用“搜索 + 筛选”的方式(该方式增加搜索间隔来避免搜索功能被封)来进行匹配，效率低下；
-- 基于以上两个原因，本项目开始转向维护阶段，更新频率将会有所下降，转而维护另一个项目：[VutronMusic](https://github.com/stark81/VutronMusic)：
+## 推广；
+- 本项目功能已较为完善、所依赖的node版本较低迁移较为麻烦等，所以本项目开始转向维护阶段，更新频率将会有所下降，转而维护另一个项目：[VutronMusic](https://github.com/stark81/VutronMusic)：
   - 该项目使用vue3 + ts + better-sqlite3 + fastify + pinia + electron32+进行开发，且可快速进行electron版本更新，以保障用户体验；
   - 该项目暂时仅支持客户端，不会像YesPlayMusic一样支持web端，因此无法实现Vercel部署、服务器部署等功能。如果需要可以自行fork后进行修改；
   - UI界面和功能大量【参考和复用】[YesPlayMusic](https://github.com/qier222/YesPlayMusic)，延续了YesPlayMusic的美观和优雅；
@@ -51,7 +49,7 @@
  - 如果播放器出现问题，可以进入开发者模式，使用<font color=orange>resetPlayer()重置播放器状态</font>。若问题仍未解决，则先在设置里导出本地歌曲信息后再通过开发者模式使用<font color=orange>resetApp()重置软件</font>；
 
 ## 截图
-
+![osdLyric][osdLyric-screenshot]
 ![extension][extension-screenshot]
 ![comment][comment-screenshot]
 ![floor][floor-screenshot]
@@ -324,3 +322,4 @@ API 源代码来自 [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryif
 [localMusic-screenshot]: images/localMusic.png
 [localPlaylist-screenshot]: images/localPlaylist.png
 [extension-screenshot]: images/extension.png
+[osdLyric-screenshot]: images/osdLyricAndTrayLyric.png

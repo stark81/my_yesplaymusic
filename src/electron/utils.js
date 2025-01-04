@@ -13,16 +13,16 @@ function getLyricsFromMetadata(metadata) {
   } else {
     for (const tag of format.tagTypes || []) {
       if (tag === 'vorbis') {
-        // flac
-        lyrics = native.vorbis.find(item => item.id === 'LYRICS').value || '';
+        const vorbis = native.vorbis.find(item => item.id === 'LYRICS');
+        lyrics = vorbis ? vorbis.value : '';
         break;
       } else if (tag === 'ID3v2.3') {
-        lyrics =
-          native['ID3v2.3'].find(item => item.id === 'USLT').value.text || '';
+        const id3v2 = native['ID3v2.3'].find(item => item.id === 'USLT');
+        lyrics = id3v2 && id3v2.value ? id3v2.value.text : '';
         break;
       } else if (tag === 'ID3v2.4') {
-        lyrics =
-          native['ID3v2.4'].find(item => item.id === 'USLT').value.text || '';
+        const id3v2 = native['ID3v2.4'].find(item => item.id === 'USLT');
+        lyrics = id3v2 && id3v2.value ? id3v2.value.text : '';
         break;
       }
     }

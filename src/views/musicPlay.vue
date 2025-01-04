@@ -20,11 +20,11 @@
         >
           <div
             class="top-right"
-            :style="{ backgroundImage: `url(${bgImageUrl})` }"
+            :style="{ backgroundImage: `url(${coverUrl})` }"
           />
           <div
             class="bottom-left"
-            :style="{ backgroundImage: `url(${bgImageUrl})` }"
+            :style="{ backgroundImage: `url(${coverUrl})` }"
           />
         </div>
         <div
@@ -39,10 +39,10 @@
             </div>
             <div class="cover">
               <div class="cover-container">
-                <img :src="imageUrl" loading="lazy" />
+                <img :src="coverUrl" loading="lazy" />
                 <div
                   class="shadow"
-                  :style="{ backgroundImage: `url(${imageUrl})` }"
+                  :style="{ backgroundImage: `url(${coverUrl})` }"
                 ></div>
               </div>
             </div>
@@ -128,7 +128,7 @@
                     </button-icon>
                     <button-icon
                       class="lyric_comment_btn"
-                      :class="{ disabled: heartDisabled }"
+                      :class="{ disabled: heartDisabled && show === 'lyric' }"
                       :title="
                         heartDisabled
                           ? $t('player.noAllowCauseLocal')
@@ -261,13 +261,7 @@
         </div>
         <div class="right-side">
           <Lyrics v-show="show === 'lyric'" ref="lyricRef" />
-          <component
-            :is="show !== 'lyric' ? 'comment' : null"
-            v-show="show === 'comment'"
-            ref="commentRef"
-          />
-          <!-- <Comment v-show="show === 'comment'" ref="commentRef" /> -->
-          <CommentFloor v-if="show === 'floor_comment'" ref="floorRef" />
+          <CommentPage v-if="show === 'comment'" :id="currentTrack.id" />
         </div>
         <div class="close-button" @click="closePlayPage">
           <button>
@@ -277,13 +271,11 @@
       </div>
     </transition>
     <div>
-      <ModalDeleteComment />
-      <ModalSetLyricDelay />
       <ModalSetRate />
       <ContextMenu ref="playPageMenu" class="contextMenu">
-        <div ref="lyricDelay" class="item" @click="changeLyricTime">{{
+        <!-- <div ref="lyricDelay" class="item" @click="changeLyricTime">{{
           $t('contextMenu.changeLyricTime')
-        }}</div>
+        }}</div> -->
         <div ref="playBack" class="item" @click="setRate">{{
           $t('contextMenu.playBackSpeed')
         }}</div>
@@ -311,14 +303,11 @@ import * as Vibrant from 'node-vibrant/dist/vibrant.worker.min.js';
 import Color from 'color';
 import { isAccountLoggedIn } from '@/utils/auth';
 import Lyrics from '@/views/lyrics.vue';
-import Comment from '@/views/comment.vue';
 import { hasListSource, getListSourcePath } from '@/utils/playList';
 import locale from '@/locale';
-import CommentFloor from '@/views/commentFloor.vue';
-import ModalDeleteComment from '@/components/ModalDeleteComment.vue';
-import ModalSetLyricDelay from '@/components/ModalSetLyricDelay.vue';
 import ModalSetRate from '@/components/ModalSetRate.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
+import CommentPage from '@/components/CommentPage.vue';
 
 export default {
   name: 'MusicPlay',
@@ -326,21 +315,16 @@ export default {
     VueSlider,
     ButtonIcon,
     Lyrics,
-    Comment,
-    CommentFloor,
     ContextMenu,
-    ModalDeleteComment,
-    ModalSetLyricDelay,
     ModalSetRate,
+    CommentPage,
   },
   data() {
     return {
       show: 'lyric',
       commentId: null,
       type: 0,
-      background: '',
       date: this.formatTime(new Date()),
-      hasLyric: true,
       hasTLyric: false,
       hasRLyric: false,
       idx: 0,
@@ -367,6 +351,9 @@ export default {
       }
       return lst;
     },
+    color() {
+      return this.player.color;
+    },
     tagIdx() {
       let idx = this.tags.indexOf(this.settings.showLyricsTranslation);
       idx === -1 ? (idx = 0) : idx;
@@ -382,6 +369,9 @@ export default {
       set(value) {
         this.player.volume = value;
       },
+    },
+    coverUrl() {
+      return this.player.coverUrl;
     },
     imageUrl() {
       return this.player.currentTrack?.matched !== false
@@ -405,10 +395,13 @@ export default {
       return this.settings.lyricsBackground === true ? 'dark' : 'auto';
     },
     noLyric() {
-      return !this.hasLyric && this.show === 'lyric';
+      return this.player.lyrics.lyric.length === 0 && this.show === 'lyric';
     },
     heartDisabled() {
       return this.currentTrack.isLocal && !this.currentTrack.matched;
+    },
+    background() {
+      return `linear-gradient(to top left, ${this.color.color}, ${this.color.color2})`;
     },
   },
   watch: {
@@ -416,9 +409,6 @@ export default {
       if (newVal !== oldVal) {
         this.currentTrack = newVal;
       }
-    },
-    currentTrack() {
-      this.getCoverColor();
     },
     tagIdx(val) {
       this.idx = val;
@@ -435,7 +425,7 @@ export default {
     this.Bus.$on('showComment', data => {
       this.switchCommentAndLyric(data);
     });
-    this.getCoverColor();
+    // this.getCoverColor();
     this.initDate();
   },
   beforeDestroy: function () {
@@ -487,8 +477,9 @@ export default {
       );
     },
     switchCommentAndLyric(show_option) {
-      if (this.heartDisabled) return;
-      this.show = show_option;
+      if (this.show === 'comment' || this.currentTrack.matched !== false) {
+        this.show = show_option;
+      }
     },
     addToPlaylist(isLocal = false) {
       let id = this.currentTrack.id;
@@ -599,6 +590,14 @@ export default {
   background: var(--color-body-bg);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+}
+
+.no-lyric {
+  .left-side {
+    transition: all 0.5s;
+    transform: translateX(25vh);
+    padding-right: 0;
+  }
 }
 
 .lyrics-background {

@@ -5,7 +5,24 @@
       ref="lyricsContainer"
       class="lyrics-container"
       :style="lyricFontSize"
+      @mouseover="hover = true"
+      @mouseleave="hover = false"
     >
+      <div v-show="hover" class="offset">
+        <button-icon title="后退0.5s" @click.native="setOffset(-0.5)">
+          <svg-icon icon-class="back5s" />
+        </button-icon>
+        <button-icon
+          class="recovery"
+          :title="offset"
+          @click.native="setOffset(0)"
+        >
+          <svg-icon icon-class="recovery" />
+        </button-icon>
+        <button-icon title="提前0.5s" @click.native="setOffset(0.5)">
+          <svg-icon icon-class="forward5s" />
+        </button-icon>
+      </div>
       <div id="line-1" class="line"></div>
       <div
         v-for="(line, index) in lyricWithTranslation"
@@ -44,16 +61,22 @@
 
 import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
+import ButtonIcon from '@/components/ButtonIcon.vue';
 import { isMac } from '@/utils/platform';
+import eventBus from '@/utils/eventBus';
 
 export default {
   name: 'Lyrics',
+  components: {
+    ButtonIcon,
+  },
   data() {
     return {
       lyricsInterval: null,
       minimize: true,
       background: '',
       date: this.formatTime(new Date()),
+      hover: false,
     };
   },
   computed: {
@@ -167,8 +190,24 @@ export default {
     isLyricPage() {
       return this.showLyrics && this.$parent.show === 'lyric';
     },
+    offset() {
+      const offset = this.currentTrack.offset || 0;
+      if (offset === 0) {
+        return '未调整';
+      } else if (offset > 0) {
+        return `提前${offset}s`;
+      } else {
+        return `延迟${-offset}s`;
+      }
+    },
   },
   watch: {
+    currentTrack(val) {
+      eventBus.$emit('updateCurrentLyric', {
+        content: val?.name || '听你想听的音乐',
+        time: 10,
+      });
+    },
     lyricDelay(val) {
       clearInterval(this.lyricsInterval);
       if (this.isLocal) {
@@ -186,7 +225,7 @@ export default {
       }
     },
     lyric(value) {
-      if (this.showOsdLyric || isMac) {
+      if (this.showOsdLyric) {
         const { ipcRenderer } = require('electron');
         ipcRenderer.send('sendLyrics', [value, this.tlyric]);
       }
@@ -205,7 +244,7 @@ export default {
       }
     },
     currentLyric(value) {
-      if (this.dbusStatus && this.sendDBusLrc) {
+      if (isMac || (this.dbusStatus && this.sendDBusLrc)) {
         const { ipcRenderer } = require('electron');
         let result = {};
         if (this.currentLyricIndex < this.lyric.length) {
@@ -222,6 +261,7 @@ export default {
             time: 10,
           };
         }
+        eventBus.$emit('updateCurrentLyric', result);
         ipcRenderer.send('updateCurrentLyric', result);
       }
     },
@@ -267,9 +307,15 @@ export default {
   },
   created() {
     this.initDate();
+    this.$nextTick(() => {
+      const el = document.getElementById(`line${this.currentLyricIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   },
   methods: {
-    ...mapMutations(['toggleLyrics']),
+    ...mapMutations(['toggleLyrics', 'updateOffset']),
     initDate() {
       var _this = this;
       clearInterval(this.timer);
@@ -288,6 +334,14 @@ export default {
         ':' +
         second.padStart(2, '0')
       );
+    },
+    setOffset(offset) {
+      if (offset === 0) {
+        this.updateOffset(0);
+      } else {
+        const newOffset = (this.currentTrack.offset || 0) + offset;
+        this.updateOffset(newOffset);
+      }
     },
     async getInnerLyric(filePath) {
       const data = await fetch(`atom://get-lyric/${filePath}`).then(res =>
@@ -338,6 +392,27 @@ export default {
   transition: 0.5s;
   scrollbar-width: none; // firefox
 
+  .offset {
+    display: flex;
+    position: fixed;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 10px 6px;
+    top: 50%;
+    right: 30px;
+    border-radius: 8px;
+    transform: translate(0, -50%);
+    z-index: 1;
+
+    .button-icon {
+      margin: unset;
+    }
+
+    .recovery {
+      margin: 10px 0;
+    }
+  }
+
   .line {
     width: 40vw;
     margin: 2px 0;
@@ -368,10 +443,6 @@ export default {
     }
   }
 
-  .line#line-1:hover {
-    background: unset;
-  }
-
   .translation {
     margin-top: 0.1em;
   }
@@ -393,7 +464,7 @@ export default {
   display: none;
 }
 
-.lyrics-container .line:first-child {
+.lyrics-container .line#line-1 {
   margin-top: 50vh;
 }
 

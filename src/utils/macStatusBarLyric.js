@@ -139,21 +139,13 @@ class TrayLiric {
         ipcRenderer.send('windowShow');
       }
     });
-    ipcRenderer.on('switchShowTray', (_, ops) => {
-      if (ops === 'switchLyric') {
-        const show_lyric = store.state.settings.showStatusBarLyric;
-        this.getConbineIcon();
-        if (show_lyric) {
-          this._lyric.allLyric = this._lyricText;
-          this._lyric.findCurrentLyric();
-        }
-        this.buildTray();
-        this.drawTray(true, false, false);
-      } else if (ops === 'switchControl') {
-        this.getConbineIcon();
-        this.buildTray();
-        this.drawTray(false, true, false);
-      }
+
+    eventBus.$on('switchShowTray', idx => {
+      const drawBool = [false, false, false];
+      drawBool[idx] = true;
+      this.getConbineIcon();
+      this.buildTray();
+      this.drawTray(...drawBool);
     });
     eventBus.$on('lyric-draw', () => {
       this.buildTray();
@@ -201,13 +193,13 @@ class TouchBarLyric {
 export function initMacStatusbarLyric() {
   const tray = new TrayLiric();
   const touchBar = new TouchBarLyric();
-  ipcRenderer.on('lyricsReceived', (_, arg) => {
-    touchBar._lyric.allLyric = arg;
-    touchBar._lyric.findCurrentLyric();
-    tray._lyricText = arg;
-    if (store.state.settings.showStatusBarLyric) {
-      tray._lyric.allLyric = arg;
-      tray._lyric.findCurrentLyric();
-    }
+  eventBus.$on('updateCurrentLyric', lyric => {
+    const arg = {
+      text: lyric.content,
+      width: 0,
+      time: lyric.time * 1000, // 单句歌词的播放时间
+    };
+    tray._lyric.updateLyric(arg);
+    touchBar._lyric.updateLyric(arg);
   });
 }

@@ -38,7 +38,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['modals']),
+    ...mapState(['modals', 'player']),
     show: {
       get() {
         return this.modals.accurateMatchModal.show;
@@ -84,12 +84,15 @@ export default {
       this.selectedTrackID = 0;
     },
     async accurateMatchTrack() {
+      const list = this.player.list;
+      const idx = list.findIndex(t => t === this.selectedTrackID);
       this.$store
         .dispatch('accurateMatchTrack', {
           id: this.selectedTrackID,
           title: this.title,
         })
         .then(() => {
+          this.player.list[idx] = Number(this.title);
           this.close();
         });
     },

@@ -967,6 +967,7 @@ import { changeAppearance, bytesToSize } from '@/utils/common';
 import { countDBSize, clearDB } from '@/utils/db';
 import { importFromJson } from '@/utils/migrations';
 import pkg from '../../package.json';
+import eventBus from '@/utils/eventBus';
 
 const electron =
   process.env.IS_ELECTRON === true ? window.require('electron') : null;
@@ -1230,11 +1231,11 @@ export default {
         return this.settings.showStatusBarLyric;
       },
       set(value) {
-        ipcRenderer.send('switchShowTray', 'switchLyric');
         this.$store.commit('updateSettings', {
           key: 'showStatusBarLyric',
           value,
         });
+        eventBus.$emit('switchShowTray', 0);
       },
     },
     showLyricsMenu: {
@@ -1253,11 +1254,11 @@ export default {
         return this.settings.showControl;
       },
       set(value) {
-        ipcRenderer.send('switchShowTray', 'switchControl');
         this.$store.commit('updateSettings', {
           key: 'showControl',
           value,
         });
+        eventBus.$emit('switchShowTray', 1);
       },
     },
     showLyricsExtension: {

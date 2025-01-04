@@ -19,7 +19,7 @@ function getIcon() {
   //   ? 'img/icons/menu@88.png'
   //   : 'img/icons/menu@88_dark.png';
 
-  const iconPath = 'img/icons/favicon-32x32.png';
+  const iconPath = 'img/logos/yesplaymusic-white24x24.png';
   return nativeImage.createFromPath(path.join(__static, iconPath)).resize({
     height: 20,
     width: 20,

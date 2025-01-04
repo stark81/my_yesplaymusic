@@ -12,6 +12,9 @@ import { isCreateMpris, isCreateTray, isMac } from '@/utils/platform';
 import { Howl, Howler } from 'howler';
 import shuffle from 'lodash/shuffle';
 import { decode as base642Buffer } from '@/utils/base64';
+import * as Vibrant from 'node-vibrant/dist/vibrant.worker.min.js';
+import Color from 'color';
+// import eventBus from './eventBus';
 
 const PLAY_PAUSE_FADE_DURATION = 200;
 
@@ -85,6 +88,8 @@ export default class {
     this._personalFMTrack = { id: 0 }; // 私人FM当前歌曲
     this._lyrics = { lyric: [], tlyric: [], rlyric: [] };
     this._currentLyricIndex = -1;
+    this._color = { color: null, color2: null };
+    this._coverUrl = '';
     this._personalFMNextTrack = {
       id: 0,
     }; // 私人FM下一首歌曲信息（为了快速加载下一首）
@@ -134,6 +139,12 @@ export default class {
     if (shuffle) {
       this._shuffleTheList();
     }
+  }
+  get color() {
+    return this._color;
+  }
+  get coverUrl() {
+    return this._coverUrl;
   }
   get reversed() {
     return this._reversed;
@@ -269,7 +280,7 @@ export default class {
     // 同步歌词进度
     setInterval(() => {
       if (this._howler === null) return;
-      const offset = this._currentTrack?.lyricDelay ?? 0;
+      const offset = this._currentTrack?.offset ?? 0;
       const progress = this._howler.seek() + offset;
       this._currentLyricIndex = this._lyrics.lyric.findIndex((l, index) => {
         const nextLyric = this._lyrics.lyric[index + 1];
@@ -561,6 +572,7 @@ export default class {
         return data.songs[0] ? data : getTrackDetail(id);
       })
       .then(data => {
+        if (!data?.songs?.length) return;
         const track = data.songs[0];
         this._udpateTrackInfo(track);
         return this._replaceCurrentTrackAudio(
@@ -578,11 +590,27 @@ export default class {
     this._currentLyricIndex = -1;
     if (!track) return;
     this._searchMatchTrack(track).then(track => {
+      this._coverUrl =
+        track.matched !== false
+          ? track.al.picUrl + '?param=512y512'
+          : `atom://get-pic/${track.filePath}`;
+      this._getCoverColor(this._coverUrl);
       this._getLyric(track).then(() => {
         this.saveSelfToLocalStorage();
       });
       this._updateMediaSessionMetaData(track);
     });
+  }
+
+  _getCoverColor(url) {
+    Vibrant.from(url, { colorCount: 1 })
+      .getPalette()
+      .then(palette => {
+        const originColor = Color.rgb(palette.DarkMuted._rgb);
+        const color = originColor.darken(0.1).rgb().string();
+        const color2 = originColor.lighten(0.28).rotate(-30).rgb().string();
+        this._color = { color, color2 };
+      });
   }
 
   _searchMatchTrack(track) {
@@ -607,7 +635,7 @@ export default class {
               delete newTrack.album;
               delete newTrack.artists;
               store.dispatch('updateALocalTrack', [track.filePath, newTrack]);
-              this._list[this._current] = newTrack.id;
+              this.list[this._current] = newTrack.id;
               resolve(newTrack);
             } else {
               resolve(track);

@@ -229,7 +229,7 @@
         v-if="filteredTracks.length > 0"
         :id="playlist.id"
         :tracks="filteredTracks"
-        :type="$route.name"
+        :type="$route.name === 'likedSongs' ? 'playlist' : $route.name"
         :extra-context-menu-item="
           isUserOwnPlaylist ? ['removeTrackFromPlaylist'] : []
         "
@@ -516,9 +516,7 @@ export default {
     ]),
     convert2library() {
       const params = { name: this.playlist.name };
-      const trackIDs = this.tracks
-        .filter(t => t.matched)
-        .map(t => t.onlineTrack.id);
+      const trackIDs = this.tracks.filter(t => t && t.matched).map(t => t.id);
       createPlaylist(params).then(data => {
         if (data.code === 200) {
           addOrRemoveTrackFromPlaylist({

@@ -460,9 +460,6 @@ export function initIpcMain(win, store, tray, lrc) {
     ipcMain.on('windowShow', () => {
       win.show();
     });
-    ipcMain.on('switchShowTray', (_, ops) => {
-      win.webContents.send('switchShowTray', ops);
-    });
     ipcMain.handle('selected-folder', async () => {
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory'],

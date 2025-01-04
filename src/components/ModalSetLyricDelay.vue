@@ -43,13 +43,13 @@ export default {
       get() {
         const track = this.currentTrack;
         return track.isLocal === true
-          ? this.currentTrack.lyricDelay
+          ? this.currentTrack.offset
           : this.onlineDelay;
       },
       set(value) {
         const track = this.currentTrack;
         if (track.isLocal === true) {
-          this.currentTrack.lyricDelay = value;
+          this.currentTrack.offset = value;
         } else {
           this.onlineDelay = value;
           this.updateModal({

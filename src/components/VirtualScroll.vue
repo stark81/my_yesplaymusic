@@ -364,7 +364,6 @@ export default {
 
 <style scoped lang="scss">
 .virtual-scroll {
-  // background-color: red;
   // padding-bottom: 64px;
   position: relative;
 }

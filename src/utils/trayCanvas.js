@@ -62,45 +62,12 @@ export class Lyric extends Canvas {
       time: 0, // 单句歌词的播放时间
     };
     this.x = 0; // 移动的距离
-    this.timerId = null;
     this.timer = null;
     this.frame = 34; // 歌词滚动的帧率
     this.ctx.font = `${
       this.fontSize * this.devicePixelRatio
     }px "pingfang sc", "microsoft yahei", sans-serif`;
     this.ctx.textBaseline = 'middle';
-    // this.findCurrentLyric();
-  }
-  findCurrentLyric() {
-    const lyricDelay = Number(player.currentTrack.lyricDelay || 0);
-    const progress = player.seek() + lyricDelay ?? 0;
-    let currentIndex = this.allLyric?.findIndex((l, index) => {
-      const nextLyric = this.allLyric[index + 1];
-      return (
-        progress >= l.time && (nextLyric ? progress < nextLyric.time : true)
-      );
-    });
-    if (this.allLyric && currentIndex !== -1) {
-      const currentLyric = this.allLyric[currentIndex];
-      let currentLyricTime = 0;
-      if (currentIndex === this.allLyric.length - 1) {
-        currentLyricTime = 10 * 1000;
-      } else {
-        currentLyricTime =
-          this.allLyric[currentIndex + 1].time * 1000 -
-          this.allLyric[currentIndex].time * 1000;
-      }
-      const arg = {
-        text: currentLyric.content,
-        width: 0,
-        time: currentLyricTime,
-      };
-      if (this.lyric.text != arg.text) {
-        this.lyric = arg;
-        this.updateLyric(this.lyric);
-      }
-    }
-    this.timerId = setTimeout(this.findCurrentLyric.bind(this), 100);
   }
 
   updateLyric(arg = this.lyric) {
