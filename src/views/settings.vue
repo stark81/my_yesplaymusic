@@ -599,7 +599,7 @@
           </div>
         </div>
       </div>
-      <div v-if="isElectron" class="item">
+      <!-- <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">
             {{ $t('settings.localMusic.matchStatus.title') }}
@@ -618,8 +618,8 @@
             <label for="local-music-match-status" />
           </div>
         </div>
-      </div>
-      <div v-if="isElectron" class="item">
+      </div> -->
+      <!-- <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">{{
             $t('settings.localMusic.exportLocalMusic')
@@ -628,8 +628,8 @@
         <div class="right">
           <button @click="exportLocalMusic">导出</button>
         </div>
-      </div>
-      <div v-if="isElectron" class="item">
+      </div> -->
+      <!-- <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">{{
             $t('settings.localMusic.importLocalMusic')
@@ -644,7 +644,7 @@
         type="file"
         style="display: none"
         @change="importLocalMusicFromJson"
-      />
+      /> -->
       <div v-if="isElectron" class="item">
         <div class="left">
           <div class="title">{{
@@ -1566,23 +1566,11 @@ export default {
   methods: {
     ...mapActions(['showToast']),
     deleteLocalMusic() {
+      this.$store.commit('deleteLocalMusic');
       this.$store.commit('updateSettings', {
         key: 'localMusicFolderPath',
         value: null,
       });
-      const musicObj = {
-        version: 'v1',
-        trackIdCounter: 1,
-        albumsIdCounter: 1,
-        artistsIdCounter: 1,
-        playlistIdCounter: 1,
-        playlists: [],
-        tracks: [],
-        sortBy: 'default',
-      };
-      this.$store.commit('updateLocalMusic', musicObj);
-      localStorage.setItem('localMusic', musicObj);
-      this.showToast('已清除本地音乐信息');
     },
     importLocalMusic() {
       this.$refs.selectFileInput.click();

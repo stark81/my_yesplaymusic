@@ -27,6 +27,15 @@ export default {
   addALocalTrack(state, track) {
     state.localMusic.tracks.push(track);
   },
+  deleteLocalMusic(state) {
+    const localMusic = state.localMusic;
+    localMusic.playlists = [];
+    localMusic.tracks = [];
+    localMusic.sortBy = 'default';
+    const electron = window.require('electron');
+    const ipcRenderer = electron.ipcRenderer;
+    ipcRenderer.send('deleteLocalMusic', localMusic);
+  },
   addLocalPlaylist(state, playlistParams) {
     const playlist = {
       id: state.localMusic.playlists.length + 1,

@@ -2,7 +2,7 @@ import store from '@/store';
 
 const player = store.state.player;
 const settings = store.state.settings;
-const localMusic = store.state.localMusic;
+let localMusic = store.state.localMusic;
 
 export function ipcRenderer(vueInstance) {
   const self = vueInstance;
@@ -24,6 +24,9 @@ export function ipcRenderer(vueInstance) {
     ipcRenderer.send('currentLocalMusic', localMusic?.tracks || []);
     ipcRenderer.send('msgScanLocalMusic', settings.localMusicFolderPath);
   }
+  ipcRenderer.on('deleteLocalMusic', (event, data) => {
+    localMusic = data;
+  });
   ipcRenderer.on('msgHandleScanLocalMusic', (event, data) => {
     store.commit('addALocalTrack', data.song);
   });

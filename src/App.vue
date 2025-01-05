@@ -32,7 +32,7 @@ import Toast from './components/Toast.vue';
 import { ipcRenderer } from './electron/ipcRenderer';
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import MusicPlay from './views/musicPlay.vue';
-import { mapState } from 'vuex';
+import { mapState, mapMutations } from 'vuex';
 import { isMac, isLinux } from './utils/platform';
 
 export default {
@@ -91,7 +91,9 @@ export default {
   watch: {
     localMusicPath(value) {
       if (!value) return;
+      this.deleteLocalMusic();
       const render = require('electron').ipcRenderer;
+      render.send('currentLocalMusic', []);
       render.send('msgScanLocalMusic', value);
     },
     virtualScroll(value) {
@@ -129,6 +131,7 @@ export default {
     this.fetchData();
   },
   methods: {
+    ...mapMutations(['deleteLocalMusic']),
     handleKeydown(e) {
       if (e.code === 'Space') {
         if (e.target.tagName === 'INPUT') return false;

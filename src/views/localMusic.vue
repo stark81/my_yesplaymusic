@@ -318,11 +318,15 @@ export default {
       const data = await this.getLyricFn(randomTrack);
       if (data && !data.lrc?.lyric?.length) {
         this.noLyricTracks.push(randomTrack);
-        this.getRandomLyric();
+        if (this.localTracks.length > this.noLyricTracks.length) {
+          this.getRandomLyric();
+        }
         return;
       }
       if (!data) {
-        this.getRandomLyric();
+        if (this.localTracks.length > this.noLyricTracks.length) {
+          this.getRandomLyric();
+        }
         return;
       } else {
         const { lyric } = lyricParser(data);
@@ -331,7 +335,9 @@ export default {
         );
         if (isInstrumental?.length) {
           this.noLyricTracks.push(randomTrack);
-          this.getRandomLyric();
+          if (this.localTracks.length > this.noLyricTracks.length) {
+            this.getRandomLyric();
+          }
           return;
         }
         this.lyric = lyric;
