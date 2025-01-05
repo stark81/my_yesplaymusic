@@ -214,7 +214,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(['localMusic', 'modalOpen', 'settings']),
+    ...mapState(['localMusic', 'modalOpen', 'settings', 'player']),
     localTracks() {
       if (!this.localMusic?.tracks) return [];
       return this.localMusic?.tracks?.map((track, index) => ({
@@ -371,7 +371,9 @@ export default {
         .catch(() => null);
       return data;
     },
-    playThisTrack() {},
+    playThisTrack() {
+      this.player.addTrackToPlayNext(this.lyricSong.id, true, true);
+    },
     updateTab(tab) {
       this.currentTab = tab;
     },

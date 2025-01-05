@@ -38,6 +38,10 @@ service.interceptors.request.use(function (config) {
     config.params.realIP = '211.161.244.70';
   }
 
+  if (config.url.includes('/login')) {
+    config.params.cookie = 'os=pc;';
+  }
+
   if (process.env.VUE_APP_REAL_IP) {
     config.params.realIP = process.env.VUE_APP_REAL_IP;
   }

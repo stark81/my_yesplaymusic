@@ -93,7 +93,7 @@ module.exports = {
     // LimitChunkCountPlugin 可以通过合并块来对块进行后期处理。用以解决 chunk 包太多的问题
     config.plugin('chunkPlugin').use(webpack.optimize.LimitChunkCountPlugin, [
       {
-        maxChunks: 3,
+        maxChunks: 6,
         minChunkSize: 10_000,
       },
     ]);
@@ -169,10 +169,10 @@ module.exports = {
               target: 'snap',
               arch: ['x64'],
             },
-            {
-              target: 'pacman',
-              arch: ['x64'],
-            },
+            // {
+            //   target: 'pacman',
+            //   arch: ['x64'],
+            // },
           ],
           category: 'Music',
           icon: './build/icon.icns',

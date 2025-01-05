@@ -330,7 +330,10 @@ class Background {
         nodeIntegration: true,
         enableRemoteModule: true,
         contextIsolation: false,
-        preload: path.join(__dirname, '../public/preload.js'),
+        preload: path.join(
+          __dirname,
+          isDevelopment ? '../public/preload.js' : 'preload.js'
+        ),
       },
     });
 
