@@ -329,6 +329,9 @@ export default {
       const url = `https://music.163.com/#/album?id=${id}`;
       window.open(url);
     },
+    scrollTo(top, behavior = 'smooth') {
+      this.$parent.$refs.main.scrollTo({ top, behavior });
+    },
   },
 };
 </script>

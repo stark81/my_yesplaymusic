@@ -427,6 +427,7 @@ export default class {
     });
   }
   _getAudioSourceFromNetease(track) {
+    track.source = 'netease';
     if (isAccountLoggedIn()) {
       return getMP3(track.id).then(result => {
         if (!result.data[0]) return null;
@@ -490,6 +491,8 @@ export default class {
       }
     );
 
+    track.source = retrieveSongInfo.source;
+
     if (store.state.settings.automaticallyCacheSongs && retrieveSongInfo?.url) {
       // 对于来自 bilibili 的音源
       // retrieveSongInfo.url 是音频数据的base64编码
@@ -514,6 +517,7 @@ export default class {
   }
   _getAudioSource(track) {
     if (track.isLocal === true) {
+      track.source = 'localTrack';
       const getLocalMusic = track => {
         return new Promise(resolve => {
           const source = `file://${track.filePath}`;
@@ -524,6 +528,7 @@ export default class {
         return source;
       });
     } else {
+      track.source = 'cache';
       return this._getAudioSourceFromCache(String(track.id))
         .then(source => {
           return source ?? this._getAudioSourceFromNetease(track);

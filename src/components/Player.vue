@@ -213,8 +213,21 @@ export default {
       return this.player.playing;
     },
     audioSource() {
-      return this.player._howler?._src.includes('kuwo.cn')
-        ? '音源来自酷我音乐'
+      const sourceMap = {
+        localTrack: '本地音乐',
+        netease: '网易云音乐',
+        qq: 'QQ音乐',
+        kugou: '酷狗音乐',
+        kuwo: '酷我音乐',
+        bilibili: '哔哩哔哩',
+        pyncmd: '第三方网易云音乐',
+        migu: '咪咕音乐',
+        cache: '本地缓存',
+      };
+      const source = this.currentTrack.source;
+      const sourceName = source in sourceMap ? sourceMap[source] : source;
+      return this.currentTrack
+        ? `${this.currentTrack.name}, 音源: ${sourceName}`
         : '';
     },
     osdState() {

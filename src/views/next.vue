@@ -6,20 +6,22 @@
       type="playlist"
       dbclick-track-func="none"
     />
-    <h1 v-show="playNextList.length > 0"
-      >插队播放
-      <button @click="player.clearPlayNextList()">清除队列</button>
-    </h1>
-    <TrackList
-      :tracks="playNextTracks"
-      type="playlist"
-      :highlight-playing-track="false"
-      :show-position="false"
-      :enabled="false"
-      dbclick-track-func="playTrackOnListByID"
-      item-key="id+index"
-      :extra-context-menu-item="['removeTrackFromQueue']"
-    />
+    <div v-if="playNextTracks.length > 0">
+      <h1>
+        插队播放
+        <button @click="player.clearPlayNextList()">清除队列</button>
+      </h1>
+      <TrackList
+        :tracks="playNextTracks"
+        type="playlist"
+        :highlight-playing-track="false"
+        :show-position="false"
+        :enabled="false"
+        dbclick-track-func="playTrackOnListByID"
+        item-key="id+index"
+        :extra-context-menu-item="['removeTrackFromQueue']"
+      />
+    </div>
     <h1>{{ $t('next.nextUp') }}</h1>
     <TrackList
       v-if="filteredTracks.length > 0"
@@ -66,7 +68,7 @@ export default {
     },
     playNextTracks() {
       return this.playNextList.map(tid => {
-        return this.tracks.find(t => t.id === tid);
+        return this.tracks?.find(t => t.id === tid);
       });
     },
   },
@@ -90,7 +92,7 @@ export default {
   },
   methods: {
     ...mapActions(['playTrackOnListByID']),
-    loadTracks() {
+    async loadTracks() {
       // 获取播放列表当前歌曲后100首歌
       let trackIDs = this.player.list.slice(
         this.player.current + 1,
@@ -113,7 +115,7 @@ export default {
       );
 
       if (newTrackIDs.length > 0) {
-        getTrackDetail(trackIDs.join(',')).then(data => {
+        await getTrackDetail(newTrackIDs.join(',')).then(data => {
           newTracks.push(
             ...data.songs.filter(t => !loadedTrackIDs.includes(t.id))
           );

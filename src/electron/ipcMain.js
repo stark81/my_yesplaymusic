@@ -238,8 +238,8 @@ const initOtherIpcMain = win => {
     if (!filePath) return;
     const musicFileExtensions = /\.(mp3|aiff|flac|alac|m4a|aac|wav)$/i;
 
-    const albums = songs.map(song => song.album);
-    const artists = songs.map(song => song.artist).flat();
+    const albums = songs.map(song => song.al);
+    const artists = songs.map(song => song.ar).flat();
     const newTracks = [];
     const newAlbums = [];
     const newArtists = [];

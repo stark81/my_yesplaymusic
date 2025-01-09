@@ -113,8 +113,9 @@
     >
       <template #default="{ item, index }">
         <TrackListItem
+          v-if="item"
           ref="trackListItemRef"
-          :key="itemKey === 'id' ? item.id : `${item.id}${index}`"
+          :key="index"
           :track-prop="item"
           :type="type === 'localTracklist' ? 'tracklist' : type"
           :track-no="index + 1"
