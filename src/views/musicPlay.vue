@@ -415,7 +415,7 @@ export default {
         migu: '咪咕音乐',
         cache: '本地缓存',
       };
-      const source = this.currentTrack.source;
+      const source = this.player.audioSource;
       const sourceName = source in sourceMap ? sourceMap[source] : source;
       return this.currentTrack
         ? `${this.currentTrack.name}, 音源: ${sourceName}`

@@ -265,7 +265,7 @@ export default {
   methods: {
     ...mapActions(['showToast']),
     goToAlbum() {
-      if (this.track.al.id === 0) return;
+      if (this.track.al.matched === false) return;
       this.$router.push({ path: '/album/' + this.track?.al?.id });
     },
     playTrack() {

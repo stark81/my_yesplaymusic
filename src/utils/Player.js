@@ -75,9 +75,9 @@ export default class {
 
     // 播放信息
     this._list = []; // 播放列表
+    this._audioSource = 'netease';
     this._isLocal = false;
     this._localPic = null;
-    this._localID = null;
     this._current = 0; // 当前播放歌曲在播放列表里的index
     this._shuffledList = []; // 被随机打乱的播放列表，随机播放模式下会使用此播放列表
     this._shuffledCurrent = 0; // 当前播放歌曲在随机列表里面的index
@@ -189,6 +189,9 @@ export default class {
   }
   get currentTrack() {
     return this._currentTrack;
+  }
+  get audioSource() {
+    return this._audioSource;
   }
   get currentTrackID() {
     return this._currentTrack?.id ?? 0;
@@ -420,14 +423,25 @@ export default class {
 
     return source;
   }
+  _getAudioSourceFromLocal(track) {
+    return new Promise(resolve => {
+      if (track.isLocal) {
+        const source = `file://${track.filePath}`;
+        resolve(source);
+        this._audioSource = 'localTrack';
+      } else {
+        resolve(null);
+      }
+    });
+  }
   _getAudioSourceFromCache(id) {
     return getTrackSource(id).then(t => {
       if (!t) return null;
+      this._audioSource = 'cache';
       return this._getAudioSourceBlobURL(t.source);
     });
   }
   _getAudioSourceFromNetease(track) {
-    track.source = 'netease';
     if (isAccountLoggedIn()) {
       return getMP3(track.id).then(result => {
         if (!result.data[0]) return null;
@@ -437,11 +451,13 @@ export default class {
         if (store.state.settings.automaticallyCacheSongs) {
           cacheTrackSource(track, source, result.data[0].br);
         }
+        this._audioSource = 'netease';
         return source;
       });
     } else {
       return new Promise(resolve => {
         resolve(`https://music.163.com/song/media/outer/url?id=${track.id}`);
+        this._audioSource = 'netease';
       });
     }
   }
@@ -491,8 +507,6 @@ export default class {
       }
     );
 
-    track.source = retrieveSongInfo.source;
-
     if (store.state.settings.automaticallyCacheSongs && retrieveSongInfo?.url) {
       // 对于来自 bilibili 的音源
       // retrieveSongInfo.url 是音频数据的base64编码
@@ -508,6 +522,8 @@ export default class {
       return null;
     }
 
+    this._audioSource = retrieveSongInfo.source;
+
     if (retrieveSongInfo.source !== 'bilibili') {
       return retrieveSongInfo.url;
     }
@@ -516,27 +532,16 @@ export default class {
     return this._getAudioSourceBlobURL(buffer);
   }
   _getAudioSource(track) {
-    if (track.isLocal === true) {
-      track.source = 'localTrack';
-      const getLocalMusic = track => {
-        return new Promise(resolve => {
-          const source = `file://${track.filePath}`;
-          resolve(source);
-        });
-      };
-      return getLocalMusic(track).then(source => {
-        return source;
+    return this._getAudioSourceFromLocal(track)
+      .then(source => {
+        return source ?? this._getAudioSourceFromCache(String(track.id));
+      })
+      .then(source => {
+        return source ?? this._getAudioSourceFromNetease(track);
+      })
+      .then(source => {
+        return source ?? this._getAudioSourceFromUnblockMusic(track);
       });
-    } else {
-      track.source = 'cache';
-      return this._getAudioSourceFromCache(String(track.id))
-        .then(source => {
-          return source ?? this._getAudioSourceFromNetease(track);
-        })
-        .then(source => {
-          return source ?? this._getAudioSourceFromUnblockMusic(track);
-        });
-    }
   }
   _replaceCurrentTrack(
     id,
@@ -560,6 +565,7 @@ export default class {
           : JSON.parse(localStorage.getItem('settings'));
         const matchTrack = localMusic.tracks?.find(track => track.id === id);
         if (matchTrack && settings.localMusicFirst) {
+          this._audioSource = 'localTrack';
           resolve({ songs: [matchTrack] });
           if (this.isLocal !== true) {
             store?.dispatch(
@@ -573,7 +579,6 @@ export default class {
     };
     return getLocalMusic(id)
       .then(data => {
-        this._localID = id;
         return data.songs[0] ? data : getTrackDetail(id);
       })
       .then(data => {

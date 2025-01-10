@@ -62,7 +62,7 @@
 import { mapState, mapMutations } from 'vuex';
 import { formatTrackTime } from '@/utils/common';
 import ButtonIcon from '@/components/ButtonIcon.vue';
-import { isMac } from '@/utils/platform';
+import { isMac, isWindows } from '@/utils/platform';
 import eventBus from '@/utils/eventBus';
 
 export default {
@@ -244,24 +244,26 @@ export default {
       }
     },
     currentLyric(value) {
-      if (isMac || (this.dbusStatus && this.sendDBusLrc)) {
-        const { ipcRenderer } = require('electron');
-        let result = {};
-        if (this.currentLyricIndex < this.lyric.length) {
-          const nextLyric = this.lyric[this.currentLyricIndex + 1];
-          const diff = nextLyric?.time - value?.time || 10;
-          result = {
-            content:
-              value?.content || this.currentTrack?.name || '听你想听的音乐',
-            time: diff,
-          };
-        } else {
-          result = {
-            content: this.currentTrack?.name || '听你想听的音乐',
-            time: 10,
-          };
-        }
+      if (isWindows) return;
+      const { ipcRenderer } = require('electron');
+      let result = {};
+      if (this.currentLyricIndex < this.lyric.length) {
+        const nextLyric = this.lyric[this.currentLyricIndex + 1];
+        const diff = nextLyric?.time - value?.time || 10;
+        result = {
+          content:
+            value?.content || this.currentTrack?.name || '听你想听的音乐',
+          time: diff,
+        };
+      } else {
+        result = {
+          content: this.currentTrack?.name || '听你想听的音乐',
+          time: 10,
+        };
+      }
+      if (isMac) {
         eventBus.$emit('updateCurrentLyric', result);
+      } else if (this.dbusStatus && this.sendDBusLrc) {
         ipcRenderer.send('updateCurrentLyric', result);
       }
     },
@@ -474,7 +476,7 @@ export default {
 
 @media screen and (min-width: 1200px) {
   .right-side .lyrics-container {
-    max-width: 600px;
+    // max-width: 600px;
   }
 }
 
