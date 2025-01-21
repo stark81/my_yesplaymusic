@@ -239,6 +239,7 @@ export default class {
   _init() {
     this._loadSelfFromLocalStorage();
     this._howler?.volume(this.volume);
+    this._playings = false;
 
     if (this._enabled) {
       // 恢复当前播放歌曲

@@ -132,15 +132,6 @@ export default {
   },
   methods: {
     ...mapMutations(['deleteLocalMusic']),
-    handleKeydown(e) {
-      if (e.code === 'Space') {
-        if (e.target.tagName === 'INPUT') return false;
-        if (e.target.classList.contains('comment_box')) return false;
-        if (this.$route.name === 'mv') return false;
-        e.preventDefault();
-        this.player.playOrPause();
-      }
-    },
     fetchData() {
       if (!isLooseLoggedIn()) return;
       this.$store.dispatch('fetchLikedSongs');

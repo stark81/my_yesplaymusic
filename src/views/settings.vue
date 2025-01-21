@@ -1044,6 +1044,8 @@ export default {
         ) {
           // Arrows
           shortcut.push(e.code.replace('Arrow', ''));
+        } else if (e.keyCode === 32) {
+          shortcut.push('Space');
         } else if (validShortcutCodes.includes(e.key)) {
           shortcut.push(e.key);
         }
@@ -1762,6 +1764,7 @@ export default {
       if (this.recordedShortcut.find(s => s.keyCode === e.keyCode)) return;
       this.recordedShortcut.push(e);
       if (
+        e.keyCode === 32 || // space
         (e.keyCode >= 65 && e.keyCode <= 90) || // A-Z
         (e.keyCode >= 48 && e.keyCode <= 57) || // 0-9
         (e.keyCode >= 112 && e.keyCode <= 123) || // F1-F12

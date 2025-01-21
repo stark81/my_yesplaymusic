@@ -49,6 +49,13 @@ export function ipcRenderer(vueInstance) {
   });
 
   ipcRenderer.on('play', () => {
+    if (
+      document.activeElement.tagName === 'INPUT' ||
+      document.activeElement.classList.contains('comment_box')
+    ) {
+      // 防止输入框聚焦时播放
+      return;
+    }
     player.playOrPause();
   });
 

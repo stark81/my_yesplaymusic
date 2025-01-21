@@ -412,6 +412,7 @@ export default {
 }
 .comment {
   width: auto;
+  word-break: break-word;
 
   .comment-nickname {
     cursor: pointer;

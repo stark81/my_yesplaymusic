@@ -318,8 +318,14 @@ export default {
       return [];
     },
   },
+  watch: {
+    currentTab() {
+      this.$parent.$refs.main.style.paddingBottom = '96px';
+    },
+  },
   created() {
     setTimeout(() => {
+      this.$parent.$refs.main.style.paddingBottom = '96px';
       if (!this.show) NProgress.start();
     }, 1000);
     this.loadData();

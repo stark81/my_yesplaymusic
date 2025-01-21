@@ -92,7 +92,6 @@ export default {
         }));
       }
       const hasTranslation = ret[this.highlighIdx]?.contents[1];
-      console.log(hasTranslation);
       const idx = hasTranslation
         ? this.highlighIdx
         : this.highlighIdx + (this.highlighIdx % 2 === 0 ? 0 : -1);

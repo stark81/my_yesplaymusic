@@ -870,6 +870,10 @@ export default {
   }
 }
 
+.right-side {
+  width: 50vw;
+}
+
 .cover {
   position: relative;
 
@@ -958,7 +962,7 @@ export default {
 
 @media screen and (min-width: 1200px) {
   .right-side .lyrics-container {
-    max-width: 600px;
+    // max-width: 600px;
   }
 }
 
