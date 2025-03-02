@@ -1,6 +1,6 @@
 {
   "name": "yesplaymusic",
-  "version": "0.4.20",
+  "version": "0.5.0",
   "private": true,
   "description": "A third party music player for Netease Music",
   "author": "qier222<qier222@outlook.com>",
@@ -28,7 +28,7 @@
   },
   "main": "background.js",
   "engines": {
-    "node": "14 || 16"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@fastify/cookie": "^9.3.1",
@@ -113,7 +113,8 @@
   "resolutions": {
     "icon-gen": "3.0.0",
     "degenerator": "2.2.0",
-    "electron-builder": "^23.0.0"
+    "electron-builder": "^23.0.0",
+    "@achrinza/node-ipc": "^10.1.0"
   },
   "eslintConfig": {
     "root": true,
